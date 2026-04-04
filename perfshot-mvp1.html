@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PERF SHOT — Mini-MVP 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:      #0B1C2D;
+  --navy-2:    #132638;
+  --navy-3:    #1E3A54;
+  --green:     #1D9E75;
+  --green-l:   #5DCAA5;
+  --green-dim: rgba(29,158,117,.12);
+  --blue:      #4DB8FF;
+  --blue-dim:  rgba(77,184,255,.10);
+  --red:       #E8462A;
+  --red-dim:   rgba(232,70,42,.10);
+  --gold:      #EF9F27;
+  --fog:       #F0F7FF;
+  --fog-2:     #E3EEF9;
+  --text:      #0B1C2D;
+  --text-2:    #4A6278;
+  --text-3:    #8BA5BB;
+  --border:    rgba(11,28,45,.10);
+  --border-2:  rgba(11,28,45,.06);
+  --radius:    12px;
+  --radius-sm: 8px;
+  --mono:      'DM Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --body:      'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  background: var(--fog);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  padding: 0;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform .25s ease;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--navy-3);
+}
+.logo-wordmark {
+  font-family: var(--display);
+  font-size: 20px; font-weight: 700;
+  letter-spacing: .04em;
+  color: #fff;
+}
+.logo-wordmark span { color: var(--green); }
+.logo-sub {
+  font-size: 10px; font-weight: 400;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #6B8FAF; margin-top: 2px;
+}
+
+.sidebar-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+
+.nav-section-label {
+  font-size: 9px; font-weight: 500; letter-spacing: .15em;
+  text-transform: uppercase; color: #3A5570;
+  padding: 10px 10px 4px; margin-top: 4px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background .15s;
+  color: #6B8FAF; font-size: 13px; font-weight: 400;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--navy-2); color: #9DBDD4; }
+.nav-item.active { background: var(--green-dim); color: var(--green-l); }
+.nav-item.active .nav-icon { color: var(--green); }
+.nav-icon { width: 16px; flex-shrink: 0; opacity: .7; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-badge {
+  margin-left: auto; font-size: 9px; font-family: var(--mono);
+  background: var(--green-dim); color: var(--green-l);
+  padding: 1px 6px; border-radius: 20px;
+}
+
+.sidebar-user {
+  padding: 14px 14px; border-top: 1px solid var(--navy-3);
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--green); display: flex; align-items: center;
+  justify-content: center; font-family: var(--display);
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 500; color: #9DBDD4; }
+.user-role { font-size: 10px; color: #3A5570; }
+
+/* ── MAIN ── */
+.main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 14px 32px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: var(--display); font-size: 16px; font-weight: 600; color: var(--text); }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.content { padding: 28px 32px; flex: 1; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: var(--radius-sm);
+  font-family: var(--body); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; border: none; white-space: nowrap;
+}
+.btn-primary { background: var(--green); color: #fff; }
+.btn-primary:hover { background: #189060; }
+.btn-secondary {
+  background: transparent; color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--fog-2); }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(232,70,42,.2); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-icon { padding: 8px; border-radius: var(--radius-sm); background: transparent; border: 1px solid var(--border); cursor: pointer; color: var(--text-2); transition: all .15s; }
+.btn-icon:hover { background: var(--fog-2); }
+
+/* ── CARDS ── */
+.card {
+  background: #fff; border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 20px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--text); }
+.card-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+/* ── STAT CARDS ── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+}
+.stat-val { font-family: var(--display); font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.stat-val .decimal { font-size: 16px; color: var(--green); }
+.stat-lbl { font-size: 11px; color: var(--text-3); margin-top: 4px; letter-spacing: .04em; }
+.stat-delta { font-size: 11px; margin-top: 6px; font-family: var(--mono); }
+.delta-up { color: var(--green); }
+.delta-down { color: var(--red); }
+.delta-neutral { color: var(--text-3); }
+
+/* ── FORMS ── */
+.form-grid { display: grid; gap: 14px; }
+.form-grid-2 { grid-template-columns: 1fr 1fr; }
+.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 11px; font-weight: 500; color: var(--text-2); letter-spacing: .04em; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea {
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--fog);
+  font-family: var(--body); font-size: 13px; color: var(--text);
+  transition: border-color .15s, background .15s; width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--green);
+  background: #fff; box-shadow: 0 0 0 3px var(--green-dim);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-hint { font-size: 11px; color: var(--text-3); }
+
+/* ── TAGS / BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-blue { background: var(--blue-dim); color: #185FA5; }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-gold { background: rgba(239,159,39,.12); color: #8a5a00; }
+.badge-gray { background: var(--fog-2); color: var(--text-2); }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 10px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-3);
+  padding: 10px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 11px 12px; border-bottom: 1px solid var(--border-2); font-size: 13px; color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--fog-2); }
+
+/* ── RATING STARS ── */
+.stars { display: flex; gap: 2px; }
+.star { font-size: 13px; cursor: pointer; transition: transform .1s; }
+.star:hover { transform: scale(1.2); }
+.star.filled { color: var(--gold); }
+.star.empty { color: var(--border); }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: all .15s; background: var(--fog);
+}
+.upload-zone:hover { border-color: var(--green); background: var(--green-dim); }
+.upload-zone-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-zone-text { font-size: 13px; color: var(--text-2); }
+.upload-zone-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border-2); margin-bottom: 20px; }
+.tab {
+  padding: 10px 16px; font-size: 13px; font-weight: 500;
+  color: var(--text-3); cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all .15s; font-family: var(--body);
+}
+.tab:hover { color: var(--text-2); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(11,28,45,.5);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal {
+  background: #fff; border-radius: 16px; width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto;
+  animation: modalIn .2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+.modal-header {
+  padding: 20px 24px 16px; display: flex; align-items: center;
+  justify-content: space-between; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: #fff; z-index: 1; border-radius: 16px 16px 0 0;
+}
+.modal-title { font-family: var(--display); font-size: 15px; font-weight: 600; }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── AUTH SCREEN ── */
+.auth-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--navy);
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(29,158,117,.08) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(77,184,255,.05) 0%, transparent 60%);
+}
+.auth-card {
+  width: 100%; max-width: 400px; padding: 40px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px; backdrop-filter: blur(10px);
+}
+.auth-logo { text-align: center; margin-bottom: 32px; }
+.auth-logo-mark { font-family: var(--display); font-size: 32px; font-weight: 800; color: #fff; letter-spacing: .05em; }
+.auth-logo-mark span { color: var(--green); }
+.auth-logo-sub { font-size: 11px; letter-spacing: .15em; color: #6B8FAF; text-transform: uppercase; margin-top: 4px; }
+.auth-title { font-family: var(--display); font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.auth-sub { font-size: 13px; color: #6B8FAF; margin-bottom: 24px; }
+.auth-input {
+  width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
+  color: #fff; font-family: var(--body); font-size: 14px; margin-bottom: 10px;
+  transition: border-color .15s;
+}
+.auth-input::placeholder { color: #3A5570; }
+.auth-input:focus { outline: none; border-color: var(--green); background: rgba(255,255,255,.08); }
+.auth-btn {
+  width: 100%; padding: 13px; border-radius: var(--radius-sm);
+  background: var(--green); color: #fff; font-family: var(--display);
+  font-size: 14px; font-weight: 700; letter-spacing: .04em;
+  border: none; cursor: pointer; transition: background .15s; margin-top: 4px;
+}
+.auth-btn:hover { background: #189060; }
+.auth-divider { text-align: center; color: #3A5570; font-size: 12px; margin: 14px 0; position: relative; }
+.auth-divider::before, .auth-divider::after {
+  content: ''; position: absolute; top: 50%; width: 38%; height: 1px;
+  background: rgba(255,255,255,.06);
+}
+.auth-divider::before { left: 0; }
+.auth-divider::after { right: 0; }
+.auth-google {
+  width: 100%; padding: 11px; border-radius: var(--radius-sm);
+  background: transparent; color: #9DBDD4; font-family: var(--body);
+  font-size: 13px; border: 1px solid rgba(255,255,255,.1);
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.auth-google:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.2); }
+.auth-switch { text-align: center; margin-top: 20px; font-size: 12px; color: #3A5570; }
+.auth-switch a { color: var(--green-l); cursor: pointer; }
+
+/* ── ROLE SELECTOR ── */
+.role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.role-card {
+  padding: 16px; border-radius: var(--radius-sm); border: 2px solid rgba(255,255,255,.08);
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.role-card:hover { border-color: var(--green); background: var(--green-dim); }
+.role-card.selected { border-color: var(--green); background: var(--green-dim); }
+.role-card-icon { font-size: 24px; margin-bottom: 6px; }
+.role-card-name { font-size: 13px; font-weight: 500; color: #9DBDD4; }
+.role-card.selected .role-card-name { color: var(--green-l); }
+
+/* ── EQUIPMENT CARD ── */
+.equip-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; display: flex; gap: 14px; align-items: flex-start;
+  transition: box-shadow .15s; cursor: pointer;
+}
+.equip-card:hover { box-shadow: 0 4px 20px rgba(11,28,45,.08); }
+.equip-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-sm);
+  background: var(--navy); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.equip-info { flex: 1; }
+.equip-name { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--text); }
+.equip-model { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.equip-serial { font-family: var(--mono); font-size: 11px; color: var(--text-3); margin-top: 6px; }
+.equip-tags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+
+/* ── AMMO CARD ── */
+.ammo-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px;
+}
+.ammo-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.ammo-name { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--text); }
+.ammo-lot { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin-top: 2px; }
+.ammo-photo { width: 100%; height: 100px; border-radius: var(--radius-sm); object-fit: cover; background: var(--fog-2); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-3); margin-bottom: 10px; }
+.ammo-comment { font-size: 12px; color: var(--text-2); line-height: 1.5; font-style: italic; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 24px; color: var(--text-3);
+}
+.empty-icon { font-size: 36px; margin-bottom: 12px; opacity: .4; }
+.empty-title { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.empty-sub { font-size: 12px; line-height: 1.6; }
+
+/* ── MINI CHART ── */
+.sparkline { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+.spark-bar {
+  flex: 1; border-radius: 3px 3px 0 0; background: var(--green-dim);
+  transition: background .15s;
+}
+.spark-bar.highlight { background: var(--green); }
+.spark-bar:hover { background: var(--green); }
+
+/* ── AI INSIGHT BOX ── */
+.ai-insight {
+  background: linear-gradient(135deg, var(--green-dim) 0%, var(--blue-dim) 100%);
+  border: 1px solid rgba(29,158,117,.2); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start;
+}
+.ai-insight-icon {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--green);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ai-insight-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+.ai-insight-text strong { color: var(--green); font-weight: 500; }
+
+/* ── UTILS ── */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.text-mono { font-family: var(--mono); }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.text-muted { color: var(--text-3); }
+.text-green { color: var(--green); }
+.w-full { width: 100%; }
+.hidden { display: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: none; }
+  .main { margin-left: 0; }
+  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ── MOCK DATA ── */
+const MOCK_USER = {
+  id: '1', name: 'Martín Rodríguez', email: 'martin@perfshot.com',
+  role: 'athlete', club: 'Club de Tiro Buenos Aires',
+  category: 'Absoluto', initials: 'MR',
+  disciplines: ['10m Pistola de Aire', '50m Pistola'],
+};
+
+const MOCK_WEAPONS = [
+  { id: '1', type: 'pistola', brand: 'Walther', model: 'LP500', serial: 'WL-2021-48392', caliber: '4.5mm', year: 2021, notes: 'Grip ajustado en nov 2023', active: true },
+  { id: '2', type: 'rifle', brand: 'Feinwerkbau', model: '800X', serial: 'FW-800-19274', caliber: '4.5mm', year: 2019, notes: '', active: true },
+];
+
+const MOCK_AMMO = [
+  { id: '1', brand: 'RWS', model: 'R10 Match', caliber: '4.5mm', lot: '2024-B-0312', qty: 500, rating: 5, comment: 'Excelente agrupación. Mejor lote que probé hasta ahora. Recomendado para competencia.', hasPhoto: true },
+  { id: '2', brand: 'Lapua', model: 'L-110', caliber: '4.5mm', lot: 'L-112-2023', qty: 200, rating: 3, comment: 'Agrupación aceptable. No tan consistente como RWS. OK para entrenamiento.', hasPhoto: false },
+  { id: '3', brand: 'H&N', model: 'Finale Match', caliber: '4.5mm', lot: 'HN-F24-001', qty: 350, rating: 4, comment: 'Muy buena para entrenamiento de volumen.', hasPhoto: true },
+];
+
+const MOCK_SESSIONS = [
+  { id:'1', date:'2026-04-03', type:'training', discipline:'10m Pistola de Aire', score:591, shots:60, weapon:'Walther LP500', ammo:'RWS R10 Match', wind:2, mental:8, physical:9, notes:'Mejor sesión del mes.' },
+  { id:'2', date:'2026-03-31', type:'competition', discipline:'10m Pistola de Aire', score:578, shots:60, weapon:'Walther LP500', ammo:'RWS R10 Match', wind:0, mental:7, physical:8, notes:'Nervios en las 2 primeras series.' },
+  { id:'3', date:'2026-03-29', type:'training', discipline:'10m Pistola de Aire', score:571, shots:60, weapon:'Walther LP500', ammo:'Lapua L-110', wind:3, mental:6, physical:7, notes:'' },
+  { id:'4', date:'2026-03-27', type:'training', discipline:'10m Pistola de Aire', score:583, shots:60, weapon:'Walther LP500', ammo:'H&N Finale', wind:1, mental:8, physical:8, notes:'' },
+  { id:'5', date:'2026-03-25', type:'training', discipline:'10m Pistola de Aire', score:579, shots:60, weapon:'Walther LP500', ammo:'RWS R10 Match', wind:2, mental:7, physical:9, notes:'' },
+];
+
+/* ── ICONS (inline SVG) ── */
+const Icon = ({ name, size = 16, color = 'currentColor' }) => {
+  const icons = {
+    home: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>,
+    target: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+    chart: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+    gun: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M3 12h8l2-4h6l1 4-1 2H5z"/><path d="M9 18l-2 2H5l-1-2"/><path d="M15 8V6h2"/></svg>,
+    bullet: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="17" rx="5" ry="4"/><path d="M7 17V9q0-5 5-5t5 5v8"/></svg>,
+    calendar: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>,
+    users: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.85"/></svg>,
+    settings: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+    plus: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+    x: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+    edit: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+    trash: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>,
+    upload: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+    ai: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12s1-2 4-2 4 2 4 2"/><circle cx="9" cy="9" r="1" fill={color}/><circle cx="15" cy="9" r="1" fill={color}/><path d="M12 16v2"/></svg>,
+    logout: <svg width={size} height={size} fill="none" stroke={color} strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  };
+  return icons[name] || null;
+};
+
+/* ── STARS COMPONENT ── */
+const Stars = ({ value, onChange, size = 'normal' }) => (
+  <div className="stars">
+    {[1,2,3,4,5].map(i => (
+      <span key={i} className={`star ${i <= value ? 'filled' : 'empty'}`}
+        onClick={() => onChange && onChange(i)}
+        style={{ fontSize: size === 'sm' ? 11 : 14 }}>★</span>
+    ))}
+  </div>
+);
+
+/* ── AUTH SCREEN ── */
+const AuthScreen = ({ onLogin }) => {
+  const [mode, setMode] = useState('login');
+  const [role, setRole] = useState('athlete');
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const [name, setName] = useState('');
+
+  const handleSubmit = () => {
+    onLogin({ name: name || 'Martín Rodríguez', role });
+  };
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div className="auth-logo-mark">PERF<span>SHOT</span></div>
+          <div className="auth-logo-sub">Shooting Performance</div>
+        </div>
+
+        {mode === 'login' ? (
+          <>
+            <div className="auth-title">Bienvenido de vuelta</div>
+            <div className="auth-sub">Iniciá sesión para continuar</div>
+            <input className="auth-input" placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            <input className="auth-input" placeholder="Contraseña" type="password" value={pass} onChange={e => setPass(e.target.value)} />
+            <button className="auth-btn" onClick={handleSubmit}>Iniciar sesión</button>
+            <div className="auth-divider">o continuá con</div>
+            <button className="auth-google" onClick={handleSubmit}>
+              <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Continuar con Google
+            </button>
+            <div className="auth-switch">¿No tenés cuenta? <a onClick={() => setMode('register')}>Registrate</a></div>
+          </>
+        ) : (
+          <>
+            <div className="auth-title">Crear cuenta</div>
+            <div className="auth-sub">¿Cómo vas a usar PERF SHOT?</div>
+            <div className="role-cards">
+              <div className={`role-card ${role === 'athlete' ? 'selected' : ''}`} onClick={() => setRole('athlete')}>
+                <div className="role-card-icon">🎯</div>
+                <div className="role-card-name">Atleta</div>
+              </div>
+              <div className={`role-card ${role === 'coach' ? 'selected' : ''}`} onClick={() => setRole('coach')}>
+                <div className="role-card-icon">📋</div>
+                <div className="role-card-name">Entrenador</div>
+              </div>
+            </div>
+            <input className="auth-input" placeholder="Nombre completo" value={name} onChange={e => setName(e.target.value)} />
+            <input className="auth-input" placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} />
+            <input className="auth-input" placeholder="Contraseña" type="password" value={pass} onChange={e => setPass(e.target.value)} />
+            <button className="auth-btn" onClick={handleSubmit}>Crear cuenta</button>
+            <div className="auth-switch">¿Ya tenés cuenta? <a onClick={() => setMode('login')}>Iniciá sesión</a></div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── DASHBOARD ── */
+const Dashboard = ({ user }) => {
+  const scores = MOCK_SESSIONS.map(s => s.score);
+  const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
+  const best = Math.max(...scores);
+  const maxScore = 600;
+
+  return (
+    <div>
+      <div className="mb-24">
+        <div className="ai-insight mb-16">
+          <div className="ai-insight-icon">
+            <Icon name="ai" size={14} color="#fff" />
+          </div>
+          <div className="ai-insight-text">
+            <strong>Análisis de la semana:</strong> Tu promedio subió +2.1% respecto al mes anterior. El disparo 8 de cada serie sigue siendo tu punto más débil — promedia 9.2 vs tu media de 9.7. Considerá series de concentración específica en esa posición.
+          </div>
+        </div>
+      </div>
+
+      <div className="stat-grid mb-24">
+        <div className="stat-card">
+          <div className="stat-val">{avg}<span className="decimal">.4</span></div>
+          <div className="stat-lbl">Promedio últimas 10</div>
+          <div className="stat-delta delta-up">↑ +2.1% vs mes anterior</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-val">{best}</div>
+          <div className="stat-lbl">Mejor serie</div>
+          <div className="stat-delta delta-up">★ PR personal</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-val">{MOCK_SESSIONS.length}</div>
+          <div className="stat-lbl">Sesiones este mes</div>
+          <div className="stat-delta delta-neutral">→ 3 entrenamientos, 1 competencia</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-val">{Math.round((avg/maxScore)*100)}<span style={{fontSize:14,color:'var(--text-3)'}}>%</span></div>
+          <div className="stat-lbl">% del máximo ISSF</div>
+          <div className="stat-delta delta-up">Clasificación nacional</div>
+        </div>
+      </div>
+
+      <div className="grid-2 mb-24">
+        <div className="card">
+          <div className="card-header">
+            <div><div className="card-title">Evolución de puntaje</div><div className="card-sub">Últimas 5 sesiones</div></div>
+          </div>
+          <div className="sparkline mb-8">
+            {scores.slice().reverse().map((s, i) => {
+              const h = ((s - 560) / (600 - 560)) * 100;
+              return <div key={i} className={`spark-bar ${i === scores.length-1 ? 'highlight' : ''}`}
+                style={{ height: `${Math.max(h, 8)}%` }} title={s} />;
+            })}
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted">
+            <span className="text-mono">Min: {Math.min(...scores)}</span>
+            <span className="text-mono">Avg: {avg}</span>
+            <span className="text-mono">Max: {best}</span>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <div><div className="card-title">Últimas sesiones</div></div>
+          </div>
+          {MOCK_SESSIONS.slice(0,3).map(s => (
+            <div key={s.id} className="flex items-center justify-between gap-8 mb-12">
+              <div>
+                <div className="text-sm" style={{fontWeight:500}}>{s.discipline}</div>
+                <div className="text-xs text-muted">{s.date} · {s.type === 'competition' ? 'Competencia' : 'Entrenamiento'}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontFamily:'var(--display)', fontSize:18, fontWeight:700,
+                  color: s.score >= 585 ? 'var(--green)' : s.score >= 575 ? 'var(--text)' : 'var(--red)'
+                }}>{s.score}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div><div className="card-title">Historial de sesiones</div></div>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Fecha</th><th>Tipo</th><th>Disciplina</th>
+              <th>Puntaje</th><th>Arma</th><th>Munición</th>
+              <th>Viento</th><th>Mental</th>
+            </tr></thead>
+            <tbody>
+              {MOCK_SESSIONS.map(s => (
+                <tr key={s.id}>
+                  <td className="text-mono" style={{fontSize:12}}>{s.date}</td>
+                  <td><span className={`badge ${s.type === 'competition' ? 'badge-gold' : 'badge-blue'}`}>
+                    {s.type === 'competition' ? 'Competencia' : 'Entrenamiento'}</span></td>
+                  <td style={{fontSize:12}}>{s.discipline}</td>
+                  <td><span style={{fontFamily:'var(--display)', fontWeight:700, fontSize:15,
+                    color: s.score >= 585 ? 'var(--green)' : s.score >= 575 ? 'var(--text)' : 'var(--red)'
+                  }}>{s.score}</span></td>
+                  <td style={{fontSize:12, color:'var(--text-2)'}}>{s.weapon}</td>
+                  <td style={{fontSize:12, color:'var(--text-2)'}}>{s.ammo}</td>
+                  <td style={{fontSize:12}}>{s.wind} m/s</td>
+                  <td><span style={{color: s.mental >= 8 ? 'var(--green)' : 'var(--text-2)', fontFamily:'var(--mono)', fontSize:12}}>{s.mental}/10</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── EQUIPMENT MODULE ── */
+const EquipmentModule = () => {
+  const [weapons, setWeapons] = useState(MOCK_WEAPONS);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ type:'pistola', brand:'', model:'', serial:'', caliber:'4.5mm', year: new Date().getFullYear(), notes:'' });
+
+  const weaponTypeIcon = (type) => type === 'rifle' ? (
+    <svg width="22" height="22" fill="none" stroke="var(--green)" strokeWidth="1.5" viewBox="0 0 24 24">
+      <rect x="1" y="10" width="16" height="4" rx="1.5"/><rect x="17" y="11" width="6" height="2" rx="1"/>
+      <line x1="5" y1="10" x2="5" y2="8" strokeWidth="1.2"/><line x1="5" y1="8" x2="10" y2="8" strokeWidth="1.2"/>
+    </svg>
+  ) : (
+    <svg width="22" height="22" fill="none" stroke="var(--green)" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M3 12h10l2-4h4l1 4-1 2H5z"/><path d="M9 18l-2 2H5l-1-2"/>
+    </svg>
+  );
+
+  const addWeapon = () => {
+    if (!form.brand || !form.model) return;
+    setWeapons([...weapons, { ...form, id: Date.now().toString(), active: true }]);
+    setForm({ type:'pistola', brand:'', model:'', serial:'', caliber:'4.5mm', year: new Date().getFullYear(), notes:'' });
+    setShowModal(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-20">
+        <div>
+          <h2 style={{fontFamily:'var(--display)', fontSize:18, fontWeight:700}}>Equipamiento</h2>
+          <p className="text-sm text-muted mt-1">Rifles, pistolas y accesorios registrados</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Icon name="plus" size={14} color="#fff" /> Agregar arma
+        </button>
+      </div>
+
+      {weapons.length === 0 ? (
+        <div className="card"><div className="empty-state">
+          <div className="empty-icon">🔫</div>
+          <div className="empty-title">Sin equipamiento registrado</div>
+          <div className="empty-sub">Agregá tu primer arma para empezar a asociarla con tus sesiones.</div>
+        </div></div>
+      ) : (
+        <div className="grid-2">
+          {weapons.map(w => (
+            <div key={w.id} className="equip-card">
+              <div className="equip-icon">{weaponTypeIcon(w.type)}</div>
+              <div className="equip-info">
+                <div className="equip-name">{w.brand} {w.model}</div>
+                <div className="equip-model">{w.type === 'rifle' ? 'Rifle' : 'Pistola'} · {w.caliber} · {w.year}</div>
+                <div className="equip-serial">S/N: {w.serial || '—'}</div>
+                {w.notes && <div style={{fontSize:11, color:'var(--text-3)', marginTop:6, fontStyle:'italic'}}>{w.notes}</div>}
+                <div className="equip-tags">
+                  <span className="badge badge-green">Activa</span>
+                  <span className="badge badge-gray">{w.caliber}</span>
+                </div>
+              </div>
+              <div className="flex gap-8" style={{flexDirection:'column'}}>
+                <button className="btn-icon" title="Editar"><Icon name="edit" size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Agregar arma</div>
+              <button className="btn-icon" onClick={() => setShowModal(false)}><Icon name="x" size={14} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid mb-16">
+                <div className="form-group">
+                  <label className="form-label">Tipo</label>
+                  <select className="form-select" value={form.type} onChange={e => setForm({...form, type:e.target.value})}>
+                    <option value="pistola">Pistola</option>
+                    <option value="rifle">Rifle</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-grid form-grid-2 mb-16">
+                <div className="form-group">
+                  <label className="form-label">Marca</label>
+                  <input className="form-input" placeholder="Walther, FWB, Steyr..." value={form.brand} onChange={e => setForm({...form, brand:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Modelo</label>
+                  <input className="form-input" placeholder="LP500, 800X..." value={form.model} onChange={e => setForm({...form, model:e.target.value})} />
+                </div>
+              </div>
+              <div className="form-grid form-grid-2 mb-16">
+                <div className="form-group">
+                  <label className="form-label">Número de serie</label>
+                  <input className="form-input" placeholder="WL-2024-00000" value={form.serial} onChange={e => setForm({...form, serial:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Calibre</label>
+                  <select className="form-select" value={form.caliber} onChange={e => setForm({...form, caliber:e.target.value})}>
+                    <option>4.5mm</option>
+                    <option>5.5mm</option>
+                    <option>.22 LR</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-grid mb-16">
+                <div className="form-group">
+                  <label className="form-label">Año de adquisición</label>
+                  <input className="form-input" type="number" value={form.year} onChange={e => setForm({...form, year:e.target.value})} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Notas</label>
+                <textarea className="form-textarea" placeholder="Grip personalizado, ajustes, mantenimiento..." value={form.notes} onChange={e => setForm({...form, notes:e.target.value})} />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={addWeapon}>Guardar arma</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── AMMO MODULE ── */
+const AmmoModule = () => {
+  const [ammos, setAmmos] = useState(MOCK_AMMO);
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({ brand:'', model:'', caliber:'4.5mm', lot:'', qty:'', rating:0, comment:'' });
+
+  const addAmmo = () => {
+    if (!form.brand || !form.lot) return;
+    setAmmos([...ammos, { ...form, id: Date.now().toString(), hasPhoto: false, qty: parseInt(form.qty)||0 }]);
+    setForm({ brand:'', model:'', caliber:'4.5mm', lot:'', qty:'', rating:0, comment:'' });
+    setShowModal(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-20">
+        <div>
+          <h2 style={{fontFamily:'var(--display)', fontSize:18, fontWeight:700}}>Munición y balines</h2>
+          <p className="text-sm text-muted mt-1">Registro de lotes con rendimiento y agrupación</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Icon name="plus" size={14} color="#fff" /> Agregar lote
+        </button>
+      </div>
+
+      {ammos.length > 0 && (
+        <div className="ai-insight mb-20">
+          <div className="ai-insight-icon"><Icon name="ai" size={14} color="#fff" /></div>
+          <div className="ai-insight-text">
+            <strong>Correlación detectada:</strong> Con el lote RWS 2024-B tu promedio es <strong>581.3</strong> vs 577.8 con Lapua L-112. La diferencia es consistente en 12 sesiones. <strong>Recomendación: priorizá RWS para competencia.</strong>
+          </div>
+        </div>
+      )}
+
+      <div className="grid-3">
+        {ammos.map(a => (
+          <div key={a.id} className="ammo-card">
+            <div className="ammo-header">
+              <div>
+                <div className="ammo-name">{a.brand} {a.model}</div>
+                <div className="ammo-lot">Lote: {a.lot}</div>
+              </div>
+              <Stars value={a.rating} size="sm" />
+            </div>
+
+            <div className="ammo-photo">
+              {a.hasPhoto
+                ? <div style={{width:'100%',height:'100%',background:'var(--navy)',borderRadius:'var(--radius-sm)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--green-l)',fontSize:11}}>📸 Foto cargada</div>
+                : <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:'var(--text-3)'}}>
+                    <Icon name="upload" size={20} color="var(--text-3)" />
+                    <span style={{fontSize:11}}>Sin foto</span>
+                  </div>
+              }
+            </div>
+
+            <div className="flex gap-8 mb-8" style={{flexWrap:'wrap'}}>
+              <span className="badge badge-gray">{a.caliber}</span>
+              <span className="badge badge-blue">{a.qty} unid.</span>
+              {a.rating >= 4 && <span className="badge badge-green">Recomendado</span>}
+            </div>
+
+            {a.comment && <div className="ammo-comment">"{a.comment}"</div>}
+
+            <div className="flex gap-8 mt-12">
+              <button className="btn btn-secondary btn-sm w-full">
+                <Icon name="upload" size={12} /> Subir foto
+              </button>
+              <button className="btn-icon btn-sm"><Icon name="edit" size={12} /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Agregar lote de munición</div>
+              <button className="btn-icon" onClick={() => setShowModal(false)}><Icon name="x" size={14} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid form-grid-2 mb-14">
+                <div className="form-group">
+                  <label className="form-label">Marca</label>
+                  <input className="form-input" placeholder="RWS, Lapua, H&N..." value={form.brand} onChange={e => setForm({...form, brand:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Modelo</label>
+                  <input className="form-input" placeholder="R10 Match, L-110..." value={form.model} onChange={e => setForm({...form, model:e.target.value})} />
+                </div>
+              </div>
+              <div className="form-grid form-grid-2 mb-14">
+                <div className="form-group">
+                  <label className="form-label">Número de lote</label>
+                  <input className="form-input" placeholder="2024-B-0312" value={form.lot} onChange={e => setForm({...form, lot:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Calibre</label>
+                  <select className="form-select" value={form.caliber} onChange={e => setForm({...form, caliber:e.target.value})}>
+                    <option>4.5mm</option>
+                    <option>5.5mm</option>
+                    <option>.22 LR</option>
+                    <option>5.6mm</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-grid form-grid-2 mb-14">
+                <div className="form-group">
+                  <label className="form-label">Cantidad</label>
+                  <input className="form-input" type="number" placeholder="500" value={form.qty} onChange={e => setForm({...form, qty:e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Rating de rendimiento</label>
+                  <div style={{paddingTop:8}}>
+                    <Stars value={form.rating} onChange={r => setForm({...form, rating:r})} />
+                  </div>
+                </div>
+              </div>
+              <div className="form-group mb-14">
+                <label className="form-label">Comentarios y observaciones</label>
+                <textarea className="form-textarea" placeholder="Agrupación, consistencia, condiciones de prueba..." value={form.comment} onChange={e => setForm({...form, comment:e.target.value})} />
+              </div>
+              <div className="upload-zone">
+                <div className="upload-zone-icon"><Icon name="upload" size={28} color="var(--text-3)" /></div>
+                <div className="upload-zone-text">Subir foto de agrupación</div>
+                <div className="upload-zone-hint">PNG, JPG hasta 10MB · También podés arrastrar y soltar</div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={addAmmo}>Guardar lote</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── PROFILE MODULE ── */
+const ProfileModule = ({ user }) => {
+  const [tab, setTab] = useState('personal');
+  const [form, setForm] = useState({
+    name: user.name, email: user.email,
+    club: user.club, category: user.category,
+    birthdate: '1995-03-15', nationality: 'Argentina',
+    coach: 'Prof. Carlos Fernández',
+  });
+
+  return (
+    <div>
+      <div className="flex items-center gap-16 mb-24">
+        <div style={{width:64, height:64, borderRadius:'50%', background:'var(--green)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--display)', fontSize:24, fontWeight:800, color:'#fff'}}>
+          {user.initials}
+        </div>
+        <div>
+          <h2 style={{fontFamily:'var(--display)', fontSize:20, fontWeight:700}}>{user.name}</h2>
+          <p className="text-sm text-muted">{user.club} · {user.category}</p>
+          <div className="flex gap-8 mt-8">
+            {user.disciplines.map(d => <span key={d} className="badge badge-blue">{d}</span>)}
+          </div>
+        </div>
+      </div>
+
+      <div className="tabs mb-20">
+        {['personal', 'disciplinas', 'entrenador'].map(t => (
+          <button key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+            {t === 'personal' ? 'Datos personales' : t === 'disciplinas' ? 'Disciplinas ISSF' : 'Entrenador'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'personal' && (
+        <div className="card">
+          <div className="form-grid form-grid-2 mb-14">
+            <div className="form-group">
+              <label className="form-label">Nombre completo</label>
+              <input className="form-input" value={form.name} onChange={e => setForm({...form, name:e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" value={form.email} onChange={e => setForm({...form, email:e.target.value})} />
+            </div>
+          </div>
+          <div className="form-grid form-grid-2 mb-14">
+            <div className="form-group">
+              <label className="form-label">Club</label>
+              <input className="form-input" value={form.club} onChange={e => setForm({...form, club:e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Categoría</label>
+              <select className="form-select" value={form.category} onChange={e => setForm({...form, category:e.target.value})}>
+                {['Junior','Sub-23','Absoluto','Master'].map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-grid form-grid-2 mb-14">
+            <div className="form-group">
+              <label className="form-label">Fecha de nacimiento</label>
+              <input className="form-input" type="date" value={form.birthdate} onChange={e => setForm({...form, birthdate:e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Nacionalidad</label>
+              <input className="form-input" value={form.nationality} onChange={e => setForm({...form, nationality:e.target.value})} />
+            </div>
+          </div>
+          <div className="flex" style={{justifyContent:'flex-end'}}>
+            <button className="btn btn-primary">Guardar cambios</button>
+          </div>
+        </div>
+      )}
+
+      {tab === 'disciplinas' && (
+        <div className="card">
+          <p className="text-sm text-muted mb-16">Seleccioná las disciplinas ISSF en las que competís</p>
+          {['10m Pistola de Aire','10m Pistola de Aire (F)','10m Rifle de Aire','50m Pistola','50m Rifle 3 Posiciones','50m Rifle Tendido'].map(d => (
+            <label key={d} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 0',borderBottom:'1px solid var(--border-2)',cursor:'pointer'}}>
+              <input type="checkbox" defaultChecked={user.disciplines.includes(d)} style={{accentColor:'var(--green)',width:15,height:15}} />
+              <span style={{fontSize:13}}>{d}</span>
+            </label>
+          ))}
+          <div className="flex" style={{justifyContent:'flex-end',marginTop:16}}>
+            <button className="btn btn-primary">Guardar disciplinas</button>
+          </div>
+        </div>
+      )}
+
+      {tab === 'entrenador' && (
+        <div className="card">
+          <div className="flex items-center gap-12 mb-20" style={{padding:'14px',background:'var(--fog-2)',borderRadius:'var(--radius-sm)'}}>
+            <div style={{width:42,height:42,borderRadius:'50%',background:'var(--navy)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--green)',fontFamily:'var(--display)',fontWeight:700}}>CF</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:500}}>Prof. Carlos Fernández</div>
+              <div className="text-xs text-muted">carlos@ctnacional.ar · Club de Tiro Nacional</div>
+            </div>
+            <span className="badge badge-green" style={{marginLeft:'auto'}}>Vinculado</span>
+          </div>
+          <p className="text-sm text-muted mb-16">¿Querés vincular otro entrenador? Ingresá su código o email:</p>
+          <div className="form-grid form-grid-2">
+            <div className="form-group">
+              <label className="form-label">Email del entrenador</label>
+              <input className="form-input" placeholder="entrenador@club.com" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Código de invitación</label>
+              <input className="form-input" placeholder="PERF-XXXX" />
+            </div>
+          </div>
+          <div className="flex" style={{justifyContent:'flex-end',marginTop:14}}>
+            <button className="btn btn-primary">Enviar solicitud</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── COMING SOON ── */
+const ComingSoon = ({ title, icon, desc }) => (
+  <div className="card" style={{minHeight:320, display:'flex', alignItems:'center', justifyContent:'center'}}>
+    <div className="empty-state">
+      <div style={{marginBottom:16}}><Icon name={icon} size={36} color="var(--text-3)" /></div>
+      <div className="empty-title">{title}</div>
+      <div className="empty-sub">{desc}</div>
+      <div style={{marginTop:20}}>
+        <span className="badge badge-blue">Mini-MVP 2 — Semana 2</span>
+      </div>
+    </div>
+  </div>
+);
+
+/* ── MAIN APP ── */
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [page, setPage] = useState('home');
+
+  if (!user) return <AuthScreen onLogin={u => setUser({ ...MOCK_USER, ...u })} />;
+
+  const nav = [
+    { id:'home',      label:'Inicio',       icon:'home' },
+    { id:'sessions',  label:'Sesiones',     icon:'target' },
+    { id:'analysis',  label:'Análisis',     icon:'chart' },
+    { section: 'Mi equipamiento' },
+    { id:'weapons',   label:'Armas',        icon:'gun' },
+    { id:'ammo',      label:'Munición',     icon:'bullet',  badge:'Nuevo' },
+    { section: 'Comunidad' },
+    { id:'calendar',  label:'Calendario',   icon:'calendar' },
+    { id:'coach',     label:'Entrenador',   icon:'users' },
+    { section: 'Cuenta' },
+    { id:'profile',   label:'Mi perfil',    icon:'settings' },
+  ];
+
+  const pageTitle = {
+    home: 'Dashboard', sessions: 'Sesiones', analysis: 'Análisis IA',
+    weapons: 'Equipamiento', ammo: 'Munición y balines',
+    calendar: 'Calendario', coach: 'Entrenador', profile: 'Mi perfil',
+  };
+
+  return (
+    <div className="app">
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-wordmark">PERF<span>SHOT</span></div>
+          <div className="logo-sub">Shooting Performance</div>
+        </div>
+
+        <nav className="sidebar-nav">
+          {nav.map((item, i) => item.section ? (
+            <div key={i} className="nav-section-label">{item.section}</div>
+          ) : (
+            <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => setPage(item.id)}>
+              <span className="nav-icon"><Icon name={item.icon} size={15} /></span>
+              {item.label}
+              {item.badge && <span className="nav-badge">{item.badge}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-user" onClick={() => setPage('profile')}>
+          <div className="user-avatar">{user.initials}</div>
+          <div>
+            <div className="user-name">{user.name.split(' ')[0]}</div>
+            <div className="user-role">{user.role === 'coach' ? 'Entrenador' : 'Atleta'}</div>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main">
+        <div className="topbar">
+          <div className="topbar-title">{pageTitle[page]}</div>
+          <div className="topbar-actions">
+            {page === 'home' && (
+              <button className="btn btn-primary btn-sm" onClick={() => setPage('sessions')}>
+                <Icon name="plus" size={13} color="#fff" /> Nueva sesión
+              </button>
+            )}
+            <button className="btn-icon" title="Cerrar sesión" onClick={() => setUser(null)}>
+              <Icon name="logout" size={15} />
+            </button>
+          </div>
+        </div>
+
+        <div className="content">
+          {page === 'home'     && <Dashboard user={user} />}
+          {page === 'weapons'  && <EquipmentModule />}
+          {page === 'ammo'     && <AmmoModule />}
+          {page === 'profile'  && <ProfileModule user={user} />}
+          {page === 'sessions' && <ComingSoon title="Registro de sesiones" icon="target" desc="Carga tiro a tiro, importación SIUS/SCATT y foto del blanco con OCR. Llega en la Semana 2." />}
+          {page === 'analysis' && <ComingSoon title="Análisis IA" icon="chart" desc="Gráficos de evolución, detección de patrones y sugerencias de Claude. Llega en la Semana 3." />}
+          {page === 'calendar' && <ComingSoon title="Calendario unificado" icon="calendar" desc="Entrenamientos y competencias pasadas y futuras en un solo lugar. Llega en la Semana 2." />}
+          {page === 'coach'    && <ComingSoon title="Entrenador" icon="users" desc="Dashboard del entrenador, asignación de planes y feedback por sesión. Llega en la Semana 2." />}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
