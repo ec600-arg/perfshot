@@ -7,316 +7,404 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --navy:#0B1C2D;--navy-2:#132638;--navy-3:#1E3A54;
-  --green:#1D9E75;--green-l:#5DCAA5;--green-dim:rgba(29,158,117,.12);
-  --blue:#4DB8FF;--blue-dim:rgba(77,184,255,.10);
-  --red:#E8462A;--red-dim:rgba(232,70,42,.10);
-  --gold:#EF9F27;--fog:#F0F7FF;--fog-2:#E3EEF9;
-  --text:#0B1C2D;--text-2:#4A6278;--text-3:#8BA5BB;
-  --border:rgba(11,28,45,.10);--border-2:rgba(11,28,45,.06);
-  --radius:12px;--radius-sm:8px;
-  --mono:'DM Mono',monospace;--display:'Syne',sans-serif;--body:'DM Sans',sans-serif;
+:root{
+  --navy:#0B1C2D;--navy2:#132638;--navy3:#1E3A54;
+  --green:#1D9E75;--greenl:#5DCAA5;--greend:rgba(29,158,117,.12);
+  --blue:#4DB8FF;--blued:rgba(77,184,255,.10);
+  --red:#E8462A;--redd:rgba(232,70,42,.10);
+  --gold:#EF9F27;--fog:#F0F7FF;--fog2:#E3EEF9;
+  --t:#0B1C2D;--t2:#4A6278;--t3:#8BA5BB;
+  --b:rgba(11,28,45,.10);--b2:rgba(11,28,45,.06);
+  --r:12px;--rs:8px;
+  --mono:'DM Mono',monospace;--disp:'Syne',sans-serif;--body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);background:var(--fog);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+body{font-family:var(--body);background:var(--fog);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
 .app{display:flex;min-height:100vh}
-.sidebar{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
-.sidebar-logo{padding:22px 18px 16px;border-bottom:1px solid var(--navy-3)}
-.logo-wm{font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:.04em;color:#fff}
-.logo-wm span{color:var(--green)}
-.logo-sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6B8FAF;margin-top:2px}
-.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
-.nav-sec{font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#3A5570;padding:8px 8px 3px;margin-top:4px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;color:#6B8FAF;font-size:12px;border:none;background:none;width:100%;text-align:left;transition:background .15s}
-.nav-item:hover{background:var(--navy-2);color:#9DBDD4}
-.nav-item.active{background:var(--green-dim);color:var(--green-l)}
-.nav-badge{margin-left:auto;font-size:9px;font-family:var(--mono);background:var(--green-dim);color:var(--green-l);padding:1px 5px;border-radius:20px}
-.sidebar-user{padding:12px 14px;border-top:1px solid var(--navy-3);display:flex;align-items:center;gap:9px;cursor:pointer}
-.user-av{width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
-.user-nm{font-size:12px;font-weight:500;color:#9DBDD4}
-.user-rl{font-size:10px;color:#3A5570}
+.sb{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px 14px;border-bottom:1px solid var(--navy3)}
+.sb-wm{font-family:var(--disp);font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff}
+.sb-wm span{color:var(--green)}
+.sb-sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6B8FAF;margin-top:2px}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+.sb-sec{font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#3A5570;padding:8px 8px 3px;margin-top:4px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:#6B8FAF;font-size:12px;border:none;background:none;width:100%;text-align:left;transition:background .15s}
+.sb-item:hover{background:var(--navy2);color:#9DBDD4}
+.sb-item.on{background:var(--greend);color:var(--greenl)}
+.sb-badge{margin-left:auto;font-size:9px;font-family:var(--mono);background:var(--greend);color:var(--greenl);padding:1px 5px;border-radius:20px}
+.sb-user{padding:12px 14px;border-top:1px solid var(--navy3);display:flex;align-items:center;gap:9px;cursor:pointer}
+.sb-av{width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-nm{font-size:12px;font-weight:500;color:#9DBDD4}
+.sb-rl{font-size:10px;color:#3A5570}
 .main{margin-left:210px;flex:1;display:flex;flex-direction:column;min-height:100vh}
-.topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.topbar-title{font-family:var(--display);font-size:15px;font-weight:600}
-.content{padding:24px 28px;flex:1}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--radius-sm);font-family:var(--body);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;white-space:nowrap}
-.btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:#189060}
-.btn-secondary{background:transparent;color:var(--text-2);border:1px solid var(--border)}.btn-secondary:hover{background:var(--fog-2)}
-.btn-sm{padding:6px 11px;font-size:11px}
-.btn-icon{padding:7px;border-radius:var(--radius-sm);background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--text-2);transition:all .15s;display:inline-flex;align-items:center}
-.btn-icon:hover{background:var(--fog-2)}
-.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:18px}
-.card-title{font-family:var(--display);font-size:13px;font-weight:600}
-.card-sub{font-size:11px;color:var(--text-3);margin-top:1px}
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-.stat-val{font-family:var(--display);font-size:26px;font-weight:700;line-height:1}
-.stat-val .dec{font-size:13px;color:var(--green)}
-.stat-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
-.stat-delta{font-size:10px;margin-top:4px;font-family:var(--mono)}
-.delta-up{color:var(--green)}.delta-down{color:var(--red)}.delta-neutral{color:var(--text-3)}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.ai-insight{background:linear-gradient(135deg,var(--green-dim),var(--blue-dim));border:1px solid rgba(29,158,117,.2);border-radius:var(--radius);padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px}
-.ai-icon{width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#fff}
-.ai-text{font-size:12px;color:var(--text);line-height:1.6}
-.ai-text strong{color:var(--green);font-weight:500}
-.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500}
-.badge-green{background:var(--green-dim);color:var(--green)}
-.badge-blue{background:var(--blue-dim);color:#185FA5}
-.badge-gold{background:rgba(239,159,39,.12);color:#8a5a00}
-.badge-gray{background:var(--fog-2);color:var(--text-2)}
-.badge-red{background:var(--red-dim);color:var(--red)}
-.sparkline{display:flex;align-items:flex-end;gap:3px;height:48px;margin-bottom:8px}
-.spark-bar{flex:1;border-radius:3px 3px 0 0;background:var(--green-dim);cursor:pointer}
-.spark-bar:hover,.spark-bar.hi{background:var(--green)}
-table{width:100%;border-collapse:collapse}
-th{font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
-td{padding:9px 10px;border-bottom:1px solid var(--border-2);font-size:12px;color:var(--text);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--fog-2)}
-.form-grid{display:grid;gap:12px}
-.form-grid-2{grid-template-columns:1fr 1fr}
-.form-group{display:flex;flex-direction:column;gap:4px}
-.form-label{font-size:10px;font-weight:500;color:var(--text-2);letter-spacing:.04em;text-transform:uppercase}
-.form-input,.form-select,.form-textarea{padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--fog);font-family:var(--body);font-size:12px;color:var(--text);width:100%;transition:border-color .15s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--green-dim)}
-.form-textarea{resize:vertical;min-height:70px}
-.tabs{display:flex;border-bottom:2px solid var(--border-2);margin-bottom:16px}
-.tab{padding:8px 14px;font-size:12px;font-weight:500;color:var(--text-3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;font-family:var(--body)}
-.tab:hover{color:var(--text-2)}.tab.active{color:var(--green);border-bottom-color:var(--green)}
-.modal-ov{position:fixed;inset:0;background:rgba(11,28,45,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:#fff;border-radius:14px;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;animation:mIn .18s ease}
-@keyframes mIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
-.modal-hd{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1;border-radius:14px 14px 0 0}
-.modal-title{font-family:var(--display);font-size:14px;font-weight:600}
-.modal-body{padding:16px 20px}
-.modal-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.equip-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:box-shadow .15s}
-.equip-card:hover{box-shadow:0 4px 16px rgba(11,28,45,.08)}
-.equip-icon{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ammo-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.topbar{background:#fff;border-bottom:1px solid var(--b);padding:11px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.tb-title{font-family:var(--disp);font-size:15px;font-weight:600}
+.content{padding:20px 24px;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);font-family:var(--body);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;white-space:nowrap}
+.btn-p{background:var(--green);color:#fff}.btn-p:hover{background:#189060}
+.btn-s{background:transparent;color:var(--t2);border:1px solid var(--b)}.btn-s:hover{background:var(--fog2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-i{padding:7px;border-radius:var(--rs);background:transparent;border:1px solid var(--b);cursor:pointer;color:var(--t2);transition:all .15s;display:inline-flex;align-items:center}
+.btn-i:hover{background:var(--fog2)}
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:18px}
+.ct{font-family:var(--disp);font-size:13px;font-weight:600}
+/* DASHBOARD DARK BG */
+.dash-bg{background:var(--navy);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.dash-greet{font-family:var(--disp);font-size:20px;font-weight:700;color:#fff;margin-bottom:2px}
+.dash-greet span{color:var(--green)}
+.dash-sub{font-size:11px;color:#6B8FAF;margin-bottom:16px}
+/* HERO METRICS */
+.hero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.hcard{background:var(--navy2);border-radius:var(--r);padding:14px 16px;border:1px solid rgba(255,255,255,.06)}
+.hcard.ac{background:#0F3D2A;border-color:rgba(29,158,117,.3)}
+.hlbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6B8FAF;margin-bottom:5px}
+.hcard.ac .hlbl{color:rgba(255,255,255,.55)}
+.hval{font-family:var(--disp);font-size:26px;font-weight:800;color:#fff;line-height:1}
+.hdec{font-size:13px;color:var(--green)}
+.hcard.ac .hdec{color:rgba(255,255,255,.6)}
+.hdelta{font-size:10px;margin-top:4px;font-family:var(--mono)}
+.up{color:var(--green)}.dn{color:var(--red)}.neu{color:#6B8FAF}
+/* CHART */
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:14px}
+.chart-card{background:var(--navy2);border-radius:var(--r);padding:16px;border:1px solid rgba(255,255,255,.06)}
+.chart-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chart-t{font-family:var(--disp);font-size:12px;font-weight:600;color:#fff}
+.filters{display:flex;gap:4px}
+.fbtn{font-size:10px;padding:3px 8px;border-radius:20px;cursor:pointer;border:none;background:rgba(255,255,255,.06);color:#6B8FAF;font-family:var(--body)}
+.fbtn.on{background:var(--green);color:#fff}
+.bars{height:80px;display:flex;align-items:flex-end;gap:4px;margin-bottom:4px}
+.bar{flex:1;border-radius:3px 3px 0 0;cursor:pointer;transition:opacity .15s;position:relative}
+.bar:hover{opacity:.75}
+.bar-lbl{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:8px;color:#6B8FAF;font-family:var(--mono);white-space:nowrap}
+.chart-meta{display:flex;justify-content:space-between;font-size:9px;font-family:var(--mono);color:#6B8FAF;margin-top:18px}
+/* AI PANEL */
+.ai-panel{background:linear-gradient(135deg,#0F3D2A,#0B2438);border:1px solid rgba(29,158,117,.25);border-radius:var(--r);padding:14px}
+.ai-hd{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-title{font-size:10px;font-weight:500;color:var(--greenl);letter-spacing:.06em;text-transform:uppercase}
+.ai-txt{font-size:11px;color:rgba(255,255,255,.75);line-height:1.65}
+.ai-txt strong{color:var(--greenl)}
+.ai-acts{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.ai-btn{font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid rgba(29,158,117,.3);background:rgba(29,158,117,.1);color:var(--greenl);cursor:pointer;font-family:var(--body)}
+/* SESSIONS LIST */
+.sess-card{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:16px;margin-bottom:14px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-t{font-family:var(--disp);font-size:13px;font-weight:600}
+.see-all{font-size:10px;color:var(--green);cursor:pointer}
+.srow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+.srow:hover{background:var(--fog2)}
+.sdate{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:72px}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sdisc{font-size:11px;font-weight:500;flex:1}
+.smeta{font-size:10px;color:var(--t3)}
+.sscore{font-family:var(--disp);font-size:16px;font-weight:700;min-width:36px;text-align:right}
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mini{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:14px}
+.mini-t{font-size:11px;font-weight:500;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.mitem{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b2)}
+.mitem:last-child{border-bottom:none}
+.micon{width:28px;height:28px;border-radius:6px;background:var(--fog2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .stars{display:flex;gap:1px}
-.star{font-size:13px;cursor:pointer}.star.on{color:var(--gold)}.star.off{color:var(--border)}
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--fog)}
-.upload-zone:hover{border-color:var(--green);background:var(--green-dim)}
-.empty-state{text-align:center;padding:40px 20px;color:var(--text-3)}
-.empty-title{font-family:var(--display);font-size:13px;font-weight:600;color:var(--text-2);margin:8px 0 4px}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:var(--radius-sm);font-size:12px;z-index:999;animation:mIn .2s ease;display:flex;align-items:center;gap:8px}
-.toast.success{border-left:3px solid var(--green)}
-.toast.error{border-left:3px solid var(--red)}
-.spinner{width:16px;height:16px;border:2px solid var(--green-dim);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);flex-direction:column;gap:16px}
-.loading-logo{font-family:var(--display);font-size:32px;font-weight:800;color:#fff;letter-spacing:.05em}
-.loading-logo span{color:var(--green)}
+.star{font-size:12px;cursor:pointer}.star.on{color:var(--gold)}.star.off{color:var(--b)}
+.next-card{background:var(--navy);border-radius:var(--r);padding:14px;border:1px solid rgba(77,184,255,.15)}
+.next-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+.next-title{font-family:var(--disp);font-size:13px;font-weight:600;color:#fff;margin-bottom:8px}
+.next-item{font-size:11px;color:#6B8FAF;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.next-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.new-sess-btn{width:100%;margin-top:10px;padding:8px;border-radius:8px;background:var(--green);color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--disp)}
+/* SESSION DETAIL */
+.sdh{background:var(--navy);border-radius:var(--r);padding:18px;margin-bottom:14px;position:relative}
+.sdh-score{font-family:var(--disp);font-size:52px;font-weight:800;color:#fff;line-height:1}
+.sdh-disc{font-size:12px;color:#6B8FAF;margin-top:4px}
+.sdh-date{font-size:11px;color:#3A5570;margin-top:2px}
+.sdh-badge{position:absolute;top:18px;right:18px}
+.sdh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.sdh-stat{background:rgba(255,255,255,.05);border-radius:8px;padding:10px}
+.sdh-sv{font-family:var(--disp);font-size:16px;font-weight:700;color:#fff}
+.sdh-sl{font-size:10px;color:#6B8FAF;margin-top:2px}
+.aa{background:linear-gradient(135deg,#0F3D2A,#0B2438);border:1px solid rgba(29,158,117,.25);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.aa-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.aa-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.aa-title{font-family:var(--disp);font-size:12px;font-weight:600;color:var(--greenl)}
+.aa-lbl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--greenl);margin-bottom:6px;opacity:.7;margin-top:10px}
+.aa-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.5}
+.aa-d{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+/* EQUIP */
+.ecard{background:#fff;border:1px solid var(--b);border-radius:var(--r);padding:14px;display:flex;gap:12px;align-items:flex-start;transition:box-shadow .15s}
+.ecard:hover{box-shadow:0 4px 16px rgba(11,28,45,.08)}
+.eicon{width:40px;height:40px;border-radius:var(--rs);background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.acard{background:#fff;border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.aphoto{width:100%;height:72px;border-radius:var(--rs);background:var(--fog2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3);margin:8px 0;overflow:hidden}
+.aphoto img{width:100%;height:100%;object-fit:cover}
+.upload-zone{border:2px dashed var(--b);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .15s;background:var(--fog);position:relative}
+.upload-zone:hover{border-color:var(--green);background:var(--greend)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fl{font-size:10px;font-weight:500;color:var(--t2);letter-spacing:.04em;text-transform:uppercase}
+.fi,.fs,.fta{padding:8px 10px;border-radius:var(--rs);border:1px solid var(--b);background:var(--fog);font-family:var(--body);font-size:12px;color:var(--t);width:100%;transition:border-color .15s}
+.fi:focus,.fs:focus,.fta:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--greend)}
+.fta{resize:vertical;min-height:70px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.bg{background:var(--greend);color:var(--green)}
+.bb{background:var(--blued);color:#185FA5}
+.bo{background:rgba(239,159,39,.12);color:#7a4a00}
+.bgr{background:var(--fog2);color:var(--t2)}
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(11,28,45,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:mIn .18s ease}
+.modal-lg{max-width:660px}
+@keyframes mIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.mhd{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);position:sticky;top:0;background:#fff;z-index:1;border-radius:14px 14px 0 0}
+.mt{font-family:var(--disp);font-size:14px;font-weight:600}
+.mb{padding:16px 20px}
+.mft{padding:12px 20px;border-top:1px solid var(--b);display:flex;gap:8px;justify-content:flex-end}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:var(--rs);font-size:12px;z-index:999;animation:mIn .2s ease;display:flex;align-items:center;gap:8px}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+/* AUTH */
 .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);background-image:radial-gradient(circle at 20% 80%,rgba(29,158,117,.08),transparent 60%),radial-gradient(circle at 80% 20%,rgba(77,184,255,.05),transparent 60%)}
 .auth-card{width:100%;max-width:380px;padding:36px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px}
-.auth-lm{font-family:var(--display);font-size:30px;font-weight:800;color:#fff;text-align:center;letter-spacing:.05em}
+.auth-lm{font-family:var(--disp);font-size:30px;font-weight:800;color:#fff;text-align:center;letter-spacing:.05em}
 .auth-lm span{color:var(--green)}
 .auth-ls{font-size:10px;letter-spacing:.15em;color:#6B8FAF;text-transform:uppercase;text-align:center;margin-top:2px;margin-bottom:24px}
-.auth-title{font-family:var(--display);font-size:16px;font-weight:600;color:#fff;margin-bottom:3px}
-.auth-sub{font-size:12px;color:#6B8FAF;margin-bottom:18px}
-.auth-input{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-family:var(--body);font-size:13px;margin-bottom:8px}
-.auth-input::placeholder{color:#3A5570}
-.auth-input:focus{outline:none;border-color:var(--green)}
-.auth-btn{width:100%;padding:11px;border-radius:var(--radius-sm);background:var(--green);color:#fff;font-family:var(--display);font-size:13px;font-weight:700;border:none;cursor:pointer;margin-top:4px;transition:background .15s}
+.auth-title{font-family:var(--disp);font-size:16px;font-weight:600;color:#fff;margin-bottom:3px}
+.auth-sub{font-size:12px;color:#6B8FAF;margin-bottom:16px}
+.auth-in{width:100%;padding:10px 12px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-family:var(--body);font-size:13px;margin-bottom:8px}
+.auth-in::placeholder{color:#3A5570}
+.auth-in:focus{outline:none;border-color:var(--green)}
+.auth-btn{width:100%;padding:11px;border-radius:var(--rs);background:var(--green);color:#fff;font-family:var(--disp);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:background .15s}
 .auth-btn:hover{background:#189060}
-.auth-err{background:var(--red-dim);color:var(--red);padding:8px 12px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:10px;border:1px solid rgba(232,70,42,.2)}
-.auth-sw{text-align:center;margin-top:16px;font-size:12px;color:#3A5570}
-.auth-sw a{color:var(--green-l);cursor:pointer}
-.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-.role-card{padding:14px;border-radius:var(--radius-sm);border:2px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s;text-align:center}
-.role-card:hover,.role-card.sel{border-color:var(--green);background:var(--green-dim)}
-.role-card-n{font-size:12px;font-weight:500;color:#9DBDD4;margin-top:4px}
-.role-card.sel .role-card-n{color:var(--green-l)}
-.coming{background:#fff;border:1px solid var(--border);border-radius:var(--radius);min-height:260px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:32px;text-align:center}
-.coming-title{font-family:var(--display);font-size:14px;font-weight:600;color:var(--text-2)}
-.coming-sub{font-size:12px;color:var(--text-3);max-width:280px;line-height:1.6}
-.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
-.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
-.flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}
-.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}
-.text-sm{font-size:12px}.text-xs{font-size:11px}.text-muted{color:var(--text-3)}
-.text-green{color:var(--green)}.text-mono{font-family:var(--mono)}
-.w-full{width:100%}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.stat-grid{grid-template-columns:1fr 1fr}.grid-2,.grid-3{grid-template-columns:1fr}.form-grid-2{grid-template-columns:1fr}}
+.auth-err{background:var(--redd);color:var(--red);padding:8px 12px;border-radius:var(--rs);font-size:12px;margin-bottom:10px;border:1px solid rgba(232,70,42,.2)}
+.auth-sw{text-align:center;margin-top:14px;font-size:12px;color:#3A5570}
+.auth-sw a{color:var(--greenl);cursor:pointer}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.rcard{padding:14px;border-radius:var(--rs);border:2px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s;text-align:center}
+.rcard:hover,.rcard.on{border-color:var(--green);background:var(--greend)}
+.rcard-n{font-size:12px;font-weight:500;color:#9DBDD4;margin-top:4px}
+.rcard.on .rcard-n{color:var(--greenl)}
+/* UTILS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.flex{display:flex}.ic{align-items:center}.jb{justify-content:space-between}
+.gap8{gap:8px}.gap12{gap:12px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb14{margin-bottom:14px}.mb16{margin-bottom:16px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}
+.tsm{font-size:12px}.txs{font-size:11px}.tmuted{color:var(--t3)}
+.tgreen{color:var(--green)}.tmono{font-family:var(--mono)}
+.wf{width:100%}
+.spinner{width:14px;height:14px;border:2px solid var(--greend);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);flex-direction:column;gap:16px}
+.load-logo{font-family:var(--disp);font-size:32px;font-weight:800;color:#fff;letter-spacing:.05em}
+.load-logo span{color:var(--green)}
+.coming{background:#fff;border:1px solid var(--b);border-radius:var(--r);min-height:240px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:32px;text-align:center}
+@media(max-width:768px){.sb{display:none}.main{margin-left:0}.hero{grid-template-columns:1fr 1fr}.chart-row,.g2,.g3,.fg2,.bottom-row,.sdh-stats{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-
 <script>
-// ── SUPABASE CONFIG ──────────────────────────────────────────
-const SUPABASE_URL = 'https://gdqpdqbkqxxmynbnanym.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcXBkcWJrcXh4bXluYm5hbnltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTk4MjEsImV4cCI6MjA5MDg3NTgyMX0.auOXAocvt5jSgBRIi_l4oaFDFIFg-HxRgPdrdw_iPg4';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SURL='https://gdqpdqbkqxxmynbnanym.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcXBkcWJrcXh4bXluYm5hbnltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTk4MjEsImV4cCI6MjA5MDg3NTgyMX0.auOXAocvt5jSgBRIi_l4oaFDFIFg-HxRgPdrdw_iPg4';
+const sb=supabase.createClient(SURL,SKEY);
 
-// ── STATE ────────────────────────────────────────────────────
-let state = { user: null, profile: null, page: 'home', loading: true, toast: null };
-let weapons = [], ammos = [], sessions = [];
+let ST={user:null,profile:null,page:'home',loading:true,toast:null,modal:null,selSession:null};
+let weapons=[],ammos=[],sessions=[],editItem=null;
 
-// ── RENDER ENGINE ────────────────────────────────────────────
-function render() { document.getElementById('app').innerHTML = getHTML(); bindEvents(); }
+const $=id=>document.getElementById(id);
+const ini=n=>n?n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase():'PS';
+const sc=s=>s>=585?'var(--green)':s>=570?'var(--t)':'var(--red)';
+const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):'—';
 
-function showToast(msg, type = 'success') {
-  state.toast = { msg, type };
-  render();
-  setTimeout(() => { state.toast = null; render(); }, 3000);
+const I={
+  home:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>`,
+  target:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  chart:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  gun:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="9" width="13" height="5" rx="1.5"/><rect x="14" y="10" width="5" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/></svg>`,
+  bullet:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="17" rx="5" ry="3.5"/><path d="M7 17V10Q7 4 12 4T17 10V17"/></svg>`,
+  cal:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`,
+  users:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3a4 4 0 010 8"/><path d="M21 21v-2a4 4 0 00-3-4"/></svg>`,
+  user:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></svg>`,
+  plus:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  x:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  edit:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>`,
+  trash:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>`,
+  out:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  upl:`<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  chev:`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`,
+};
+
+function render(){document.getElementById('app').innerHTML=html();bind()}
+
+function toast(msg,type='ok'){
+  ST.toast={msg,type};render();
+  setTimeout(()=>{ST.toast=null;render()},3000);
 }
 
-// ── AUTH ─────────────────────────────────────────────────────
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    state.user = session.user;
-    await loadProfile();
-    await loadData();
-  }
-  state.loading = false;
-  render();
-
-  sb.auth.onAuthStateChange(async (event, session) => {
-    state.user = session?.user || null;
-    if (state.user) { await loadProfile(); await loadData(); }
-    else { state.profile = null; weapons = []; ammos = []; sessions = []; }
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session?.user){ST.user=session.user;await loadProfile();await loadData()}
+  ST.loading=false;render();
+  sb.auth.onAuthStateChange(async(e,s)=>{
+    ST.user=s?.user||null;
+    if(ST.user){await loadProfile();await loadData()}
+    else{ST.profile=null;weapons=[];ammos=[];sessions=[]}
     render();
   });
 }
 
-async function loadProfile() {
-  const { data } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
-  state.profile = data;
+async function loadProfile(){
+  const{data}=await sb.from('profiles').select('*').eq('id',ST.user.id).single();
+  ST.profile=data;
 }
 
-async function loadData() {
-  const uid = state.user.id;
-  const [w, a, s] = await Promise.all([
-    sb.from('weapons').select('*').eq('athlete_id', uid).order('created_at', { ascending: false }),
-    sb.from('ammo_lots').select('*').eq('athlete_id', uid).order('created_at', { ascending: false }),
-    sb.from('sessions').select('*').eq('athlete_id', uid).order('date', { ascending: false }).limit(20),
+async function loadData(){
+  const uid=ST.user.id;
+  const[w,a,s]=await Promise.all([
+    sb.from('weapons').select('*').eq('athlete_id',uid).order('created_at',{ascending:false}),
+    sb.from('ammo_lots').select('*').eq('athlete_id',uid).order('created_at',{ascending:false}),
+    sb.from('sessions').select('*').eq('athlete_id',uid).order('date',{ascending:false}).limit(30),
   ]);
-  weapons = w.data || [];
-  ammos   = a.data || [];
-  sessions = s.data || [];
+  weapons=w.data||[];ammos=a.data||[];sessions=s.data||[];
 }
 
-async function signIn(email, pass) {
-  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) return error.message;
-  return null;
+async function signIn(email,pass){
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  return error?.message||null;
 }
 
-async function signUp(email, pass, name, role) {
-  const { data, error } = await sb.auth.signUp({ email, password: pass });
-  if (error) return error.message;
-  if (data.user) {
-    await sb.from('profiles').insert({
-      id: data.user.id, full_name: name, email, role,
-      disciplines: ['10m_pistola_aire_m']
+async function signUp(email,pass,name,role){
+  const{data,error}=await sb.auth.signUp({
+    email,password:pass,
+    options:{data:{full_name:name,role}}
+  });
+  if(error)return error.message;
+  if(data.user){
+    await sb.from('profiles').upsert({
+      id:data.user.id,full_name:name,email,role,
+      disciplines:['10m_pistola_aire_m']
     });
   }
   return null;
 }
 
-async function signOut() { await sb.auth.signOut(); state.page = 'home'; render(); }
+async function signOut(){await sb.auth.signOut();ST.page='home';render()}
 
-// ── DATA OPS ─────────────────────────────────────────────────
-async function addWeapon(form) {
-  const { error } = await sb.from('weapons').insert({ ...form, athlete_id: state.user.id });
-  if (!error) { await loadData(); showToast('Arma guardada ✓'); }
-  else showToast(error.message, 'error');
+async function ensureProfile(){
+  if(!ST.profile){
+    const uid=ST.user.id;
+    await sb.from('profiles').upsert({
+      id:uid,email:ST.user.email,role:'athlete',
+      full_name:ST.user.email.split('@')[0],
+      disciplines:['10m_pistola_aire_m']
+    });
+    await loadProfile();
+  }
 }
 
-async function addAmmo(form) {
-  const { error } = await sb.from('ammo_lots').insert({ ...form, athlete_id: state.user.id });
-  if (!error) { await loadData(); showToast('Lote guardado ✓'); }
-  else showToast(error.message, 'error');
+async function saveWeapon(form){
+  await ensureProfile();
+  let error;
+  if(editItem){
+    ({error}=await sb.from('weapons').update(form).eq('id',editItem.id));
+  } else {
+    ({error}=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}));
+  }
+  if(!error){await loadData();ST.modal=null;editItem=null;toast(editItem?'Arma actualizada ✓':'Arma guardada ✓')}
+  else toast(error.message,'err');
 }
 
-async function updateProfile(form) {
-  const { error } = await sb.from('profiles').update(form).eq('id', state.user.id);
-  if (!error) { await loadProfile(); showToast('Perfil actualizado ✓'); }
-  else showToast(error.message, 'error');
+async function deleteWeapon(id){
+  const{error}=await sb.from('weapons').delete().eq('id',id);
+  if(!error){await loadData();toast('Arma eliminada')}
+  else toast(error.message,'err');
 }
 
-// ── HELPERS ──────────────────────────────────────────────────
-const initials = (name) => name ? name.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase() : 'PS';
-const scoreColor = (s) => s >= 585 ? 'var(--green)' : s >= 570 ? 'var(--text)' : 'var(--red)';
-const avg = (arr, key) => arr.length ? Math.round(arr.reduce((a,b) => a + (b[key]||0), 0) / arr.length * 10) / 10 : 0;
-
-// ── SVG ICONS ────────────────────────────────────────────────
-const ico = {
-  home:   `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>`,
-  target: `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
-  chart:  `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  gun:    `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="9" width="13" height="5" rx="1.5"/><rect x="14" y="10" width="5" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/></svg>`,
-  bullet: `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="17" rx="5" ry="3.5"/><path d="M7 17V10Q7 4 12 4T17 10V17"/></svg>`,
-  cal:    `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`,
-  users:  `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3a4 4 0 010 8"/><path d="M21 21v-2a4 4 0 00-3-4"/></svg>`,
-  user:   `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></svg>`,
-  plus:   `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  x:      `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-  edit:   `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>`,
-  out:    `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
-  upl:    `<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
-  ai:     `✦`,
-};
-
-// ── HTML BUILDERS ────────────────────────────────────────────
-function getHTML() {
-  if (state.loading) return `
-    <div class="loading-screen">
-      <div class="loading-logo">PERF<span>SHOT</span></div>
-      <div class="spinner"></div>
-    </div>`;
-
-  if (!state.user) return getAuthHTML();
-  return getAppHTML();
+async function saveAmmo(form,photoFile){
+  await ensureProfile();
+  let photoUrl=form.photo_url||null;
+  if(photoFile){
+    const ext=photoFile.name.split('.').pop();
+    const path=`${ST.user.id}/${Date.now()}.${ext}`;
+    const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);
+    if(!ue){
+      const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);
+      photoUrl=pd.publicUrl;
+    }
+  }
+  const payload={...form,photo_url:photoUrl};
+  let error;
+  if(editItem){
+    ({error}=await sb.from('ammo_lots').update(payload).eq('id',editItem.id));
+  } else {
+    ({error}=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}));
+  }
+  if(!error){await loadData();ST.modal=null;editItem=null;toast('Lote guardado ✓')}
+  else toast(error.message,'err');
 }
 
-function getAuthHTML() {
-  return `
-  <div class="auth-screen">
-    <div class="auth-card" id="auth-card">
-      <div class="auth-lm">PERF<span>SHOT</span></div>
-      <div class="auth-ls">Shooting Performance</div>
-      <div id="auth-inner">${getLoginHTML()}</div>
-    </div>
-  </div>`;
+async function deleteAmmo(id){
+  const{error}=await sb.from('ammo_lots').delete().eq('id',id);
+  if(!error){await loadData();toast('Lote eliminado')}
+  else toast(error.message,'err');
 }
 
-function getLoginHTML(err='') { return `
-  <div class="auth-title">Bienvenido de vuelta</div>
-  <div class="auth-sub">Iniciá sesión para continuar</div>
-  ${err ? `<div class="auth-err">${err}</div>` : ''}
-  <input class="auth-input" id="auth-email" placeholder="Email" type="email"/>
-  <input class="auth-input" id="auth-pass" placeholder="Contraseña" type="password"/>
-  <button class="auth-btn" id="btn-login">Iniciar sesión</button>
-  <div class="auth-sw">¿No tenés cuenta? <a id="to-register">Registrate</a></div>`; }
+async function updateProfile(form){
+  const{error}=await sb.from('profiles').update(form).eq('id',ST.user.id);
+  if(!error){await loadProfile();toast('Perfil actualizado ✓')}
+  else toast(error.message,'err');
+}
 
-function getRegisterHTML(err='') { return `
-  <div class="auth-title">Crear cuenta</div>
-  <div class="auth-sub">¿Cómo vas a usar PERF SHOT?</div>
-  <div class="role-cards">
-    <div class="role-card sel" data-role="athlete" id="role-athlete"><div style="font-size:22px">🎯</div><div class="role-card-n">Atleta</div></div>
-    <div class="role-card" data-role="coach" id="role-coach"><div style="font-size:22px">📋</div><div class="role-card-n">Entrenador</div></div>
+function html(){
+  if(ST.loading)return`<div class="loading"><div class="load-logo">PERF<span>SHOT</span></div><div class="spinner"></div></div>`;
+  if(!ST.user)return authHTML();
+  return appHTML();
+}
+
+function authHTML(){return`
+<div class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-lm">PERF<span>SHOT</span></div>
+    <div class="auth-ls">Shooting Performance</div>
+    <div id="auth-inner">${loginHTML()}</div>
   </div>
-  <input id="reg-role" type="hidden" value="athlete"/>
-  ${err ? `<div class="auth-err">${err}</div>` : ''}
-  <input class="auth-input" id="reg-name" placeholder="Nombre completo"/>
-  <input class="auth-input" id="reg-email" placeholder="Email" type="email"/>
-  <input class="auth-input" id="reg-pass" placeholder="Contraseña (mín. 6 caracteres)" type="password"/>
-  <button class="auth-btn" id="btn-register">Crear cuenta</button>
-  <div class="auth-sw">¿Ya tenés cuenta? <a id="to-login">Iniciá sesión</a></div>`; }
+</div>`}
 
-function getAppHTML() {
-  const p = state.profile;
-  const name = p?.full_name || state.user.email;
-  const role = p?.role || 'athlete';
-  const nav = [
+function loginHTML(err=''){return`
+<div class="auth-title">Bienvenido de vuelta</div>
+<div class="auth-sub">Iniciá sesión para continuar</div>
+${err?`<div class="auth-err">${err}</div>`:''}
+<input class="auth-in" id="ae" placeholder="Email" type="email"/>
+<input class="auth-in" id="ap" placeholder="Contraseña" type="password"/>
+<button class="auth-btn" id="btn-li">Iniciar sesión</button>
+<div class="auth-sw">¿No tenés cuenta? <a id="to-reg">Registrate</a></div>`}
+
+function regHTML(err=''){return`
+<div class="auth-title">Crear cuenta</div>
+<div class="auth-sub">¿Cómo vas a usar PERF SHOT?</div>
+<div class="role-cards">
+  <div class="rcard on" data-role="athlete" id="rc-a"><div style="font-size:22px">🎯</div><div class="rcard-n">Atleta</div></div>
+  <div class="rcard" data-role="coach" id="rc-c"><div style="font-size:22px">📋</div><div class="rcard-n">Entrenador</div></div>
+</div>
+<input type="hidden" id="rrole" value="athlete"/>
+${err?`<div class="auth-err">${err}</div>`:''}
+<input class="auth-in" id="rn" placeholder="Nombre completo"/>
+<input class="auth-in" id="re" placeholder="Email" type="email"/>
+<input class="auth-in" id="rp" placeholder="Contraseña (mín. 6 caracteres)" type="password"/>
+<button class="auth-btn" id="btn-reg">Crear cuenta</button>
+<div class="auth-sw">¿Ya tenés cuenta? <a id="to-li">Iniciá sesión</a></div>`}
+
+function appHTML(){
+  const p=ST.profile;
+  const name=p?.full_name||ST.user.email;
+  const nav=[
     {id:'home',l:'Inicio',i:'home'},
     {id:'sessions',l:'Sesiones',i:'target'},
     {id:'analysis',l:'Análisis IA',i:'chart'},
@@ -329,435 +417,462 @@ function getAppHTML() {
     {sec:'Cuenta'},
     {id:'profile',l:'Mi perfil',i:'user'},
   ];
-  const titles = {home:'Dashboard',sessions:'Sesiones',analysis:'Análisis IA',weapons:'Equipamiento',ammo:'Munición y balines',calendar:'Calendario',coach:'Entrenador',profile:'Mi perfil'};
-
-  return `
-  ${state.toast ? `<div class="toast ${state.toast.type}">${state.toast.type==='success'?'✓':'✗'} ${state.toast.msg}</div>` : ''}
-  <div class="app">
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-wm">PERF<span>SHOT</span></div>
-        <div class="logo-sub">Shooting Performance</div>
+  const titles={home:'Dashboard',sessions:'Sesiones',analysis:'Análisis IA',weapons:'Equipamiento',ammo:'Munición y balines',calendar:'Calendario',coach:'Entrenador',profile:'Mi perfil'};
+  return`
+${ST.toast?`<div class="toast ${ST.toast.type}">${ST.toast.type==='ok'?'✓':'✗'} ${ST.toast.msg}</div>`:''}
+<div class="app">
+  <aside class="sb">
+    <div class="sb-logo"><div class="sb-wm">PERF<span>SHOT</span></div><div class="sb-sub">Shooting Performance</div></div>
+    <nav class="sb-nav">
+      ${nav.map(item=>item.sec?`<div class="sb-sec">${item.sec}</div>`:`<button class="sb-item ${ST.page===item.id?'on':''}" data-page="${item.id}"><span style="flex-shrink:0;opacity:.7">${I[item.i]}</span>${item.l}${item.badge?`<span class="sb-badge">${item.badge}</span>`:''}</button>`).join('')}
+    </nav>
+    <div class="sb-user" id="go-prf">
+      <div class="sb-av">${ini(name)}</div>
+      <div><div class="sb-nm">${name.split(' ')[0]}</div><div class="sb-rl">${(p?.role||'athlete')==='coach'?'Entrenador':'Atleta'}</div></div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="tb-title">${titles[ST.page]}</div>
+      <div class="flex ic gap8">
+        ${ST.page==='home'?`<button class="btn btn-p btn-sm" data-page="sessions">${I.plus} Nueva sesión</button>`:''}
+        <button class="btn-i" id="btn-so" title="Cerrar sesión">${I.out}</button>
       </div>
-      <nav class="sidebar-nav">
-        ${nav.map(item => item.sec
-          ? `<div class="nav-sec">${item.sec}</div>`
-          : `<button class="nav-item ${state.page===item.id?'active':''}" data-page="${item.id}">
-               <span style="flex-shrink:0;opacity:.7">${ico[item.i]}</span>${item.l}
-               ${item.badge?`<span class="nav-badge">${item.badge}</span>`:''}
-             </button>`
-        ).join('')}
-      </nav>
-      <div class="sidebar-user" id="go-profile">
-        <div class="user-av">${initials(name)}</div>
-        <div><div class="user-nm">${name.split(' ')[0]}</div><div class="user-rl">${role==='coach'?'Entrenador':'Atleta'}</div></div>
-      </div>
-    </aside>
-    <main class="main">
-      <div class="topbar">
-        <div class="topbar-title">${titles[state.page]}</div>
-        <div class="flex gap-8 items-center">
-          ${state.page==='home'?`<button class="btn btn-primary btn-sm" data-page="sessions">${ico.plus} Nueva sesión</button>`:''}
-          <button class="btn-icon" id="btn-signout" title="Cerrar sesión">${ico.out}</button>
-        </div>
-      </div>
-      <div class="content">
-        ${getPageHTML()}
-      </div>
-    </main>
-  </div>
-  ${getModalHTML()}`;
+    </div>
+    <div class="content">${pageHTML()}</div>
+  </main>
+</div>
+${modalHTML()}`;
 }
 
-function getPageHTML() {
-  switch(state.page) {
-    case 'home':     return getDashboardHTML();
-    case 'weapons':  return getWeaponsHTML();
-    case 'ammo':     return getAmmoHTML();
-    case 'profile':  return getProfileHTML();
-    default: return getComingHTML(state.page);
+function pageHTML(){
+  switch(ST.page){
+    case'home':return dashHTML();
+    case'weapons':return weaponsHTML();
+    case'ammo':return ammoHTML();
+    case'profile':return profileHTML();
+    default:return`<div class="coming"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🚧</div><div style="font-family:var(--disp);font-size:14px;font-weight:600;color:var(--t2);margin-bottom:4px">Módulo en construcción</div><div class="txs tmuted" style="max-width:260px;line-height:1.6">Llega en el Mini-MVP 2.</div><span class="badge bb" style="margin-top:10px">Próximamente</span></div>`;
   }
 }
 
-function getDashboardHTML() {
-  const scores = sessions.map(s => s.total_score || 0).filter(s => s > 0);
-  const avgScore = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
-  const best = scores.length ? Math.max(...scores) : '—';
-  const [intPart, decPart] = String(avgScore).split('.');
-  return `
-  <div class="ai-insight">
-    <div class="ai-icon">${ico.ai}</div>
-    <div class="ai-text">
-      <strong>PERF AI:</strong> ${sessions.length > 0
-        ? `Tenés ${sessions.length} sesiones registradas. Promedio: <strong>${avgScore}</strong>. Comenzá cargando sesiones para obtener análisis detallados de tu rendimiento.`
-        : `Bienvenido a PERF SHOT. Comenzá registrando tus armas y tu primera sesión de entrenamiento para que la IA pueda analizar tu rendimiento.`
-      }
-    </div>
-  </div>
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="stat-val">${intPart}${decPart?`<span class="dec">.${decPart}</span>`:''}</div>
-      <div class="stat-lbl">Promedio sesiones</div>
-      <div class="stat-delta delta-neutral">últimas ${sessions.length} sesiones</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${best}</div>
-      <div class="stat-lbl">Mejor serie</div>
-      <div class="stat-delta delta-up">${best !== '—' ? '★ record personal' : 'sin datos aún'}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${sessions.length}</div>
-      <div class="stat-lbl">Sesiones totales</div>
-      <div class="stat-delta delta-neutral">${sessions.filter(s=>s.type==='competition').length} competencias</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${weapons.length}</div>
-      <div class="stat-lbl">Armas registradas</div>
-      <div class="stat-delta delta-neutral">${ammos.length} lotes de munición</div>
-    </div>
-  </div>
-  <div class="grid-2 mb-16">
-    <div class="card">
-      <div class="card-title mb-12">Evolución de puntaje</div>
-      ${scores.length > 1 ? `
-        <div class="sparkline">
-          ${[...scores].reverse().map((s,i) => {
-            const min = Math.min(...scores), max = Math.max(...scores);
-            const h = max > min ? ((s-min)/(max-min))*80+20 : 50;
-            return `<div class="spark-bar ${i===scores.length-1?'hi':''}" style="height:${h}%" title="${s}"></div>`;
-          }).join('')}
-        </div>
-        <div class="flex justify-between text-xs text-muted text-mono">
-          <span>Min: ${Math.min(...scores)}</span><span>Avg: ${avgScore}</span><span>Max: ${best}</span>
-        </div>` : `<div class="empty-state" style="padding:20px"><div class="empty-title">Sin datos aún</div><div class="text-xs text-muted">Registrá sesiones para ver tu evolución</div></div>`}
-    </div>
-    <div class="card">
-      <div class="card-title mb-12">Últimas sesiones</div>
-      ${sessions.length ? sessions.slice(0,4).map(s => `
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <div class="text-sm" style="font-weight:500">${s.date}</div>
-            <div class="text-xs text-muted">${s.type==='competition'?'Competencia':'Entrenamiento'} · ${s.discipline?.replace(/_/g,' ')}</div>
-          </div>
-          <span style="font-family:var(--display);font-size:16px;font-weight:700;color:${scoreColor(s.total_score)}">${s.total_score||'—'}</span>
-        </div>`).join('')
-      : `<div class="text-sm text-muted" style="padding:12px 0">Sin sesiones registradas aún.</div>`}
-    </div>
-  </div>
-  ${sessions.length ? `
-  <div class="card">
-    <div class="card-title mb-12">Historial de sesiones</div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>Fecha</th><th>Tipo</th><th>Disciplina</th><th>Puntaje</th><th>Disparos</th><th>Estado mental</th></tr></thead>
-        <tbody>
-          ${sessions.map(s=>`
-          <tr>
-            <td class="text-mono" style="font-size:11px">${s.date}</td>
-            <td><span class="badge ${s.type==='competition'?'badge-gold':'badge-blue'}">${s.type==='competition'?'Comp.':'Entren.'}</span></td>
-            <td style="font-size:11px">${s.discipline?.replace(/_/g,' ')}</td>
-            <td><span style="font-family:var(--display);font-weight:700;font-size:14px;color:${scoreColor(s.total_score)}">${s.total_score||'—'}</span></td>
-            <td class="text-mono" style="font-size:11px">${s.total_shots||'—'}</td>
-            <td style="font-family:var(--mono);font-size:11px;color:${(s.mental_state||0)>=8?'var(--green)':'var(--text-2)'}">${s.mental_state?s.mental_state+'/10':'—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>` : ''}`;
-}
+function dashHTML(){
+  const scores=sessions.map(s=>s.total_score||0).filter(s=>s>0);
+  const avgS=scores.length?parseFloat(avg(scores)):null;
+  const best=scores.length?Math.max(...scores):null;
+  const name=(ST.profile?.full_name||ST.user.email).split(' ')[0];
+  const compCount=sessions.filter(s=>s.type==='competition').length;
+  const chartData=sessions.slice(0,10).reverse();
+  const cMin=chartData.length?Math.min(...chartData.map(s=>s.total_score||0))-5:560;
+  const cMax=chartData.length?Math.max(...chartData.map(s=>s.total_score||0))+5:600;
+  const topAmmo=ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0))[0]:null;
 
-function getWeaponsHTML() {
-  return `
-  <div class="flex items-center justify-between mb-16">
-    <div><div style="font-family:var(--display);font-size:16px;font-weight:700">Equipamiento</div>
-    <div class="text-xs text-muted mt-8">Rifles y pistolas registradas</div></div>
-    <button class="btn btn-primary btn-sm" id="btn-add-weapon">${ico.plus} Agregar arma</button>
-  </div>
-  ${weapons.length === 0
-    ? `<div class="card"><div class="empty-state"><div style="font-size:32px;opacity:.3">🔫</div><div class="empty-title">Sin equipamiento</div><div class="text-xs text-muted">Agregá tu primera arma para asociarla con tus sesiones.</div></div></div>`
-    : `<div class="grid-2">${weapons.map(w => `
-      <div class="equip-card">
-        <div class="equip-icon">
-          <svg width="20" height="20" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24">
-            ${w.type==='rifle'
-              ? '<rect x="1" y="9" width="14" height="5" rx="1.5"/><rect x="15" y="10" width="6" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/>'
-              : '<path d="M3 12h10l2-4h4l1 4-1 2H5z"/><path d="M9 18l-2 2H5l-1-2"/>'}
-          </svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-family:var(--display);font-size:13px;font-weight:600">${w.brand} ${w.model}</div>
-          <div class="text-xs text-muted mt-8">${w.type==='rifle'?'Rifle':'Pistola'} · ${w.caliber} · ${w.year||'—'}</div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:5px">S/N: ${w.serial||'—'}</div>
-          ${w.notes?`<div style="font-size:10px;color:var(--text-3);margin-top:4px;font-style:italic">${w.notes}</div>`:''}
-          <div class="flex gap-8 mt-8">
-            <span class="badge badge-green">Activa</span>
-            <span class="badge badge-gray">${w.caliber}</span>
-          </div>
-        </div>
-      </div>`).join('')}</div>`
-  }`;
-}
-
-function getAmmoHTML() {
-  return `
-  <div class="flex items-center justify-between mb-12">
-    <div><div style="font-family:var(--display);font-size:16px;font-weight:700">Munición y balines</div>
-    <div class="text-xs text-muted mt-8">Registro de lotes con rendimiento y agrupación</div></div>
-    <button class="btn btn-primary btn-sm" id="btn-add-ammo">${ico.plus} Agregar lote</button>
-  </div>
-  ${ammos.length > 1 ? `
-  <div class="ai-insight mb-16">
-    <div class="ai-icon">${ico.ai}</div>
-    <div class="ai-text"><strong>PERF AI:</strong> Tenés ${ammos.length} lotes registrados. Asociá cada sesión a un lote para que la IA detecte correlaciones entre munición y puntaje automáticamente.</div>
-  </div>` : ''}
-  ${ammos.length === 0
-    ? `<div class="card"><div class="empty-state"><div style="font-size:32px;opacity:.3">🎯</div><div class="empty-title">Sin munición registrada</div><div class="text-xs text-muted">Registrá tus lotes para correlacionar rendimiento con munición.</div></div></div>`
-    : `<div class="grid-3">${ammos.map(a => `
-      <div class="ammo-card">
-        <div class="flex justify-between items-start mb-8">
-          <div>
-            <div style="font-family:var(--display);font-size:12px;font-weight:600">${a.brand} ${a.model||''}</div>
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:1px">Lote: ${a.lot_number}</div>
-          </div>
-          <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a.rating||0)?'on':'off'}">★</span>`).join('')}</div>
-        </div>
-        <div style="width:100%;height:70px;border-radius:var(--radius-sm);background:var(--fog-2);display:flex;align-items:center;justify-content:center;margin:10px 0;font-size:11px;color:var(--text-3)">
-          ${a.photo_url ? `<img src="${a.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm)"/>` : `${ico.upl} Sin foto`}
-        </div>
-        <div class="flex gap-8 mb-8" style="flex-wrap:wrap">
-          <span class="badge badge-gray">${a.caliber}</span>
-          <span class="badge badge-blue">${a.quantity} u.</span>
-          ${(a.rating||0)>=4?'<span class="badge badge-green">Recomendado</span>':''}
-        </div>
-        ${a.comment?`<div style="font-size:11px;color:var(--text-2);line-height:1.5;font-style:italic">"${a.comment}"</div>`:''}
-      </div>`).join('')}</div>`
-  }`;
-}
-
-function getProfileHTML() {
-  const p = state.profile || {};
-  return `
-  <div class="flex items-center gap-16 mb-16">
-    <div style="width:56px;height:56px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:800;color:#fff">${initials(p.full_name||state.user.email)}</div>
+  return`
+<div class="dash-bg">
+  <div class="flex ic jb mb14">
     <div>
-      <div style="font-family:var(--display);font-size:17px;font-weight:700">${p.full_name||'—'}</div>
-      <div class="text-xs text-muted">${p.club||'Sin club asignado'} · ${p.category||'Sin categoría'}</div>
+      <div class="dash-greet">Buen día, <span>${name}</span></div>
+      <div class="dash-sub">${sessions.length} sesiones registradas · ${weapons.length} armas · ${ammos.length} lotes de munición</div>
+    </div>
+    <button class="btn btn-sm" style="background:rgba(29,158,117,.15);color:var(--greenl);border:1px solid rgba(29,158,117,.25)" data-page="sessions">${I.plus} Nueva sesión</button>
+  </div>
+  <div class="hero">
+    <div class="hcard ac">
+      <div class="hlbl">Promedio actual</div>
+      <div class="hval">${avgS?Math.floor(avgS):'—'}<span class="hdec">${avgS?'.'+avgS.toFixed(1).split('.')[1]:''}</span></div>
+      <div class="hdelta up">${scores.length?scores.length+' sesiones':'Sin datos aún'}</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Record personal</div>
+      <div class="hval" style="color:var(--gold)">${best||'—'}</div>
+      <div class="hdelta neu">${best?'★ mejor marca':'Sin datos'}</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Sesiones totales</div>
+      <div class="hval">${sessions.length}</div>
+      <div class="hdelta neu">${compCount} comp · ${sessions.length-compCount} entren.</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Equipamiento</div>
+      <div class="hval">${weapons.length}</div>
+      <div class="hdelta neu">${ammos.length} lotes munición</div>
     </div>
   </div>
-  <div class="tabs">
-    <button class="tab active">Datos personales</button>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-hd">
+        <div class="chart-t">Evolución de puntaje</div>
+        <div class="filters"><div class="fbtn on">10 ses.</div><div class="fbtn">Comp.</div></div>
+      </div>
+      ${chartData.length>1?`
+      <div class="bars">
+        ${chartData.map((s,i)=>{
+          const h=Math.round(((s.total_score-cMin)/(cMax-cMin))*75+10);
+          const col=s.type==='competition'?'var(--gold)':i===chartData.length-1?'var(--green)':'rgba(29,158,117,.35)';
+          return`<div class="bar" style="height:${h}%;background:${col}" title="${s.date}: ${s.total_score}"><span class="bar-lbl">${s.total_score}</span></div>`;
+        }).join('')}
+      </div>
+      <div class="chart-meta">
+        <span>Min: ${Math.min(...chartData.map(s=>s.total_score))}</span>
+        <span>Avg: ${avg(chartData.map(s=>s.total_score))}</span>
+        <span>Max: ${Math.max(...chartData.map(s=>s.total_score))}</span>
+        <span style="color:var(--gold)">● Competencia</span>
+        <span style="color:var(--green)">● Entrenamiento</span>
+      </div>`:`<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#6B8FAF">Registrá sesiones para ver tu evolución</div>`}
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">PERF AI · análisis</div></div>
+      <div class="ai-txt">
+        ${sessions.length>0?`Promedio: <strong>${avgS||'—'}</strong>. Mejor marca: <strong>${best||'—'}</strong>.
+        ${topAmmo?`<br><br>Tu mejor lote es <strong>${topAmmo.brand} ${topAmmo.model}</strong> (${topAmmo.rating}★). Asocialo a tus sesiones para detectar correlaciones.`:''}
+        ${sessions.length<5?`<br><br>Cargá <strong>${5-sessions.length} sesiones más</strong> para activar el análisis de patrones avanzado.`:''}`
+        :`Bienvenido a PERF SHOT. Comenzá registrando tu primera sesión para activar la IA.`}
+      </div>
+      <div class="ai-acts">
+        <div class="ai-btn" data-page="sessions">Nueva sesión</div>
+        ${sessions.length>=5?`<div class="ai-btn" data-page="analysis">Ver análisis</div>`:''}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sess-card">
+  <div class="sec-hd">
+    <div class="sec-t">Últimas sesiones</div>
+    <div class="see-all" data-page="sessions">Ver todas →</div>
+  </div>
+  ${sessions.length?sessions.slice(0,5).map(s=>`
+  <div class="srow" data-sess="${s.id}">
+    <div class="sdate">${s.date}</div>
+    <div class="sdot" style="background:${s.type==='competition'?'var(--gold)':'var(--green)'}"></div>
+    <div style="flex:1">
+      <div class="sdisc">${s.discipline?.replace(/_/g,' ')}</div>
+      <div class="smeta">${s.type==='competition'?'Competencia':'Entrenamiento'}${s.wind_ms?` · ${s.wind_ms} m/s viento`:''}${s.athlete_notes?` · "${s.athlete_notes.slice(0,40)}${s.athlete_notes.length>40?'...':''}"`:''}</div>
+    </div>
+    <div class="sscore" style="color:${sc(s.total_score)}">${s.total_score||'—'}</div>
+    <div style="color:var(--t3);margin-left:4px">${I.chev}</div>
+  </div>`).join(''):`<div class="txs tmuted" style="padding:16px 0;text-align:center">Sin sesiones registradas. ¡Cargá tu primera sesión!</div>`}
+</div>
+
+<div class="bottom-row">
+  <div class="mini">
+    <div class="mini-t">${I.gun} Armamento activo</div>
+    ${weapons.length?weapons.slice(0,3).map(w=>`
+    <div class="mitem">
+      <div class="micon">
+        <svg width="14" height="14" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24">
+          ${w.type==='rifle'?'<rect x="1" y="9" width="14" height="5" rx="1.5"/><rect x="15" y="10" width="6" height="3" rx="1"/>':'<path d="M3 12h10l2-4h4l1 4-1 2H5z"/>'}
+        </svg>
+      </div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:500">${w.brand} ${w.model}</div><div class="txs tmuted">${w.caliber} · ${w.year||'—'}</div></div>
+    </div>`).join(''):`<div class="txs tmuted mb8">Sin armas registradas</div><button class="btn btn-p btn-sm wf" id="btn-add-w-dash">${I.plus} Agregar arma</button>`}
+  </div>
+  <div class="mini">
+    <div class="mini-t">${I.bullet} Top munición</div>
+    ${ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0)).slice(0,3).map(a=>`
+    <div class="mitem">
+      <div style="flex:1"><div style="font-size:11px;font-weight:500">${a.brand} ${a.model||''}</div><div class="txs tmuted">Lote ${a.lot_number}</div></div>
+      <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a.rating||0)?'on':'off'}" style="font-size:11px">★</span>`).join('')}</div>
+    </div>`).join(''):`<div class="txs tmuted mb8">Sin munición registrada</div><button class="btn btn-p btn-sm wf" id="btn-add-a-dash">${I.plus} Agregar lote</button>`}
+  </div>
+  <div class="next-card">
+    <div class="next-lbl">Training Advisor · IA</div>
+    <div class="next-title">Plan próxima sesión</div>
+    ${sessions.length>=3?`
+    ${['Sesión de calidad · concentración','Foco en consistencia de series',topAmmo?`Usar ${topAmmo.brand} ${topAmmo.model}`:'Registrá tu munición de mejor rating','Estado mental ≥ 8 antes de empezar'].map(t=>`
+    <div class="next-item"><div class="next-dot"></div><span style="font-size:11px;color:#6B8FAF">${t}</span></div>`).join('')}
+    <button class="new-sess-btn" data-page="sessions">${I.plus} Registrar sesión</button>`:`
+    <div style="font-size:11px;color:#6B8FAF;line-height:1.6">El Training Advisor se activa con 3+ sesiones. Cargá tus primeras sesiones.</div>
+    <button class="new-sess-btn" data-page="sessions" style="margin-top:10px">${I.plus} Primera sesión</button>`}
+  </div>
+</div>`;
+}
+
+function weaponsHTML(){return`
+<div class="flex ic jb mb16">
+  <div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Equipamiento</div><div class="txs tmuted mt8">${weapons.length} armas registradas</div></div>
+  <button class="btn btn-p btn-sm" id="btn-add-w">${I.plus} Agregar arma</button>
+</div>
+${weapons.length===0?`<div class="card"><div style="text-align:center;padding:40px;color:var(--t3)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🔫</div><div style="font-family:var(--disp);font-size:13px;font-weight:600;color:var(--t2);margin-bottom:4px">Sin equipamiento</div><div class="txs">Agregá tu primera arma para asociarla con tus sesiones.</div></div></div>`:`
+<div class="g2">
+${weapons.map(w=>`
+<div class="ecard">
+  <div class="eicon">
+    <svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24">
+      ${w.type==='rifle'?'<rect x="1" y="9" width="14" height="5" rx="1.5"/><rect x="15" y="10" width="6" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/>':'<path d="M3 12h10l2-4h4l1 4-1 2H5z"/><path d="M9 18l-2 2H5l-1-2"/>'}
+    </svg>
+  </div>
+  <div style="flex:1">
+    <div style="font-family:var(--disp);font-size:13px;font-weight:600">${w.brand} ${w.model}</div>
+    <div class="txs tmuted mt8">${w.type==='rifle'?'Rifle':'Pistola'} · ${w.caliber} · ${w.year||'—'}</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:4px">S/N: ${w.serial||'—'}</div>
+    ${w.notes?`<div style="font-size:10px;color:var(--t3);margin-top:4px;font-style:italic">${w.notes}</div>`:''}
+    <div class="flex gap8 mt8"><span class="badge bg">Activa</span><span class="badge bgr">${w.caliber}</span></div>
+  </div>
+  <div class="flex gap8" style="flex-direction:column">
+    <button class="btn-i" data-edit-w="${w.id}">${I.edit}</button>
+    <button class="btn-i" data-del-w="${w.id}" style="color:var(--red);border-color:rgba(232,70,42,.2)">${I.trash}</button>
+  </div>
+</div>`).join('')}
+</div>`}`}
+
+function ammoHTML(){return`
+<div class="flex ic jb mb12">
+  <div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Munición y balines</div><div class="txs tmuted mt8">${ammos.length} lotes registrados</div></div>
+  <button class="btn btn-p btn-sm" id="btn-add-a">${I.plus} Agregar lote</button>
+</div>
+${ammos.length>1?`<div class="ai-panel mb14"><div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">PERF AI · correlación</div></div><div class="ai-txt">Tenés <strong>${ammos.length} lotes</strong>. Asociá cada sesión a un lote para detectar qué munición mejora tu puntaje.</div></div>`:''}
+${ammos.length===0?`<div class="card"><div style="text-align:center;padding:40px;color:var(--t3)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🎯</div><div style="font-family:var(--disp);font-size:13px;font-weight:600;color:var(--t2);margin-bottom:4px">Sin munición</div><div class="txs">Registrá tus lotes para correlacionar rendimiento.</div></div></div>`:`
+<div class="g3">
+${ammos.map(a=>`
+<div class="acard">
+  <div class="flex ic jb mb8">
+    <div>
+      <div style="font-family:var(--disp);font-size:12px;font-weight:600">${a.brand} ${a.model||''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:1px">Lote: ${a.lot_number}</div>
+    </div>
+    <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a.rating||0)?'on':'off'}">★</span>`).join('')}</div>
+  </div>
+  <div class="aphoto">
+    ${a.photo_url?`<img src="${a.photo_url}" alt="Agrupación"/>`:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">${I.upl}<span style="font-size:10px">Sin foto</span></div>`}
+  </div>
+  <div class="flex gap8 mb8" style="flex-wrap:wrap">
+    <span class="badge bgr">${a.caliber}</span>
+    <span class="badge bb">${a.quantity} u.</span>
+    ${(a.rating||0)>=4?'<span class="badge bg">Recomendado</span>':''}
+  </div>
+  ${a.comment?`<div style="font-size:11px;color:var(--t2);line-height:1.5;font-style:italic;margin-bottom:8px">"${a.comment}"</div>`:''}
+  <div class="flex gap8">
+    <button class="btn btn-s btn-sm" style="flex:1;font-size:10px" data-edit-a="${a.id}">${I.edit} Editar</button>
+    <button class="btn-i" data-del-a="${a.id}" style="color:var(--red);border-color:rgba(232,70,42,.2)">${I.trash}</button>
+  </div>
+</div>`).join('')}
+</div>`}`}
+
+function profileHTML(){
+  const p=ST.profile||{};
+  return`
+<div class="flex ic gap12 mb16">
+  <div style="width:56px;height:56px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:20px;font-weight:800;color:#fff">${ini(p.full_name||ST.user.email)}</div>
+  <div><div style="font-family:var(--disp);font-size:17px;font-weight:700">${p.full_name||'—'}</div><div class="txs tmuted">${p.club||'Sin club'} · ${p.category||'Sin categoría'}</div></div>
+</div>
+<div class="card">
+  <div class="fg2 mb12">
+    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="pn" value="${p.full_name||''}"/></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" value="${ST.user.email}" disabled style="opacity:.6"/></div>
+  </div>
+  <div class="fg2 mb12">
+    <div class="fg"><label class="fl">Club</label><input class="fi" id="pc" value="${p.club||''}"/></div>
+    <div class="fg"><label class="fl">Categoría</label><select class="fs" id="pcat">${['Junior','Sub-23','Absoluto','Master'].map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  </div>
+  <div class="flex jb"><span></span><button class="btn btn-p btn-sm" id="btn-save-prf">Guardar cambios</button></div>
+</div>`;
+}
+
+function sessDetailHTML(s){
+  const wname=s.weapon_id?weapons.find(w=>w.id===s.weapon_id):null;
+  const aname=s.ammo_lot_id?ammos.find(a=>a.id===s.ammo_lot_id):null;
+  const topAmmo=ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0))[0]:null;
+  return`
+<div class="sdh">
+  <div class="sdh-badge"><span class="badge ${s.type==='competition'?'bo':'bb'}">${s.type==='competition'?'Competencia':'Entrenamiento'}</span></div>
+  <div class="sdh-score">${s.total_score||'—'}</div>
+  <div class="sdh-disc">${s.discipline?.replace(/_/g,' ')||'—'}</div>
+  <div class="sdh-date">${s.date}</div>
+  <div class="sdh-stats">
+    <div class="sdh-stat"><div class="sdh-sv">${s.total_shots||'—'}</div><div class="sdh-sl">Disparos</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.wind_ms!=null?s.wind_ms:'—'}</div><div class="sdh-sl">Viento m/s</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.mental_state||'—'}/10</div><div class="sdh-sl">Mental</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.physical_state||'—'}/10</div><div class="sdh-sl">Físico</div></div>
+  </div>
+</div>
+<div class="g2 mb14">
+  <div class="card">
+    <div class="ct mb8">Equipamiento usado</div>
+    <div class="tsm">${wname?wname.brand+' '+wname.model:'No registrado'}</div>
+    <div class="txs tmuted mt8">Munición: ${aname?aname.brand+' '+aname.lot_number:'No registrada'}</div>
   </div>
   <div class="card">
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="prf-name" value="${p.full_name||''}"/></div>
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="${state.user.email}" disabled style="opacity:.6"/></div>
-    </div>
-    <div class="form-grid form-grid-2 mb-12">
-      <div class="form-group"><label class="form-label">Club</label><input class="form-input" id="prf-club" value="${p.club||''}"/></div>
-      <div class="form-group"><label class="form-label">Categoría</label>
-        <select class="form-select" id="prf-cat">
-          ${['Junior','Sub-23','Absoluto','Master'].map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="flex justify-between">
-      <span></span>
-      <button class="btn btn-primary btn-sm" id="btn-save-profile">Guardar cambios</button>
-    </div>
-  </div>`;
+    <div class="ct mb8">Notas</div>
+    ${s.athlete_notes?`<div class="tsm" style="font-style:italic">"${s.athlete_notes}"</div>`:'<div class="txs tmuted">Sin notas del atleta</div>'}
+    ${s.coach_notes?`<div class="txs tmuted mt8">Entrenador: "${s.coach_notes}"</div>`:''}
+  </div>
+</div>
+${s.target_photo_url?`<div class="card mb14"><div class="ct mb8">Blanco / Diana</div><img src="${s.target_photo_url}" style="width:100%;max-height:280px;object-fit:contain;border-radius:8px;margin-top:8px"/></div>`:''}
+<div class="aa">
+  <div class="aa-hd"><div class="aa-dot"></div><div class="aa-title">Análisis PERF AI</div></div>
+  <div class="aa-lbl">Evaluación de sesión</div>
+  <div class="aa-item"><div class="aa-d" style="background:${s.total_score>=585?'var(--green)':s.total_score>=575?'var(--gold)':'var(--red)'}"></div>${s.total_score>=585?'Puntaje excelente — zona de clasificación nacional':s.total_score>=575?'Puntaje sólido — dentro de tu zona habitual':'Puntaje por debajo del promedio — revisá las condiciones'}</div>
+  ${s.wind_ms>2?`<div class="aa-item"><div class="aa-d" style="background:var(--gold)"></div>Viento de ${s.wind_ms} m/s puede haber afectado la estabilidad</div>`:''}
+  ${s.mental_state&&s.mental_state<7?`<div class="aa-item"><div class="aa-d" style="background:var(--red)"></div>Estado mental bajo (${s.mental_state}/10) — correlacionar con sesiones futuras</div>`:''}
+  <div class="aa-lbl">Recomendaciones próxima sesión</div>
+  <div class="aa-item"><div class="aa-d" style="background:var(--blue)"></div>${s.total_score<575?'Sesión de recuperación: 30 tiros con foco en técnica y respiración':'Mantener volumen actual — estás en buen ritmo'}</div>
+  <div class="aa-item"><div class="aa-d" style="background:var(--blue)"></div>${topAmmo?`Usar ${topAmmo.brand} ${topAmmo.model} — tu lote mejor evaluado`:'Registrá tu munición para recomendaciones específicas'}</div>
+</div>`;
 }
 
-function getComingHTML(page) {
-  const map = {
-    sessions: ['Registro de sesiones', 'Carga tiro a tiro, importación SIUS/SCATT y foto del blanco con OCR.'],
-    analysis: ['Análisis IA con Claude', 'Gráficos de evolución, detección de patrones y sugerencias personalizadas.'],
-    calendar: ['Calendario unificado', 'Entrenamientos y competencias en un solo lugar.'],
-    coach:    ['Dashboard del entrenador', 'Gestión de atletas, asignación de planes y feedback.'],
-  };
-  const [title, sub] = map[page] || ['En construcción', 'Próximamente.'];
-  return `<div class="coming"><div style="font-size:32px;opacity:.3">🚧</div><div class="coming-title">${title}</div><div class="coming-sub">${sub}</div><span class="badge badge-blue" style="margin-top:8px">Mini-MVP 2 — Semana 2</span></div>`;
-}
-
-// ── MODALS ────────────────────────────────────────────────────
-let activeModal = null;
-
-function getModalHTML() {
-  if (activeModal === 'weapon') return `
-    <div class="modal-ov" id="modal-ov">
-      <div class="modal">
-        <div class="modal-hd"><div class="modal-title">Agregar arma</div><button class="btn-icon" id="close-modal">${ico.x}</button></div>
-        <div class="modal-body">
-          <div class="form-group mb-12"><label class="form-label">Tipo</label>
-            <select class="form-select" id="w-type"><option value="pistola">Pistola</option><option value="rifle">Rifle</option></select>
+function modalHTML(){
+  if(!ST.modal)return'';
+  if(ST.modal==='sess-detail'&&ST.selSession){
+    const s=sessions.find(x=>x.id===ST.selSession);
+    if(!s)return'';
+    return`<div class="ov" id="mov"><div class="modal modal-lg"><div class="mhd"><div class="mt">Detalle de sesión · ${s.date}</div><button class="btn-i" id="cm">${I.x}</button></div><div class="mb">${sessDetailHTML(s)}</div></div></div>`;
+  }
+  if(ST.modal==='weapon'){
+    const w=editItem;
+    return`<div class="ov" id="mov"><div class="modal"><div class="mhd"><div class="mt">${w?'Editar arma':'Agregar arma'}</div><button class="btn-i" id="cm">${I.x}</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Tipo</label><select class="fs" id="wt"><option value="pistola" ${(!w||w.type==='pistola')?'selected':''}>Pistola</option><option value="rifle" ${w?.type==='rifle'?'selected':''}>Rifle</option></select></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Marca *</label><input class="fi" id="wb" placeholder="Walther, FWB, Steyr..." value="${w?.brand||''}"/></div>
+        <div class="fg"><label class="fl">Modelo *</label><input class="fi" id="wm" placeholder="LP500, 800X..." value="${w?.model||''}"/></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Nº de serie</label><input class="fi" id="ws" placeholder="WL-2024-00000" value="${w?.serial||''}"/></div>
+        <div class="fg"><label class="fl">Calibre</label><select class="fs" id="wc"><option ${w?.caliber==='4.5mm'||!w?'selected':''}>4.5mm</option><option ${w?.caliber==='5.5mm'?'selected':''}>5.5mm</option><option ${w?.caliber==='.22 LR'?'selected':''}>.22 LR</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Año de adquisición</label><input class="fi" id="wy" type="number" value="${w?.year||new Date().getFullYear()}"/></div>
+      <div class="fg"><label class="fl">Notas</label><textarea class="fta" id="wn">${w?.notes||''}</textarea></div>
+    </div>
+    <div class="mft"><button class="btn btn-s" id="cm2">Cancelar</button><button class="btn btn-p" id="btn-sw">${w?'Actualizar arma':'Guardar arma'}</button></div>
+    </div></div>`;
+  }
+  if(ST.modal==='ammo'){
+    const a=editItem;
+    return`<div class="ov" id="mov"><div class="modal"><div class="mhd"><div class="mt">${a?'Editar lote':'Agregar lote de munición'}</div><button class="btn-i" id="cm">${I.x}</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg"><label class="fl">Marca *</label><input class="fi" id="ab" placeholder="RWS, Lapua, H&N..." value="${a?.brand||''}"/></div>
+        <div class="fg"><label class="fl">Modelo</label><input class="fi" id="am" placeholder="R10 Match, L-110..." value="${a?.model||''}"/></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Nº de lote *</label><input class="fi" id="al" placeholder="2024-B-0312" value="${a?.lot_number||''}"/></div>
+        <div class="fg"><label class="fl">Calibre</label><select class="fs" id="ac"><option ${a?.caliber==='4.5mm'||!a?'selected':''}>4.5mm</option><option ${a?.caliber==='5.5mm'?'selected':''}>5.5mm</option><option ${a?.caliber==='.22 LR'?'selected':''}>.22 LR</option></select></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Cantidad</label><input class="fi" id="aq" type="number" placeholder="500" value="${a?.quantity||''}"/></div>
+        <div class="fg"><label class="fl">Rating de rendimiento</label>
+          <div class="stars" id="rating-stars" style="margin-top:8px">
+            ${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a?.rating||0)?'on':'off'}" data-r="${i}" style="font-size:20px">★</span>`).join('')}
           </div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="w-brand" placeholder="Walther, FWB..."/></div>
-            <div class="form-group"><label class="form-label">Modelo</label><input class="form-input" id="w-model" placeholder="LP500, 800X..."/></div>
-          </div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Nº de serie</label><input class="form-input" id="w-serial" placeholder="WL-2024-00000"/></div>
-            <div class="form-group"><label class="form-label">Calibre</label>
-              <select class="form-select" id="w-caliber"><option>4.5mm</option><option>5.5mm</option><option>.22 LR</option></select>
-            </div>
-          </div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Año</label><input class="form-input" id="w-year" type="number" value="${new Date().getFullYear()}"/></div>
-          </div>
-          <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="w-notes" placeholder="Grip personalizado, ajustes..."></textarea></div>
-        </div>
-        <div class="modal-ft">
-          <button class="btn btn-secondary" id="close-modal-2">Cancelar</button>
-          <button class="btn btn-primary" id="btn-save-weapon">Guardar arma</button>
+          <input type="hidden" id="ar" value="${a?.rating||0}"/>
         </div>
       </div>
-    </div>`;
-
-  if (activeModal === 'ammo') return `
-    <div class="modal-ov" id="modal-ov">
-      <div class="modal">
-        <div class="modal-hd"><div class="modal-title">Agregar lote de munición</div><button class="btn-icon" id="close-modal">${ico.x}</button></div>
-        <div class="modal-body">
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Marca</label><input class="form-input" id="a-brand" placeholder="RWS, Lapua..."/></div>
-            <div class="form-group"><label class="form-label">Modelo</label><input class="form-input" id="a-model" placeholder="R10 Match..."/></div>
-          </div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Nº de lote</label><input class="form-input" id="a-lot" placeholder="2024-B-0312"/></div>
-            <div class="form-group"><label class="form-label">Calibre</label>
-              <select class="form-select" id="a-caliber"><option>4.5mm</option><option>5.5mm</option><option>.22 LR</option></select>
-            </div>
-          </div>
-          <div class="form-grid form-grid-2 mb-12">
-            <div class="form-group"><label class="form-label">Cantidad</label><input class="form-input" id="a-qty" type="number" placeholder="500"/></div>
-            <div class="form-group"><label class="form-label">Rating</label>
-              <div class="stars" style="padding-top:8px" id="rating-stars">
-                ${[1,2,3,4,5].map(i=>`<span class="star off" data-r="${i}">★</span>`).join('')}
-              </div>
-              <input type="hidden" id="a-rating" value="0"/>
-            </div>
-          </div>
-          <div class="form-group mb-12"><label class="form-label">Comentarios</label><textarea class="form-textarea" id="a-comment" placeholder="Agrupación, consistencia..."></textarea></div>
-          <div class="upload-zone">${ico.upl}<div style="font-size:12px;color:var(--text-2);margin-top:6px">Subir foto de agrupación</div><div style="font-size:11px;color:var(--text-3);margin-top:2px">PNG, JPG hasta 10MB</div></div>
-        </div>
-        <div class="modal-ft">
-          <button class="btn btn-secondary" id="close-modal-2">Cancelar</button>
-          <button class="btn btn-primary" id="btn-save-ammo">Guardar lote</button>
-        </div>
+      <div class="fg"><label class="fl">Comentarios y observaciones</label><textarea class="fta" id="ac2" placeholder="Agrupación, consistencia, condiciones de prueba...">${a?.comment||''}</textarea></div>
+      <div class="upload-zone">
+        <input type="file" id="photo-file" accept="image/*"/>
+        <div style="pointer-events:none">${I.upl}</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:6px;pointer-events:none" id="photo-name">${a?.photo_url?'Foto cargada ✓ · clic para cambiar':'Subir foto de agrupación'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px;pointer-events:none">PNG, JPG hasta 10MB</div>
       </div>
-    </div>`;
-
-  return '';
+    </div>
+    <div class="mft"><button class="btn btn-s" id="cm2">Cancelar</button><button class="btn btn-p" id="btn-sa">${a?'Actualizar lote':'Guardar lote'}</button></div>
+    </div></div>`;
+  }
+  return'';
 }
 
-// ── EVENT BINDING ─────────────────────────────────────────────
-function bindEvents() {
-  // Navigation
-  document.querySelectorAll('[data-page]').forEach(el => {
-    el.addEventListener('click', () => { state.page = el.dataset.page; render(); });
+function bind(){
+  document.querySelectorAll('[data-page]').forEach(el=>{
+    el.addEventListener('click',()=>{ST.page=el.dataset.page;ST.modal=null;render()});
   });
-  document.getElementById('go-profile')?.addEventListener('click', () => { state.page = 'profile'; render(); });
-  document.getElementById('btn-signout')?.addEventListener('click', signOut);
+  $('go-prf')?.addEventListener('click',()=>{ST.page='profile';render()});
+  $('btn-so')?.addEventListener('click',signOut);
 
   // Auth
-  document.getElementById('btn-login')?.addEventListener('click', async () => {
-    const email = document.getElementById('auth-email').value;
-    const pass  = document.getElementById('auth-pass').value;
-    if (!email || !pass) return;
-    document.getElementById('btn-login').textContent = 'Entrando...';
-    const err = await signIn(email, pass);
-    if (err) document.getElementById('auth-inner').innerHTML = getLoginHTML(err);
+  $('btn-li')?.addEventListener('click',async()=>{
+    const e=$('ae').value,p=$('ap').value;
+    if(!e||!p)return;
+    $('btn-li').innerHTML='<span class="spinner"></span>';
+    const err=await signIn(e,p);
+    if(err)$('auth-inner').innerHTML=loginHTML(err);
   });
-
-  document.getElementById('to-register')?.addEventListener('click', () => {
-    document.getElementById('auth-inner').innerHTML = getRegisterHTML();
-    bindEvents();
-  });
-
-  document.getElementById('to-login')?.addEventListener('click', () => {
-    document.getElementById('auth-inner').innerHTML = getLoginHTML();
-    bindEvents();
-  });
-
-  document.querySelectorAll('.role-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('sel'));
-      card.classList.add('sel');
-      document.getElementById('reg-role').value = card.dataset.role;
+  $('to-reg')?.addEventListener('click',()=>{$('auth-inner').innerHTML=regHTML();bind()});
+  $('to-li')?.addEventListener('click',()=>{$('auth-inner').innerHTML=loginHTML();bind()});
+  document.querySelectorAll('.rcard').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.rcard').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on');
+      $('rrole').value=c.dataset.role;
     });
   });
-
-  document.getElementById('btn-register')?.addEventListener('click', async () => {
-    const name  = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
-    const pass  = document.getElementById('reg-pass').value;
-    const role  = document.getElementById('reg-role').value;
-    if (!name || !email || !pass) return;
-    document.getElementById('btn-register').textContent = 'Creando cuenta...';
-    const err = await signUp(email, pass, name, role);
-    if (err) document.getElementById('auth-inner').innerHTML = getRegisterHTML(err);
+  $('btn-reg')?.addEventListener('click',async()=>{
+    const n=$('rn').value,e=$('re').value,p=$('rp').value,r=$('rrole').value;
+    if(!n||!e||!p)return;
+    $('btn-reg').innerHTML='<span class="spinner"></span>';
+    const err=await signUp(e,p,n,r);
+    if(err)$('auth-inner').innerHTML=regHTML(err);
   });
 
-  // Modals
-  document.getElementById('btn-add-weapon')?.addEventListener('click', () => { activeModal = 'weapon'; render(); });
-  document.getElementById('btn-add-ammo')?.addEventListener('click',   () => { activeModal = 'ammo';   render(); });
-  document.getElementById('close-modal')?.addEventListener('click',    () => { activeModal = null;     render(); });
-  document.getElementById('close-modal-2')?.addEventListener('click',  () => { activeModal = null;     render(); });
-  document.getElementById('modal-ov')?.addEventListener('click', (e) => { if (e.target.id === 'modal-ov') { activeModal = null; render(); } });
+  // Sessions → detail
+  document.querySelectorAll('[data-sess]').forEach(el=>{
+    el.addEventListener('click',()=>{ST.selSession=el.dataset.sess;ST.modal='sess-detail';render()});
+  });
+
+  // Dashboard quick add
+  $('btn-add-w-dash')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
+  $('btn-add-a-dash')?.addEventListener('click',()=>{editItem=null;ST.modal='ammo';render()});
+
+  // Weapons
+  $('btn-add-w')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
+  document.querySelectorAll('[data-edit-w]').forEach(el=>{
+    el.addEventListener('click',()=>{editItem=weapons.find(w=>w.id===el.dataset.editW);ST.modal='weapon';render()});
+  });
+  document.querySelectorAll('[data-del-w]').forEach(el=>{
+    el.addEventListener('click',async()=>{if(confirm('¿Eliminar esta arma?'))await deleteWeapon(el.dataset.delW)});
+  });
+
+  // Ammo
+  $('btn-add-a')?.addEventListener('click',()=>{editItem=null;ST.modal='ammo';render()});
+  document.querySelectorAll('[data-edit-a]').forEach(el=>{
+    el.addEventListener('click',()=>{editItem=ammos.find(a=>a.id===el.dataset.editA);ST.modal='ammo';render()});
+  });
+  document.querySelectorAll('[data-del-a]').forEach(el=>{
+    el.addEventListener('click',async()=>{if(confirm('¿Eliminar este lote?'))await deleteAmmo(el.dataset.delA)});
+  });
+
+  // Modal close
+  $('cm')?.addEventListener('click',()=>{ST.modal=null;editItem=null;render()});
+  $('cm2')?.addEventListener('click',()=>{ST.modal=null;editItem=null;render()});
+  $('mov')?.addEventListener('click',e=>{if(e.target.id==='mov'){ST.modal=null;editItem=null;render()}});
 
   // Save weapon
-  document.getElementById('btn-save-weapon')?.addEventListener('click', async () => {
-    const brand = document.getElementById('w-brand').value;
-    const model = document.getElementById('w-model').value;
-    if (!brand || !model) { showToast('Marca y modelo son obligatorios', 'error'); return; }
-    activeModal = null;
-    await addWeapon({
-      type: document.getElementById('w-type').value,
-      brand, model,
-      serial:  document.getElementById('w-serial').value,
-      caliber: document.getElementById('w-caliber').value,
-      year:    parseInt(document.getElementById('w-year').value) || null,
-      notes:   document.getElementById('w-notes').value,
-    });
-  });
-
-  // Save ammo
-  document.getElementById('btn-save-ammo')?.addEventListener('click', async () => {
-    const brand = document.getElementById('a-brand').value;
-    const lot   = document.getElementById('a-lot').value;
-    if (!brand || !lot) { showToast('Marca y lote son obligatorios', 'error'); return; }
-    activeModal = null;
-    await addAmmo({
-      brand, lot_number: lot,
-      model:    document.getElementById('a-model').value,
-      caliber:  document.getElementById('a-caliber').value,
-      quantity: parseInt(document.getElementById('a-qty').value) || 0,
-      rating:   parseInt(document.getElementById('a-rating').value) || null,
-      comment:  document.getElementById('a-comment').value,
-    });
+  $('btn-sw')?.addEventListener('click',async()=>{
+    const brand=$('wb').value,model=$('wm').value;
+    if(!brand||!model){toast('Marca y modelo son obligatorios','err');return}
+    $('btn-sw').innerHTML='<span class="spinner"></span>';
+    await saveWeapon({type:$('wt').value,brand,model,serial:$('ws').value,caliber:$('wc').value,year:parseInt($('wy').value)||null,notes:$('wn').value,active:true});
   });
 
   // Rating stars
-  document.querySelectorAll('#rating-stars .star').forEach(star => {
-    star.addEventListener('click', () => {
-      const r = parseInt(star.dataset.r);
-      document.getElementById('a-rating').value = r;
-      document.querySelectorAll('#rating-stars .star').forEach((s,i) => {
-        s.className = `star ${i < r ? 'on' : 'off'}`;
-      });
+  document.querySelectorAll('#rating-stars .star').forEach(star=>{
+    star.addEventListener('click',()=>{
+      const r=parseInt(star.dataset.r);
+      $('ar').value=r;
+      document.querySelectorAll('#rating-stars .star').forEach((s,i)=>{s.className=`star ${i<r?'on':'off'}`;s.style.fontSize='20px'});
     });
   });
 
-  // Save profile
-  document.getElementById('btn-save-profile')?.addEventListener('click', async () => {
-    await updateProfile({
-      full_name: document.getElementById('prf-name').value,
-      club:      document.getElementById('prf-club').value,
-      category:  document.getElementById('prf-cat').value,
-    });
+  // Photo file
+  $('photo-file')?.addEventListener('change',e=>{
+    const f=e.target.files[0];
+    if(f&&$('photo-name'))$('photo-name').textContent=`✓ ${f.name} seleccionado`;
+  });
+
+  // Save ammo
+  $('btn-sa')?.addEventListener('click',async()=>{
+    const brand=$('ab').value,lot=$('al').value;
+    if(!brand||!lot){toast('Marca y lote son obligatorios','err');return}
+    $('btn-sa').innerHTML='<span class="spinner"></span>';
+    const photoFile=$('photo-file')?.files[0]||null;
+    await saveAmmo({brand,lot_number:lot,model:$('am').value,caliber:$('ac').value,quantity:parseInt($('aq').value)||0,rating:parseInt($('ar').value)||null,comment:$('ac2').value,photo_url:editItem?.photo_url||null},photoFile);
+  });
+
+  // Profile
+  $('btn-save-prf')?.addEventListener('click',async()=>{
+    await updateProfile({full_name:$('pn').value,club:$('pc').value,category:$('pcat').value});
   });
 }
 
-// ── BOOT ──────────────────────────────────────────────────────
 init();
 </script>
 </body>
