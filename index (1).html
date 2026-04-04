@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PERF SHOT — Shooting Performance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#0B1C2D;--navy2:#132638;--navy3:#1E3A54;
+  --green:#1D9E75;--greenl:#5DCAA5;--greend:rgba(29,158,117,.12);
+  --blue:#4DB8FF;--blued:rgba(77,184,255,.10);
+  --red:#E8462A;--redd:rgba(232,70,42,.10);
+  --gold:#EF9F27;--fog:#F0F7FF;--fog2:#E3EEF9;
+  --t:#0B1C2D;--t2:#4A6278;--t3:#8BA5BB;
+  --b:rgba(11,28,45,.10);--b2:rgba(11,28,45,.06);
+  --r:12px;--rs:8px;
+  --mono:'DM Mono',monospace;--disp:'Syne',sans-serif;--body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--fog);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--b);border-radius:4px}
+.app{display:flex;min-height:100vh}
+.sb{width:210px;flex-shrink:0;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px 14px;border-bottom:1px solid var(--navy3)}
+.sb-wm{font-family:var(--disp);font-size:18px;font-weight:800;letter-spacing:.04em;color:#fff}
+.sb-wm span{color:var(--green)}
+.sb-sub{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6B8FAF;margin-top:2px}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+.sb-sec{font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#3A5570;padding:8px 8px 3px;margin-top:4px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;color:#6B8FAF;font-size:12px;border:none;background:none;width:100%;text-align:left;transition:background .15s}
+.sb-item:hover{background:var(--navy2);color:#9DBDD4}
+.sb-item.on{background:var(--greend);color:var(--greenl)}
+.sb-badge{margin-left:auto;font-size:9px;font-family:var(--mono);background:var(--greend);color:var(--greenl);padding:1px 5px;border-radius:20px}
+.sb-user{padding:12px 14px;border-top:1px solid var(--navy3);display:flex;align-items:center;gap:9px;cursor:pointer}
+.sb-av{width:32px;height:32px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-nm{font-size:12px;font-weight:500;color:#9DBDD4}
+.sb-rl{font-size:10px;color:#3A5570}
+.main{margin-left:210px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--b);padding:11px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.tb-title{font-family:var(--disp);font-size:15px;font-weight:600}
+.content{padding:20px 24px;flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);font-family:var(--body);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;white-space:nowrap}
+.btn-p{background:var(--green);color:#fff}.btn-p:hover{background:#189060}
+.btn-s{background:transparent;color:var(--t2);border:1px solid var(--b)}.btn-s:hover{background:var(--fog2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-i{padding:7px;border-radius:var(--rs);background:transparent;border:1px solid var(--b);cursor:pointer;color:var(--t2);transition:all .15s;display:inline-flex;align-items:center}
+.btn-i:hover{background:var(--fog2)}
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:18px}
+.ct{font-family:var(--disp);font-size:13px;font-weight:600}
+/* DASHBOARD DARK BG */
+.dash-bg{background:var(--navy);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.dash-greet{font-family:var(--disp);font-size:20px;font-weight:700;color:#fff;margin-bottom:2px}
+.dash-greet span{color:var(--green)}
+.dash-sub{font-size:11px;color:#6B8FAF;margin-bottom:16px}
+/* HERO METRICS */
+.hero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.hcard{background:var(--navy2);border-radius:var(--r);padding:14px 16px;border:1px solid rgba(255,255,255,.06)}
+.hcard.ac{background:#0F3D2A;border-color:rgba(29,158,117,.3)}
+.hlbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6B8FAF;margin-bottom:5px}
+.hcard.ac .hlbl{color:rgba(255,255,255,.55)}
+.hval{font-family:var(--disp);font-size:26px;font-weight:800;color:#fff;line-height:1}
+.hdec{font-size:13px;color:var(--green)}
+.hcard.ac .hdec{color:rgba(255,255,255,.6)}
+.hdelta{font-size:10px;margin-top:4px;font-family:var(--mono)}
+.up{color:var(--green)}.dn{color:var(--red)}.neu{color:#6B8FAF}
+/* CHART */
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:14px}
+.chart-card{background:var(--navy2);border-radius:var(--r);padding:16px;border:1px solid rgba(255,255,255,.06)}
+.chart-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chart-t{font-family:var(--disp);font-size:12px;font-weight:600;color:#fff}
+.filters{display:flex;gap:4px}
+.fbtn{font-size:10px;padding:3px 8px;border-radius:20px;cursor:pointer;border:none;background:rgba(255,255,255,.06);color:#6B8FAF;font-family:var(--body)}
+.fbtn.on{background:var(--green);color:#fff}
+.bars{height:80px;display:flex;align-items:flex-end;gap:4px;margin-bottom:4px}
+.bar{flex:1;border-radius:3px 3px 0 0;cursor:pointer;transition:opacity .15s;position:relative}
+.bar:hover{opacity:.75}
+.bar-lbl{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:8px;color:#6B8FAF;font-family:var(--mono);white-space:nowrap}
+.chart-meta{display:flex;justify-content:space-between;font-size:9px;font-family:var(--mono);color:#6B8FAF;margin-top:18px}
+/* AI PANEL */
+.ai-panel{background:linear-gradient(135deg,#0F3D2A,#0B2438);border:1px solid rgba(29,158,117,.25);border-radius:var(--r);padding:14px}
+.ai-hd{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-title{font-size:10px;font-weight:500;color:var(--greenl);letter-spacing:.06em;text-transform:uppercase}
+.ai-txt{font-size:11px;color:rgba(255,255,255,.75);line-height:1.65}
+.ai-txt strong{color:var(--greenl)}
+.ai-acts{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.ai-btn{font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid rgba(29,158,117,.3);background:rgba(29,158,117,.1);color:var(--greenl);cursor:pointer;font-family:var(--body)}
+/* SESSIONS LIST */
+.sess-card{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:16px;margin-bottom:14px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-t{font-family:var(--disp);font-size:13px;font-weight:600}
+.see-all{font-size:10px;color:var(--green);cursor:pointer}
+.srow{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+.srow:hover{background:var(--fog2)}
+.sdate{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:72px}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sdisc{font-size:11px;font-weight:500;flex:1}
+.smeta{font-size:10px;color:var(--t3)}
+.sscore{font-family:var(--disp);font-size:16px;font-weight:700;min-width:36px;text-align:right}
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.mini{background:#fff;border-radius:var(--r);border:1px solid var(--b);padding:14px}
+.mini-t{font-size:11px;font-weight:500;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.mitem{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b2)}
+.mitem:last-child{border-bottom:none}
+.micon{width:28px;height:28px;border-radius:6px;background:var(--fog2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stars{display:flex;gap:1px}
+.star{font-size:12px;cursor:pointer}.star.on{color:var(--gold)}.star.off{color:var(--b)}
+.next-card{background:var(--navy);border-radius:var(--r);padding:14px;border:1px solid rgba(77,184,255,.15)}
+.next-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:5px}
+.next-title{font-family:var(--disp);font-size:13px;font-weight:600;color:#fff;margin-bottom:8px}
+.next-item{font-size:11px;color:#6B8FAF;display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.next-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.new-sess-btn{width:100%;margin-top:10px;padding:8px;border-radius:8px;background:var(--green);color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:var(--disp)}
+/* SESSION DETAIL */
+.sdh{background:var(--navy);border-radius:var(--r);padding:18px;margin-bottom:14px;position:relative}
+.sdh-score{font-family:var(--disp);font-size:52px;font-weight:800;color:#fff;line-height:1}
+.sdh-disc{font-size:12px;color:#6B8FAF;margin-top:4px}
+.sdh-date{font-size:11px;color:#3A5570;margin-top:2px}
+.sdh-badge{position:absolute;top:18px;right:18px}
+.sdh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.sdh-stat{background:rgba(255,255,255,.05);border-radius:8px;padding:10px}
+.sdh-sv{font-family:var(--disp);font-size:16px;font-weight:700;color:#fff}
+.sdh-sl{font-size:10px;color:#6B8FAF;margin-top:2px}
+.aa{background:linear-gradient(135deg,#0F3D2A,#0B2438);border:1px solid rgba(29,158,117,.25);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.aa-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.aa-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.aa-title{font-family:var(--disp);font-size:12px;font-weight:600;color:var(--greenl)}
+.aa-lbl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--greenl);margin-bottom:6px;opacity:.7;margin-top:10px}
+.aa-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.5}
+.aa-d{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px}
+/* EQUIP */
+.ecard{background:#fff;border:1px solid var(--b);border-radius:var(--r);padding:14px;display:flex;gap:12px;align-items:flex-start;transition:box-shadow .15s}
+.ecard:hover{box-shadow:0 4px 16px rgba(11,28,45,.08)}
+.eicon{width:40px;height:40px;border-radius:var(--rs);background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.acard{background:#fff;border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.aphoto{width:100%;height:72px;border-radius:var(--rs);background:var(--fog2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3);margin:8px 0;overflow:hidden}
+.aphoto img{width:100%;height:100%;object-fit:cover}
+.upload-zone{border:2px dashed var(--b);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .15s;background:var(--fog);position:relative}
+.upload-zone:hover{border-color:var(--green);background:var(--greend)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fl{font-size:10px;font-weight:500;color:var(--t2);letter-spacing:.04em;text-transform:uppercase}
+.fi,.fs,.fta{padding:8px 10px;border-radius:var(--rs);border:1px solid var(--b);background:var(--fog);font-family:var(--body);font-size:12px;color:var(--t);width:100%;transition:border-color .15s}
+.fi:focus,.fs:focus,.fta:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--greend)}
+.fta{resize:vertical;min-height:70px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.bg{background:var(--greend);color:var(--green)}
+.bb{background:var(--blued);color:#185FA5}
+.bo{background:rgba(239,159,39,.12);color:#7a4a00}
+.bgr{background:var(--fog2);color:var(--t2)}
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(11,28,45,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:mIn .18s ease}
+.modal-lg{max-width:660px}
+@keyframes mIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.mhd{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);position:sticky;top:0;background:#fff;z-index:1;border-radius:14px 14px 0 0}
+.mt{font-family:var(--disp);font-size:14px;font-weight:600}
+.mb{padding:16px 20px}
+.mft{padding:12px 20px;border-top:1px solid var(--b);display:flex;gap:8px;justify-content:flex-end}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:var(--rs);font-size:12px;z-index:999;animation:mIn .2s ease;display:flex;align-items:center;gap:8px}
+.toast.ok{border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+/* AUTH */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);background-image:radial-gradient(circle at 20% 80%,rgba(29,158,117,.08),transparent 60%),radial-gradient(circle at 80% 20%,rgba(77,184,255,.05),transparent 60%)}
+.auth-card{width:100%;max-width:380px;padding:36px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px}
+.auth-lm{font-family:var(--disp);font-size:30px;font-weight:800;color:#fff;text-align:center;letter-spacing:.05em}
+.auth-lm span{color:var(--green)}
+.auth-ls{font-size:10px;letter-spacing:.15em;color:#6B8FAF;text-transform:uppercase;text-align:center;margin-top:2px;margin-bottom:24px}
+.auth-title{font-family:var(--disp);font-size:16px;font-weight:600;color:#fff;margin-bottom:3px}
+.auth-sub{font-size:12px;color:#6B8FAF;margin-bottom:16px}
+.auth-in{width:100%;padding:10px 12px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-family:var(--body);font-size:13px;margin-bottom:8px}
+.auth-in::placeholder{color:#3A5570}
+.auth-in:focus{outline:none;border-color:var(--green)}
+.auth-btn{width:100%;padding:11px;border-radius:var(--rs);background:var(--green);color:#fff;font-family:var(--disp);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:background .15s}
+.auth-btn:hover{background:#189060}
+.auth-err{background:var(--redd);color:var(--red);padding:8px 12px;border-radius:var(--rs);font-size:12px;margin-bottom:10px;border:1px solid rgba(232,70,42,.2)}
+.auth-sw{text-align:center;margin-top:14px;font-size:12px;color:#3A5570}
+.auth-sw a{color:var(--greenl);cursor:pointer}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.rcard{padding:14px;border-radius:var(--rs);border:2px solid rgba(255,255,255,.08);cursor:pointer;transition:all .15s;text-align:center}
+.rcard:hover,.rcard.on{border-color:var(--green);background:var(--greend)}
+.rcard-n{font-size:12px;font-weight:500;color:#9DBDD4;margin-top:4px}
+.rcard.on .rcard-n{color:var(--greenl)}
+/* UTILS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.flex{display:flex}.ic{align-items:center}.jb{justify-content:space-between}
+.gap8{gap:8px}.gap12{gap:12px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb14{margin-bottom:14px}.mb16{margin-bottom:16px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}
+.tsm{font-size:12px}.txs{font-size:11px}.tmuted{color:var(--t3)}
+.tgreen{color:var(--green)}.tmono{font-family:var(--mono)}
+.wf{width:100%}
+.spinner{width:14px;height:14px;border:2px solid var(--greend);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);flex-direction:column;gap:16px}
+.load-logo{font-family:var(--disp);font-size:32px;font-weight:800;color:#fff;letter-spacing:.05em}
+.load-logo span{color:var(--green)}
+.coming{background:#fff;border:1px solid var(--b);border-radius:var(--r);min-height:240px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:32px;text-align:center}
+@media(max-width:768px){.sb{display:none}.main{margin-left:0}.hero{grid-template-columns:1fr 1fr}.chart-row,.g2,.g3,.fg2,.bottom-row,.sdh-stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SURL='https://gdqpdqbkqxxmynbnanym.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcXBkcWJrcXh4bXluYm5hbnltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTk4MjEsImV4cCI6MjA5MDg3NTgyMX0.auOXAocvt5jSgBRIi_l4oaFDFIFg-HxRgPdrdw_iPg4';
+const sb=supabase.createClient(SURL,SKEY);
+
+let ST={user:null,profile:null,page:'home',loading:true,toast:null,modal:null,selSession:null};
+let weapons=[],ammos=[],sessions=[],editItem=null;
+
+const $=id=>document.getElementById(id);
+const ini=n=>n?n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase():'PS';
+const sc=s=>s>=585?'var(--green)':s>=570?'var(--t)':'var(--red)';
+const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):'—';
+
+const I={
+  home:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>`,
+  target:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  chart:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  gun:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="9" width="13" height="5" rx="1.5"/><rect x="14" y="10" width="5" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/></svg>`,
+  bullet:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="17" rx="5" ry="3.5"/><path d="M7 17V10Q7 4 12 4T17 10V17"/></svg>`,
+  cal:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`,
+  users:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3a4 4 0 010 8"/><path d="M21 21v-2a4 4 0 00-3-4"/></svg>`,
+  user:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></svg>`,
+  plus:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  x:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  edit:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>`,
+  trash:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>`,
+  out:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  upl:`<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  chev:`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`,
+};
+
+function render(){document.getElementById('app').innerHTML=html();bind()}
+
+function toast(msg,type='ok'){
+  ST.toast={msg,type};render();
+  setTimeout(()=>{ST.toast=null;render()},3000);
+}
+
+async function init(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(session?.user){ST.user=session.user;await loadProfile();await loadData()}
+  ST.loading=false;render();
+  sb.auth.onAuthStateChange(async(e,s)=>{
+    ST.user=s?.user||null;
+    if(ST.user){await loadProfile();await loadData()}
+    else{ST.profile=null;weapons=[];ammos=[];sessions=[]}
+    render();
+  });
+}
+
+async function loadProfile(){
+  const{data}=await sb.from('profiles').select('*').eq('id',ST.user.id).single();
+  ST.profile=data;
+}
+
+async function loadData(){
+  const uid=ST.user.id;
+  const[w,a,s]=await Promise.all([
+    sb.from('weapons').select('*').eq('athlete_id',uid).order('created_at',{ascending:false}),
+    sb.from('ammo_lots').select('*').eq('athlete_id',uid).order('created_at',{ascending:false}),
+    sb.from('sessions').select('*').eq('athlete_id',uid).order('date',{ascending:false}).limit(30),
+  ]);
+  weapons=w.data||[];ammos=a.data||[];sessions=s.data||[];
+}
+
+async function signIn(email,pass){
+  const{error}=await sb.auth.signInWithPassword({email,password:pass});
+  return error?.message||null;
+}
+
+async function signUp(email,pass,name,role){
+  const{data,error}=await sb.auth.signUp({
+    email,password:pass,
+    options:{data:{full_name:name,role}}
+  });
+  if(error)return error.message;
+  if(data.user){
+    await sb.from('profiles').upsert({
+      id:data.user.id,full_name:name,email,role,
+      disciplines:['10m_pistola_aire_m']
+    });
+  }
+  return null;
+}
+
+async function signOut(){await sb.auth.signOut();ST.page='home';render()}
+
+async function ensureProfile(){
+  if(!ST.profile){
+    const uid=ST.user.id;
+    await sb.from('profiles').upsert({
+      id:uid,email:ST.user.email,role:'athlete',
+      full_name:ST.user.email.split('@')[0],
+      disciplines:['10m_pistola_aire_m']
+    });
+    await loadProfile();
+  }
+}
+
+async function saveWeapon(form){
+  await ensureProfile();
+  let error;
+  if(editItem){
+    ({error}=await sb.from('weapons').update(form).eq('id',editItem.id));
+  } else {
+    ({error}=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}));
+  }
+  if(!error){await loadData();ST.modal=null;editItem=null;toast(editItem?'Arma actualizada ✓':'Arma guardada ✓')}
+  else toast(error.message,'err');
+}
+
+async function deleteWeapon(id){
+  const{error}=await sb.from('weapons').delete().eq('id',id);
+  if(!error){await loadData();toast('Arma eliminada')}
+  else toast(error.message,'err');
+}
+
+async function saveAmmo(form,photoFile){
+  await ensureProfile();
+  let photoUrl=form.photo_url||null;
+  if(photoFile){
+    const ext=photoFile.name.split('.').pop();
+    const path=`${ST.user.id}/${Date.now()}.${ext}`;
+    const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);
+    if(!ue){
+      const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);
+      photoUrl=pd.publicUrl;
+    }
+  }
+  const payload={...form,photo_url:photoUrl};
+  let error;
+  if(editItem){
+    ({error}=await sb.from('ammo_lots').update(payload).eq('id',editItem.id));
+  } else {
+    ({error}=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}));
+  }
+  if(!error){await loadData();ST.modal=null;editItem=null;toast('Lote guardado ✓')}
+  else toast(error.message,'err');
+}
+
+async function deleteAmmo(id){
+  const{error}=await sb.from('ammo_lots').delete().eq('id',id);
+  if(!error){await loadData();toast('Lote eliminado')}
+  else toast(error.message,'err');
+}
+
+async function updateProfile(form){
+  const{error}=await sb.from('profiles').update(form).eq('id',ST.user.id);
+  if(!error){await loadProfile();toast('Perfil actualizado ✓')}
+  else toast(error.message,'err');
+}
+
+function html(){
+  if(ST.loading)return`<div class="loading"><div class="load-logo">PERF<span>SHOT</span></div><div class="spinner"></div></div>`;
+  if(!ST.user)return authHTML();
+  return appHTML();
+}
+
+function authHTML(){return`
+<div class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-lm">PERF<span>SHOT</span></div>
+    <div class="auth-ls">Shooting Performance</div>
+    <div id="auth-inner">${loginHTML()}</div>
+  </div>
+</div>`}
+
+function loginHTML(err=''){return`
+<div class="auth-title">Bienvenido de vuelta</div>
+<div class="auth-sub">Iniciá sesión para continuar</div>
+${err?`<div class="auth-err">${err}</div>`:''}
+<input class="auth-in" id="ae" placeholder="Email" type="email"/>
+<input class="auth-in" id="ap" placeholder="Contraseña" type="password"/>
+<button class="auth-btn" id="btn-li">Iniciar sesión</button>
+<div class="auth-sw">¿No tenés cuenta? <a id="to-reg">Registrate</a></div>`}
+
+function regHTML(err=''){return`
+<div class="auth-title">Crear cuenta</div>
+<div class="auth-sub">¿Cómo vas a usar PERF SHOT?</div>
+<div class="role-cards">
+  <div class="rcard on" data-role="athlete" id="rc-a"><div style="font-size:22px">🎯</div><div class="rcard-n">Atleta</div></div>
+  <div class="rcard" data-role="coach" id="rc-c"><div style="font-size:22px">📋</div><div class="rcard-n">Entrenador</div></div>
+</div>
+<input type="hidden" id="rrole" value="athlete"/>
+${err?`<div class="auth-err">${err}</div>`:''}
+<input class="auth-in" id="rn" placeholder="Nombre completo"/>
+<input class="auth-in" id="re" placeholder="Email" type="email"/>
+<input class="auth-in" id="rp" placeholder="Contraseña (mín. 6 caracteres)" type="password"/>
+<button class="auth-btn" id="btn-reg">Crear cuenta</button>
+<div class="auth-sw">¿Ya tenés cuenta? <a id="to-li">Iniciá sesión</a></div>`}
+
+function appHTML(){
+  const p=ST.profile;
+  const name=p?.full_name||ST.user.email;
+  const nav=[
+    {id:'home',l:'Inicio',i:'home'},
+    {id:'sessions',l:'Sesiones',i:'target'},
+    {id:'analysis',l:'Análisis IA',i:'chart'},
+    {sec:'Equipamiento'},
+    {id:'weapons',l:'Armas',i:'gun'},
+    {id:'ammo',l:'Munición',i:'bullet',badge:'Nuevo'},
+    {sec:'Comunidad'},
+    {id:'calendar',l:'Calendario',i:'cal'},
+    {id:'coach',l:'Entrenador',i:'users'},
+    {sec:'Cuenta'},
+    {id:'profile',l:'Mi perfil',i:'user'},
+  ];
+  const titles={home:'Dashboard',sessions:'Sesiones',analysis:'Análisis IA',weapons:'Equipamiento',ammo:'Munición y balines',calendar:'Calendario',coach:'Entrenador',profile:'Mi perfil'};
+  return`
+${ST.toast?`<div class="toast ${ST.toast.type}">${ST.toast.type==='ok'?'✓':'✗'} ${ST.toast.msg}</div>`:''}
+<div class="app">
+  <aside class="sb">
+    <div class="sb-logo"><div class="sb-wm">PERF<span>SHOT</span></div><div class="sb-sub">Shooting Performance</div></div>
+    <nav class="sb-nav">
+      ${nav.map(item=>item.sec?`<div class="sb-sec">${item.sec}</div>`:`<button class="sb-item ${ST.page===item.id?'on':''}" data-page="${item.id}"><span style="flex-shrink:0;opacity:.7">${I[item.i]}</span>${item.l}${item.badge?`<span class="sb-badge">${item.badge}</span>`:''}</button>`).join('')}
+    </nav>
+    <div class="sb-user" id="go-prf">
+      <div class="sb-av">${ini(name)}</div>
+      <div><div class="sb-nm">${name.split(' ')[0]}</div><div class="sb-rl">${(p?.role||'athlete')==='coach'?'Entrenador':'Atleta'}</div></div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="tb-title">${titles[ST.page]}</div>
+      <div class="flex ic gap8">
+        ${ST.page==='home'?`<button class="btn btn-p btn-sm" data-page="sessions">${I.plus} Nueva sesión</button>`:''}
+        <button class="btn-i" id="btn-so" title="Cerrar sesión">${I.out}</button>
+      </div>
+    </div>
+    <div class="content">${pageHTML()}</div>
+  </main>
+</div>
+${modalHTML()}`;
+}
+
+function pageHTML(){
+  switch(ST.page){
+    case'home':return dashHTML();
+    case'weapons':return weaponsHTML();
+    case'ammo':return ammoHTML();
+    case'profile':return profileHTML();
+    default:return`<div class="coming"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🚧</div><div style="font-family:var(--disp);font-size:14px;font-weight:600;color:var(--t2);margin-bottom:4px">Módulo en construcción</div><div class="txs tmuted" style="max-width:260px;line-height:1.6">Llega en el Mini-MVP 2.</div><span class="badge bb" style="margin-top:10px">Próximamente</span></div>`;
+  }
+}
+
+function dashHTML(){
+  const scores=sessions.map(s=>s.total_score||0).filter(s=>s>0);
+  const avgS=scores.length?parseFloat(avg(scores)):null;
+  const best=scores.length?Math.max(...scores):null;
+  const name=(ST.profile?.full_name||ST.user.email).split(' ')[0];
+  const compCount=sessions.filter(s=>s.type==='competition').length;
+  const chartData=sessions.slice(0,10).reverse();
+  const cMin=chartData.length?Math.min(...chartData.map(s=>s.total_score||0))-5:560;
+  const cMax=chartData.length?Math.max(...chartData.map(s=>s.total_score||0))+5:600;
+  const topAmmo=ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0))[0]:null;
+
+  return`
+<div class="dash-bg">
+  <div class="flex ic jb mb14">
+    <div>
+      <div class="dash-greet">Buen día, <span>${name}</span></div>
+      <div class="dash-sub">${sessions.length} sesiones registradas · ${weapons.length} armas · ${ammos.length} lotes de munición</div>
+    </div>
+    <button class="btn btn-sm" style="background:rgba(29,158,117,.15);color:var(--greenl);border:1px solid rgba(29,158,117,.25)" data-page="sessions">${I.plus} Nueva sesión</button>
+  </div>
+  <div class="hero">
+    <div class="hcard ac">
+      <div class="hlbl">Promedio actual</div>
+      <div class="hval">${avgS?Math.floor(avgS):'—'}<span class="hdec">${avgS?'.'+avgS.toFixed(1).split('.')[1]:''}</span></div>
+      <div class="hdelta up">${scores.length?scores.length+' sesiones':'Sin datos aún'}</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Record personal</div>
+      <div class="hval" style="color:var(--gold)">${best||'—'}</div>
+      <div class="hdelta neu">${best?'★ mejor marca':'Sin datos'}</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Sesiones totales</div>
+      <div class="hval">${sessions.length}</div>
+      <div class="hdelta neu">${compCount} comp · ${sessions.length-compCount} entren.</div>
+    </div>
+    <div class="hcard">
+      <div class="hlbl">Equipamiento</div>
+      <div class="hval">${weapons.length}</div>
+      <div class="hdelta neu">${ammos.length} lotes munición</div>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-hd">
+        <div class="chart-t">Evolución de puntaje</div>
+        <div class="filters"><div class="fbtn on">10 ses.</div><div class="fbtn">Comp.</div></div>
+      </div>
+      ${chartData.length>1?`
+      <div class="bars">
+        ${chartData.map((s,i)=>{
+          const h=Math.round(((s.total_score-cMin)/(cMax-cMin))*75+10);
+          const col=s.type==='competition'?'var(--gold)':i===chartData.length-1?'var(--green)':'rgba(29,158,117,.35)';
+          return`<div class="bar" style="height:${h}%;background:${col}" title="${s.date}: ${s.total_score}"><span class="bar-lbl">${s.total_score}</span></div>`;
+        }).join('')}
+      </div>
+      <div class="chart-meta">
+        <span>Min: ${Math.min(...chartData.map(s=>s.total_score))}</span>
+        <span>Avg: ${avg(chartData.map(s=>s.total_score))}</span>
+        <span>Max: ${Math.max(...chartData.map(s=>s.total_score))}</span>
+        <span style="color:var(--gold)">● Competencia</span>
+        <span style="color:var(--green)">● Entrenamiento</span>
+      </div>`:`<div style="height:80px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#6B8FAF">Registrá sesiones para ver tu evolución</div>`}
+    </div>
+    <div class="ai-panel">
+      <div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">PERF AI · análisis</div></div>
+      <div class="ai-txt">
+        ${sessions.length>0?`Promedio: <strong>${avgS||'—'}</strong>. Mejor marca: <strong>${best||'—'}</strong>.
+        ${topAmmo?`<br><br>Tu mejor lote es <strong>${topAmmo.brand} ${topAmmo.model}</strong> (${topAmmo.rating}★). Asocialo a tus sesiones para detectar correlaciones.`:''}
+        ${sessions.length<5?`<br><br>Cargá <strong>${5-sessions.length} sesiones más</strong> para activar el análisis de patrones avanzado.`:''}`
+        :`Bienvenido a PERF SHOT. Comenzá registrando tu primera sesión para activar la IA.`}
+      </div>
+      <div class="ai-acts">
+        <div class="ai-btn" data-page="sessions">Nueva sesión</div>
+        ${sessions.length>=5?`<div class="ai-btn" data-page="analysis">Ver análisis</div>`:''}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sess-card">
+  <div class="sec-hd">
+    <div class="sec-t">Últimas sesiones</div>
+    <div class="see-all" data-page="sessions">Ver todas →</div>
+  </div>
+  ${sessions.length?sessions.slice(0,5).map(s=>`
+  <div class="srow" data-sess="${s.id}">
+    <div class="sdate">${s.date}</div>
+    <div class="sdot" style="background:${s.type==='competition'?'var(--gold)':'var(--green)'}"></div>
+    <div style="flex:1">
+      <div class="sdisc">${s.discipline?.replace(/_/g,' ')}</div>
+      <div class="smeta">${s.type==='competition'?'Competencia':'Entrenamiento'}${s.wind_ms?` · ${s.wind_ms} m/s viento`:''}${s.athlete_notes?` · "${s.athlete_notes.slice(0,40)}${s.athlete_notes.length>40?'...':''}"`:''}</div>
+    </div>
+    <div class="sscore" style="color:${sc(s.total_score)}">${s.total_score||'—'}</div>
+    <div style="color:var(--t3);margin-left:4px">${I.chev}</div>
+  </div>`).join(''):`<div class="txs tmuted" style="padding:16px 0;text-align:center">Sin sesiones registradas. ¡Cargá tu primera sesión!</div>`}
+</div>
+
+<div class="bottom-row">
+  <div class="mini">
+    <div class="mini-t">${I.gun} Armamento activo</div>
+    ${weapons.length?weapons.slice(0,3).map(w=>`
+    <div class="mitem">
+      <div class="micon">
+        <svg width="14" height="14" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24">
+          ${w.type==='rifle'?'<rect x="1" y="9" width="14" height="5" rx="1.5"/><rect x="15" y="10" width="6" height="3" rx="1"/>':'<path d="M3 12h10l2-4h4l1 4-1 2H5z"/>'}
+        </svg>
+      </div>
+      <div style="flex:1"><div style="font-size:11px;font-weight:500">${w.brand} ${w.model}</div><div class="txs tmuted">${w.caliber} · ${w.year||'—'}</div></div>
+    </div>`).join(''):`<div class="txs tmuted mb8">Sin armas registradas</div><button class="btn btn-p btn-sm wf" id="btn-add-w-dash">${I.plus} Agregar arma</button>`}
+  </div>
+  <div class="mini">
+    <div class="mini-t">${I.bullet} Top munición</div>
+    ${ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0)).slice(0,3).map(a=>`
+    <div class="mitem">
+      <div style="flex:1"><div style="font-size:11px;font-weight:500">${a.brand} ${a.model||''}</div><div class="txs tmuted">Lote ${a.lot_number}</div></div>
+      <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a.rating||0)?'on':'off'}" style="font-size:11px">★</span>`).join('')}</div>
+    </div>`).join(''):`<div class="txs tmuted mb8">Sin munición registrada</div><button class="btn btn-p btn-sm wf" id="btn-add-a-dash">${I.plus} Agregar lote</button>`}
+  </div>
+  <div class="next-card">
+    <div class="next-lbl">Training Advisor · IA</div>
+    <div class="next-title">Plan próxima sesión</div>
+    ${sessions.length>=3?`
+    ${['Sesión de calidad · concentración','Foco en consistencia de series',topAmmo?`Usar ${topAmmo.brand} ${topAmmo.model}`:'Registrá tu munición de mejor rating','Estado mental ≥ 8 antes de empezar'].map(t=>`
+    <div class="next-item"><div class="next-dot"></div><span style="font-size:11px;color:#6B8FAF">${t}</span></div>`).join('')}
+    <button class="new-sess-btn" data-page="sessions">${I.plus} Registrar sesión</button>`:`
+    <div style="font-size:11px;color:#6B8FAF;line-height:1.6">El Training Advisor se activa con 3+ sesiones. Cargá tus primeras sesiones.</div>
+    <button class="new-sess-btn" data-page="sessions" style="margin-top:10px">${I.plus} Primera sesión</button>`}
+  </div>
+</div>`;
+}
+
+function weaponsHTML(){return`
+<div class="flex ic jb mb16">
+  <div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Equipamiento</div><div class="txs tmuted mt8">${weapons.length} armas registradas</div></div>
+  <button class="btn btn-p btn-sm" id="btn-add-w">${I.plus} Agregar arma</button>
+</div>
+${weapons.length===0?`<div class="card"><div style="text-align:center;padding:40px;color:var(--t3)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🔫</div><div style="font-family:var(--disp);font-size:13px;font-weight:600;color:var(--t2);margin-bottom:4px">Sin equipamiento</div><div class="txs">Agregá tu primera arma para asociarla con tus sesiones.</div></div></div>`:`
+<div class="g2">
+${weapons.map(w=>`
+<div class="ecard">
+  <div class="eicon">
+    <svg width="18" height="18" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24">
+      ${w.type==='rifle'?'<rect x="1" y="9" width="14" height="5" rx="1.5"/><rect x="15" y="10" width="6" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/>':'<path d="M3 12h10l2-4h4l1 4-1 2H5z"/><path d="M9 18l-2 2H5l-1-2"/>'}
+    </svg>
+  </div>
+  <div style="flex:1">
+    <div style="font-family:var(--disp);font-size:13px;font-weight:600">${w.brand} ${w.model}</div>
+    <div class="txs tmuted mt8">${w.type==='rifle'?'Rifle':'Pistola'} · ${w.caliber} · ${w.year||'—'}</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:4px">S/N: ${w.serial||'—'}</div>
+    ${w.notes?`<div style="font-size:10px;color:var(--t3);margin-top:4px;font-style:italic">${w.notes}</div>`:''}
+    <div class="flex gap8 mt8"><span class="badge bg">Activa</span><span class="badge bgr">${w.caliber}</span></div>
+  </div>
+  <div class="flex gap8" style="flex-direction:column">
+    <button class="btn-i" data-edit-w="${w.id}">${I.edit}</button>
+    <button class="btn-i" data-del-w="${w.id}" style="color:var(--red);border-color:rgba(232,70,42,.2)">${I.trash}</button>
+  </div>
+</div>`).join('')}
+</div>`}`}
+
+function ammoHTML(){return`
+<div class="flex ic jb mb12">
+  <div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Munición y balines</div><div class="txs tmuted mt8">${ammos.length} lotes registrados</div></div>
+  <button class="btn btn-p btn-sm" id="btn-add-a">${I.plus} Agregar lote</button>
+</div>
+${ammos.length>1?`<div class="ai-panel mb14"><div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">PERF AI · correlación</div></div><div class="ai-txt">Tenés <strong>${ammos.length} lotes</strong>. Asociá cada sesión a un lote para detectar qué munición mejora tu puntaje.</div></div>`:''}
+${ammos.length===0?`<div class="card"><div style="text-align:center;padding:40px;color:var(--t3)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">🎯</div><div style="font-family:var(--disp);font-size:13px;font-weight:600;color:var(--t2);margin-bottom:4px">Sin munición</div><div class="txs">Registrá tus lotes para correlacionar rendimiento.</div></div></div>`:`
+<div class="g3">
+${ammos.map(a=>`
+<div class="acard">
+  <div class="flex ic jb mb8">
+    <div>
+      <div style="font-family:var(--disp);font-size:12px;font-weight:600">${a.brand} ${a.model||''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:1px">Lote: ${a.lot_number}</div>
+    </div>
+    <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a.rating||0)?'on':'off'}">★</span>`).join('')}</div>
+  </div>
+  <div class="aphoto">
+    ${a.photo_url?`<img src="${a.photo_url}" alt="Agrupación"/>`:`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">${I.upl}<span style="font-size:10px">Sin foto</span></div>`}
+  </div>
+  <div class="flex gap8 mb8" style="flex-wrap:wrap">
+    <span class="badge bgr">${a.caliber}</span>
+    <span class="badge bb">${a.quantity} u.</span>
+    ${(a.rating||0)>=4?'<span class="badge bg">Recomendado</span>':''}
+  </div>
+  ${a.comment?`<div style="font-size:11px;color:var(--t2);line-height:1.5;font-style:italic;margin-bottom:8px">"${a.comment}"</div>`:''}
+  <div class="flex gap8">
+    <button class="btn btn-s btn-sm" style="flex:1;font-size:10px" data-edit-a="${a.id}">${I.edit} Editar</button>
+    <button class="btn-i" data-del-a="${a.id}" style="color:var(--red);border-color:rgba(232,70,42,.2)">${I.trash}</button>
+  </div>
+</div>`).join('')}
+</div>`}`}
+
+function profileHTML(){
+  const p=ST.profile||{};
+  return`
+<div class="flex ic gap12 mb16">
+  <div style="width:56px;height:56px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:20px;font-weight:800;color:#fff">${ini(p.full_name||ST.user.email)}</div>
+  <div><div style="font-family:var(--disp);font-size:17px;font-weight:700">${p.full_name||'—'}</div><div class="txs tmuted">${p.club||'Sin club'} · ${p.category||'Sin categoría'}</div></div>
+</div>
+<div class="card">
+  <div class="fg2 mb12">
+    <div class="fg"><label class="fl">Nombre</label><input class="fi" id="pn" value="${p.full_name||''}"/></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" value="${ST.user.email}" disabled style="opacity:.6"/></div>
+  </div>
+  <div class="fg2 mb12">
+    <div class="fg"><label class="fl">Club</label><input class="fi" id="pc" value="${p.club||''}"/></div>
+    <div class="fg"><label class="fl">Categoría</label><select class="fs" id="pcat">${['Junior','Sub-23','Absoluto','Master'].map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+  </div>
+  <div class="flex jb"><span></span><button class="btn btn-p btn-sm" id="btn-save-prf">Guardar cambios</button></div>
+</div>`;
+}
+
+function sessDetailHTML(s){
+  const wname=s.weapon_id?weapons.find(w=>w.id===s.weapon_id):null;
+  const aname=s.ammo_lot_id?ammos.find(a=>a.id===s.ammo_lot_id):null;
+  const topAmmo=ammos.length?[...ammos].sort((a,b)=>(b.rating||0)-(a.rating||0))[0]:null;
+  return`
+<div class="sdh">
+  <div class="sdh-badge"><span class="badge ${s.type==='competition'?'bo':'bb'}">${s.type==='competition'?'Competencia':'Entrenamiento'}</span></div>
+  <div class="sdh-score">${s.total_score||'—'}</div>
+  <div class="sdh-disc">${s.discipline?.replace(/_/g,' ')||'—'}</div>
+  <div class="sdh-date">${s.date}</div>
+  <div class="sdh-stats">
+    <div class="sdh-stat"><div class="sdh-sv">${s.total_shots||'—'}</div><div class="sdh-sl">Disparos</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.wind_ms!=null?s.wind_ms:'—'}</div><div class="sdh-sl">Viento m/s</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.mental_state||'—'}/10</div><div class="sdh-sl">Mental</div></div>
+    <div class="sdh-stat"><div class="sdh-sv">${s.physical_state||'—'}/10</div><div class="sdh-sl">Físico</div></div>
+  </div>
+</div>
+<div class="g2 mb14">
+  <div class="card">
+    <div class="ct mb8">Equipamiento usado</div>
+    <div class="tsm">${wname?wname.brand+' '+wname.model:'No registrado'}</div>
+    <div class="txs tmuted mt8">Munición: ${aname?aname.brand+' '+aname.lot_number:'No registrada'}</div>
+  </div>
+  <div class="card">
+    <div class="ct mb8">Notas</div>
+    ${s.athlete_notes?`<div class="tsm" style="font-style:italic">"${s.athlete_notes}"</div>`:'<div class="txs tmuted">Sin notas del atleta</div>'}
+    ${s.coach_notes?`<div class="txs tmuted mt8">Entrenador: "${s.coach_notes}"</div>`:''}
+  </div>
+</div>
+${s.target_photo_url?`<div class="card mb14"><div class="ct mb8">Blanco / Diana</div><img src="${s.target_photo_url}" style="width:100%;max-height:280px;object-fit:contain;border-radius:8px;margin-top:8px"/></div>`:''}
+<div class="aa">
+  <div class="aa-hd"><div class="aa-dot"></div><div class="aa-title">Análisis PERF AI</div></div>
+  <div class="aa-lbl">Evaluación de sesión</div>
+  <div class="aa-item"><div class="aa-d" style="background:${s.total_score>=585?'var(--green)':s.total_score>=575?'var(--gold)':'var(--red)'}"></div>${s.total_score>=585?'Puntaje excelente — zona de clasificación nacional':s.total_score>=575?'Puntaje sólido — dentro de tu zona habitual':'Puntaje por debajo del promedio — revisá las condiciones'}</div>
+  ${s.wind_ms>2?`<div class="aa-item"><div class="aa-d" style="background:var(--gold)"></div>Viento de ${s.wind_ms} m/s puede haber afectado la estabilidad</div>`:''}
+  ${s.mental_state&&s.mental_state<7?`<div class="aa-item"><div class="aa-d" style="background:var(--red)"></div>Estado mental bajo (${s.mental_state}/10) — correlacionar con sesiones futuras</div>`:''}
+  <div class="aa-lbl">Recomendaciones próxima sesión</div>
+  <div class="aa-item"><div class="aa-d" style="background:var(--blue)"></div>${s.total_score<575?'Sesión de recuperación: 30 tiros con foco en técnica y respiración':'Mantener volumen actual — estás en buen ritmo'}</div>
+  <div class="aa-item"><div class="aa-d" style="background:var(--blue)"></div>${topAmmo?`Usar ${topAmmo.brand} ${topAmmo.model} — tu lote mejor evaluado`:'Registrá tu munición para recomendaciones específicas'}</div>
+</div>`;
+}
+
+function modalHTML(){
+  if(!ST.modal)return'';
+  if(ST.modal==='sess-detail'&&ST.selSession){
+    const s=sessions.find(x=>x.id===ST.selSession);
+    if(!s)return'';
+    return`<div class="ov" id="mov"><div class="modal modal-lg"><div class="mhd"><div class="mt">Detalle de sesión · ${s.date}</div><button class="btn-i" id="cm">${I.x}</button></div><div class="mb">${sessDetailHTML(s)}</div></div></div>`;
+  }
+  if(ST.modal==='weapon'){
+    const w=editItem;
+    return`<div class="ov" id="mov"><div class="modal"><div class="mhd"><div class="mt">${w?'Editar arma':'Agregar arma'}</div><button class="btn-i" id="cm">${I.x}</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Tipo</label><select class="fs" id="wt"><option value="pistola" ${(!w||w.type==='pistola')?'selected':''}>Pistola</option><option value="rifle" ${w?.type==='rifle'?'selected':''}>Rifle</option></select></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Marca *</label><input class="fi" id="wb" placeholder="Walther, FWB, Steyr..." value="${w?.brand||''}"/></div>
+        <div class="fg"><label class="fl">Modelo *</label><input class="fi" id="wm" placeholder="LP500, 800X..." value="${w?.model||''}"/></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Nº de serie</label><input class="fi" id="ws" placeholder="WL-2024-00000" value="${w?.serial||''}"/></div>
+        <div class="fg"><label class="fl">Calibre</label><select class="fs" id="wc"><option ${w?.caliber==='4.5mm'||!w?'selected':''}>4.5mm</option><option ${w?.caliber==='5.5mm'?'selected':''}>5.5mm</option><option ${w?.caliber==='.22 LR'?'selected':''}>.22 LR</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Año de adquisición</label><input class="fi" id="wy" type="number" value="${w?.year||new Date().getFullYear()}"/></div>
+      <div class="fg"><label class="fl">Notas</label><textarea class="fta" id="wn">${w?.notes||''}</textarea></div>
+    </div>
+    <div class="mft"><button class="btn btn-s" id="cm2">Cancelar</button><button class="btn btn-p" id="btn-sw">${w?'Actualizar arma':'Guardar arma'}</button></div>
+    </div></div>`;
+  }
+  if(ST.modal==='ammo'){
+    const a=editItem;
+    return`<div class="ov" id="mov"><div class="modal"><div class="mhd"><div class="mt">${a?'Editar lote':'Agregar lote de munición'}</div><button class="btn-i" id="cm">${I.x}</button></div>
+    <div class="mb">
+      <div class="fg2">
+        <div class="fg"><label class="fl">Marca *</label><input class="fi" id="ab" placeholder="RWS, Lapua, H&N..." value="${a?.brand||''}"/></div>
+        <div class="fg"><label class="fl">Modelo</label><input class="fi" id="am" placeholder="R10 Match, L-110..." value="${a?.model||''}"/></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Nº de lote *</label><input class="fi" id="al" placeholder="2024-B-0312" value="${a?.lot_number||''}"/></div>
+        <div class="fg"><label class="fl">Calibre</label><select class="fs" id="ac"><option ${a?.caliber==='4.5mm'||!a?'selected':''}>4.5mm</option><option ${a?.caliber==='5.5mm'?'selected':''}>5.5mm</option><option ${a?.caliber==='.22 LR'?'selected':''}>.22 LR</option></select></div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Cantidad</label><input class="fi" id="aq" type="number" placeholder="500" value="${a?.quantity||''}"/></div>
+        <div class="fg"><label class="fl">Rating de rendimiento</label>
+          <div class="stars" id="rating-stars" style="margin-top:8px">
+            ${[1,2,3,4,5].map(i=>`<span class="star ${i<=(a?.rating||0)?'on':'off'}" data-r="${i}" style="font-size:20px">★</span>`).join('')}
+          </div>
+          <input type="hidden" id="ar" value="${a?.rating||0}"/>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Comentarios y observaciones</label><textarea class="fta" id="ac2" placeholder="Agrupación, consistencia, condiciones de prueba...">${a?.comment||''}</textarea></div>
+      <div class="upload-zone">
+        <input type="file" id="photo-file" accept="image/*"/>
+        <div style="pointer-events:none">${I.upl}</div>
+        <div style="font-size:12px;color:var(--t2);margin-top:6px;pointer-events:none" id="photo-name">${a?.photo_url?'Foto cargada ✓ · clic para cambiar':'Subir foto de agrupación'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px;pointer-events:none">PNG, JPG hasta 10MB</div>
+      </div>
+    </div>
+    <div class="mft"><button class="btn btn-s" id="cm2">Cancelar</button><button class="btn btn-p" id="btn-sa">${a?'Actualizar lote':'Guardar lote'}</button></div>
+    </div></div>`;
+  }
+  return'';
+}
+
+function bind(){
+  document.querySelectorAll('[data-page]').forEach(el=>{
+    el.addEventListener('click',()=>{ST.page=el.dataset.page;ST.modal=null;render()});
+  });
+  $('go-prf')?.addEventListener('click',()=>{ST.page='profile';render()});
+  $('btn-so')?.addEventListener('click',signOut);
+
+  // Auth
+  $('btn-li')?.addEventListener('click',async()=>{
+    const e=$('ae').value,p=$('ap').value;
+    if(!e||!p)return;
+    $('btn-li').innerHTML='<span class="spinner"></span>';
+    const err=await signIn(e,p);
+    if(err)$('auth-inner').innerHTML=loginHTML(err);
+  });
+  $('to-reg')?.addEventListener('click',()=>{$('auth-inner').innerHTML=regHTML();bind()});
+  $('to-li')?.addEventListener('click',()=>{$('auth-inner').innerHTML=loginHTML();bind()});
+  document.querySelectorAll('.rcard').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('.rcard').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on');
+      $('rrole').value=c.dataset.role;
+    });
+  });
+  $('btn-reg')?.addEventListener('click',async()=>{
+    const n=$('rn').value,e=$('re').value,p=$('rp').value,r=$('rrole').value;
+    if(!n||!e||!p)return;
+    $('btn-reg').innerHTML='<span class="spinner"></span>';
+    const err=await signUp(e,p,n,r);
+    if(err)$('auth-inner').innerHTML=regHTML(err);
+  });
+
+  // Sessions → detail
+  document.querySelectorAll('[data-sess]').forEach(el=>{
+    el.addEventListener('click',()=>{ST.selSession=el.dataset.sess;ST.modal='sess-detail';render()});
+  });
+
+  // Dashboard quick add
+  $('btn-add-w-dash')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
+  $('btn-add-a-dash')?.addEventListener('click',()=>{editItem=null;ST.modal='ammo';render()});
+
+  // Weapons
+  $('btn-add-w')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
+  document.querySelectorAll('[data-edit-w]').forEach(el=>{
+    el.addEventListener('click',()=>{editItem=weapons.find(w=>w.id===el.dataset.editW);ST.modal='weapon';render()});
+  });
+  document.querySelectorAll('[data-del-w]').forEach(el=>{
+    el.addEventListener('click',async()=>{if(confirm('¿Eliminar esta arma?'))await deleteWeapon(el.dataset.delW)});
+  });
+
+  // Ammo
+  $('btn-add-a')?.addEventListener('click',()=>{editItem=null;ST.modal='ammo';render()});
+  document.querySelectorAll('[data-edit-a]').forEach(el=>{
+    el.addEventListener('click',()=>{editItem=ammos.find(a=>a.id===el.dataset.editA);ST.modal='ammo';render()});
+  });
+  document.querySelectorAll('[data-del-a]').forEach(el=>{
+    el.addEventListener('click',async()=>{if(confirm('¿Eliminar este lote?'))await deleteAmmo(el.dataset.delA)});
+  });
+
+  // Modal close
+  $('cm')?.addEventListener('click',()=>{ST.modal=null;editItem=null;render()});
+  $('cm2')?.addEventListener('click',()=>{ST.modal=null;editItem=null;render()});
+  $('mov')?.addEventListener('click',e=>{if(e.target.id==='mov'){ST.modal=null;editItem=null;render()}});
+
+  // Save weapon
+  $('btn-sw')?.addEventListener('click',async()=>{
+    const brand=$('wb').value,model=$('wm').value;
+    if(!brand||!model){toast('Marca y modelo son obligatorios','err');return}
+    $('btn-sw').innerHTML='<span class="spinner"></span>';
+    await saveWeapon({type:$('wt').value,brand,model,serial:$('ws').value,caliber:$('wc').value,year:parseInt($('wy').value)||null,notes:$('wn').value,active:true});
+  });
+
+  // Rating stars
+  document.querySelectorAll('#rating-stars .star').forEach(star=>{
+    star.addEventListener('click',()=>{
+      const r=parseInt(star.dataset.r);
+      $('ar').value=r;
+      document.querySelectorAll('#rating-stars .star').forEach((s,i)=>{s.className=`star ${i<r?'on':'off'}`;s.style.fontSize='20px'});
+    });
+  });
+
+  // Photo file
+  $('photo-file')?.addEventListener('change',e=>{
+    const f=e.target.files[0];
+    if(f&&$('photo-name'))$('photo-name').textContent=`✓ ${f.name} seleccionado`;
+  });
+
+  // Save ammo
+  $('btn-sa')?.addEventListener('click',async()=>{
+    const brand=$('ab').value,lot=$('al').value;
+    if(!brand||!lot){toast('Marca y lote son obligatorios','err');return}
+    $('btn-sa').innerHTML='<span class="spinner"></span>';
+    const photoFile=$('photo-file')?.files[0]||null;
+    await saveAmmo({brand,lot_number:lot,model:$('am').value,caliber:$('ac').value,quantity:parseInt($('aq').value)||0,rating:parseInt($('ar').value)||null,comment:$('ac2').value,photo_url:editItem?.photo_url||null},photoFile);
+  });
+
+  // Profile
+  $('btn-save-prf')?.addEventListener('click',async()=>{
+    await updateProfile({full_name:$('pn').value,club:$('pc').value,category:$('pcat').value});
+  });
+}
+
+init();
+</script>
+</body>
+</html>
