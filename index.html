@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PERF SHOT — Shooting Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --navy:#0B1C2D;--navy2:#132638;--navy3:#1E3A54;
@@ -325,7 +327,14 @@ const I={
   weekly:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><polyline points="8 2 8 6"/><polyline points="16 2 16 6"/><polyline points="9 14 11 16 15 12"/></svg>`,
 };
 function render(){document.getElementById('app').innerHTML=html();bind()}
-function toast(msg,type='ok',dur=4500){ST.toast={msg,type};render();setTimeout(()=>{ST.toast=null;render()},dur);}
+function renderContent(){const el=document.querySelector('.content');if(el&&ST.user&&ST.profile?.onboarding_completed){el.innerHTML=pageHTML();bind();}else render();}
+function toast(msg,type='ok',dur=4500){
+  document.querySelector('.toast-fixed')?.remove();
+  const el=document.createElement('div');el.className=`toast toast-fixed ${type}`;
+  const ic=type==='ok'?'✓':type==='err'?'✗':'ℹ';
+  el.textContent=ic+' '+msg;document.body.appendChild(el);
+  if(dur>0)setTimeout(()=>el.remove(),dur);
+}
 // ── INIT + AUTH + EDGE FUNCTIONS ──────────────────────────────
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
@@ -339,18 +348,24 @@ async function init(){
   });
 }
 async function loadProfile(){const{data}=await sb.from('profiles').select('*').eq('id',ST.user.id).single();ST.profile=data;}
+const SESSION_COLS='id,date,discipline,type,total_score,wind_level,objective_met,mental_state,physical_state,total_shots,athlete_notes,session_objective,exercise_type,planned_shots,scatt_file_url,target_photo_url,weapon_id,ammo_lot_id,import_source';
 async function loadData(){
   const uid=ST.user.id;
+  const calStart=new Date();calStart.setMonth(calStart.getMonth()-1);
+  const calEnd=new Date();calEnd.setMonth(calEnd.getMonth()+3);
+  const calFrom=calStart.toISOString().split('T')[0];
+  const calTo=calEnd.toISOString().split('T')[0];
   const[w,a,s,ce,notifs,invites,pbs]=await Promise.all([
     sb.from('weapons').select('*').eq('athlete_id',uid).eq('active',true).order('created_at',{ascending:false}),
     sb.from('ammo_lots').select('*').eq('athlete_id',uid).order('rating',{ascending:false}),
-    sb.from('sessions').select('*').eq('athlete_id',uid).order('date',{ascending:false}).limit(60),
-    sb.from('calendar_events').select('*').eq('athlete_id',uid).order('date'),
+    sb.from('sessions').select(SESSION_COLS).eq('athlete_id',uid).order('date',{ascending:false}).limit(60),
+    sb.from('calendar_events').select('*').eq('athlete_id',uid).gte('date',calFrom).lte('date',calTo).order('date'),
     sb.from('notifications').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(25),
     sb.from('coach_athletes').select('id,status,message,invited_at,coach_id').eq('athlete_id',uid).eq('status','pending'),
     sb.from('personal_bests').select('*').eq('athlete_id',uid),
   ]);
   weapons=w.data||[];ammos=a.data||[];sessions=s.data||[];
+  _chartCache={key:null,data:null};_weekCache={key:null,data:null};
   ST.calEvents=ce.data||[];ST.notifications=notifs.data||[];
   ST.notifCount=(notifs.data||[]).filter(n=>!n.read).length+(invites.data||[]).length;
   ST.invitations=invites.data||[];ST.personalBests=pbs.data||[];
@@ -391,9 +406,12 @@ async function saveCoachComment(sId,comment){const sess=sessions.find(s=>s.id===
 async function markNotificationsRead(){await sb.from('notifications').update({read:true}).eq('user_id',ST.user.id).eq('read',false);ST.notifCount=ST.invitations.length;ST.notifications=ST.notifications.map(n=>({...n,read:true}));render();}
 // DATA OPS
 async function saveSession(){
-  await ensureProfile();const d=ST.wizardData;let scUrl=null,tUrl=null;
-  if(d.scatt_file){const path=`${ST.user.id}/sc-${Date.now()}.${d.scatt_file.name.split('.').pop()}`;const{error}=await sb.storage.from('scatt-files').upload(path,d.scatt_file);if(!error){const{data:pd}=sb.storage.from('scatt-files').getPublicUrl(path);scUrl=pd.publicUrl;}}
-  if(d.target_file){const path=`${ST.user.id}/tg-${Date.now()}.${d.target_file.name.split('.').pop()}`;const{error}=await sb.storage.from('targets').upload(path,d.target_file);if(!error){const{data:pd}=sb.storage.from('targets').getPublicUrl(path);tUrl=pd.publicUrl;}}
+  await ensureProfile();const d=ST.wizardData;
+  const _upFile=async(bucket,file,prefix)=>{const path=`${ST.user.id}/${prefix}-${Date.now()}.${file.name.split('.').pop()}`;const{error}=await sb.storage.from(bucket).upload(path,file);if(error)return null;return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;};
+  const[scUrl,tUrl]=await Promise.all([
+    d.scatt_file?_upFile('scatt-files',d.scatt_file,'sc'):Promise.resolve(null),
+    d.target_file?_upFile('targets',d.target_file,'tg'):Promise.resolve(null),
+  ]);
   const{data:sess,error}=await sb.from('sessions').insert({athlete_id:ST.user.id,type:d.type,discipline:d.discipline,date:d.date,weapon_id:d.weapon_id||null,ammo_lot_id:d.ammo_lot_id||null,total_score:parseFloat(d.total_score)||null,total_shots:parseInt(d.planned_shots)||DISC[d.discipline]?.shots||60,wind_level:d.wind_level||null,mental_state:parseInt(d.mental_state)||null,physical_state:parseInt(d.physical_state)||null,athlete_notes:d.notes||null,session_objective:d.objective||null,exercise_type:d.exercise_type||null,planned_shots:parseInt(d.planned_shots)||null,objective_met:d.objective_met,scatt_file_url:scUrl,target_photo_url:tUrl,import_source:'wizard_v2'}).select().single();
   if(error){toast(error.message,'err');return;}
   await loadData();ST.page='session-detail';ST.selSession=sess.id;ST.aiInsight=null;
@@ -403,16 +421,28 @@ async function saveSession(){
   if(d.target_file&&d.target_file.type==='application/pdf')tp2='[PDF blanco adjunto]';
   render();analyzeSessionV2(sess.id,sc2,tp2);
 }
-async function saveWeapon(form){await ensureProfile();let error;if(editItem){({error}=await sb.from('weapons').update(form).eq('id',editItem.id))}else{({error}=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}))}if(!error){await loadData();ST.modal=null;editItem=null;toast('Arma guardada ✓')}else toast(error.message,'err')}
+async function saveWeapon(form){await ensureProfile();let res;if(editItem){res=await sb.from('weapons').update(form).eq('id',editItem.id).select().single();}else{res=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}).select().single();}if(res.error){toast(res.error.message,'err');return;}if(editItem){weapons=weapons.map(w=>w.id===editItem.id?res.data:w);}else{weapons=[res.data,...weapons];}ST.modal=null;editItem=null;toast('Arma guardada ✓');render();}
 async function deleteWeapon(id){const{error}=await sb.from('weapons').delete().eq('id',id);if(!error){await loadData();toast('Eliminada')}else toast(error.message,'err')}
-async function saveAmmo(form,photoFile){await ensureProfile();let photoUrl=form.photo_url||null;if(photoFile){const path=`${ST.user.id}/${Date.now()}.${photoFile.name.split('.').pop()}`;const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);if(!ue){const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);photoUrl=pd.publicUrl;}}const payload={...form,photo_url:photoUrl};let error;if(editItem){({error}=await sb.from('ammo_lots').update(payload).eq('id',editItem.id))}else{({error}=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}))}if(!error){await loadData();ST.modal=null;editItem=null;toast('Lote guardado ✓')}else toast(error.message,'err')}
+async function saveAmmo(form,photoFile){await ensureProfile();let photoUrl=form.photo_url||null;if(photoFile){const path=`${ST.user.id}/${Date.now()}.${photoFile.name.split('.').pop()}`;const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);if(!ue){const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);photoUrl=pd.publicUrl;}}const payload={...form,photo_url:photoUrl};let res;if(editItem){res=await sb.from('ammo_lots').update(payload).eq('id',editItem.id).select().single();}else{res=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}).select().single();}if(res.error){toast(res.error.message,'err');return;}if(editItem){ammos=ammos.map(a=>a.id===editItem.id?res.data:a);}else{ammos=[res.data,...ammos];}ST.modal=null;editItem=null;toast('Lote guardado ✓');render();}
 async function deleteAmmo(id){const{error}=await sb.from('ammo_lots').delete().eq('id',id);if(!error){await loadData();toast('Eliminado')}else toast(error.message,'err')}
 async function updateProfile(form){const{error}=await sb.from('profiles').update(form).eq('id',ST.user.id);if(!error){await loadProfile();toast('Perfil actualizado ✓')}else toast(error.message,'err')}
-async function saveCalEvent(form){await ensureProfile();const{error}=await sb.from('calendar_events').insert({...form,athlete_id:ST.user.id});if(!error){await loadData();ST.modal=null;toast('Evento agregado ✓')}else toast(error.message,'err')}
+async function saveCalEvent(form){await ensureProfile();const res=await sb.from('calendar_events').insert({...form,athlete_id:ST.user.id}).select().single();if(res.error){toast(res.error.message,'err');return;}ST.calEvents=[...ST.calEvents,res.data].sort((a,b)=>a.date.localeCompare(b.date));ST.modal=null;toast('Evento agregado ✓');render();}
 // HELPERS
-function getChartData(){let d=[...sessions];if(ST.chartFilter!=='all'){const days={'1m':30,'3m':90,'6m':180,'12m':365}[ST.chartFilter];const cut=new Date();cut.setDate(cut.getDate()-days);d=d.filter(s=>new Date(s.date)>=cut);}if(ST.chartType==='training')d=d.filter(s=>s.type==='training');if(ST.chartType==='competition')d=d.filter(s=>s.type==='competition');return d.slice(0,40).reverse();}
+let _chartCache={key:null,data:null};
+function getChartData(){
+  const key=`${ST.chartFilter}-${ST.chartType}-${sessions.length}-${sessions[0]?.id||''}`;
+  if(_chartCache.key===key)return _chartCache.data;
+  let d=[...sessions];if(ST.chartFilter!=='all'){const days={'1m':30,'3m':90,'6m':180,'12m':365}[ST.chartFilter];const cut=new Date();cut.setDate(cut.getDate()-days);d=d.filter(s=>new Date(s.date)>=cut);}if(ST.chartType==='training')d=d.filter(s=>s.type==='training');if(ST.chartType==='competition')d=d.filter(s=>s.type==='competition');
+  const result=d.slice(0,40).reverse();_chartCache={key,data:result};return result;
+}
 function getDefWeapon(disc){const isPistol=disc.includes('pistola');return weapons.find(w=>isPistol?w.type==='pistola':w.type==='rifle')||weapons[0]||null}
-function getWeekStats(){const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()===0?6:now.getDay()-1));mon.setHours(0,0,0,0);const lastMon=new Date(mon);lastMon.setDate(mon.getDate()-7);const tw=sessions.filter(s=>new Date(s.date+'T00:00:00')>=mon);const lw=sessions.filter(s=>{const d=new Date(s.date+'T00:00:00');return d>=lastMon&&d<mon});const twS=tw.map(s=>Number(s.total_score)).filter(Boolean);const lwS=lw.map(s=>Number(s.total_score)).filter(Boolean);const twA=twS.length?twS.reduce((a,b)=>a+b,0)/twS.length:null;const lwA=lwS.length?lwS.reduce((a,b)=>a+b,0)/lwS.length:null;return{thisWeek:tw,twA:twA?.toFixed(1),lwA:lwA?.toFixed(1),delta:twA&&lwA?(twA-lwA).toFixed(1):null,count:tw.length};}
+let _weekCache={key:null,data:null};
+function getWeekStats(){
+  const key=`${sessions.length}-${sessions[0]?.id||''}`;
+  if(_weekCache.key===key)return _weekCache.data;
+  const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()===0?6:now.getDay()-1));mon.setHours(0,0,0,0);const lastMon=new Date(mon);lastMon.setDate(mon.getDate()-7);const tw=sessions.filter(s=>new Date(s.date+'T00:00:00')>=mon);const lw=sessions.filter(s=>{const d=new Date(s.date+'T00:00:00');return d>=lastMon&&d<mon});const twS=tw.map(s=>Number(s.total_score)).filter(Boolean);const lwS=lw.map(s=>Number(s.total_score)).filter(Boolean);const twA=twS.length?twS.reduce((a,b)=>a+b,0)/twS.length:null;const lwA=lwS.length?lwS.reduce((a,b)=>a+b,0)/lwS.length:null;
+  const result={thisWeek:tw,twA:twA?.toFixed(1),lwA:lwA?.toFixed(1),delta:twA&&lwA?(twA-lwA).toFixed(1):null,count:tw.length};_weekCache={key,data:result};return result;
+}
 // ════════════════════════════════════════════════════════════════
 // HTML RENDERING
 // ════════════════════════════════════════════════════════════════
@@ -453,8 +483,7 @@ function appHTML(){
     {sec:'Cuenta'},{id:'notifications',l:'Notificaciones',i:'bell',notif:ST.notifCount},{id:'planes',l:'Planes',i:'star'},{id:'profile',l:'Mi perfil',i:'user'},
   ];
   const titles={home:'Dashboard','new-session':'Registrar sesión','sessions-list':'Historial',competitions:'Mis competencias',issf:'Historial ISSF',analysis:'Análisis IA avanzado',weapons:'Equipamiento',ammo:'Munición y balines',calendar:'Calendario',coach:isCoach?'Mi equipo':'Mi entrenador',notifications:'Notificaciones',planes:'Planes',profile:'Mi perfil','session-detail':'Detalle de sesión'};
-  return`${ST.toast?`<div class="toast ${ST.toast.type}">${ST.toast.type==='ok'?'✓':ST.toast.type==='err'?'✗':'ℹ'} ${ST.toast.msg}</div>`:''}
-<div class="app">
+  return`<div class="app">
   <aside class="sb">
     <div class="sb-logo"><div class="sb-wm">PERF<span>SHOT</span></div><div class="sb-sub">Shooting Performance</div></div>
     <nav class="sb-nav">${nav.map(item=>item.sec?`<div class="sb-sec">${item.sec}</div>`:`<button class="sb-item ${ST.page===item.id?'on':''}" data-page="${item.id}"><span style="flex-shrink:0;opacity:.7">${I[item.i]||''}</span>${item.l}${item.badge?`<span class="sb-badge">${item.badge}</span>`:item.notif?`<span class="sb-notif">${item.notif}</span>`:''}</button>`).join('')}</nav>
@@ -497,11 +526,11 @@ function pageHTML(){
 // ── DASHBOARD ────────────────────────────────────────────────────
 function dashHTML(){
   const scores=sessions.map(s=>s.total_score||0).filter(Boolean).map(Number);
-  const avgS=scores.length?parseFloat(avg(scores)):null;const best=scores.length?Math.max(...scores):null;
+  const avgS=scores.length?parseFloat(avg(scores)):null;const best=scores.length?scores.reduce((a,b)=>a>b?a:b):null;
   const compCount=sessions.filter(s=>s.type==='competition').length;
   const name=(ST.profile?.full_name||ST.user.email).split(' ')[0];
   const cd=getChartData();const cs=cd.map(s=>s.total_score||0).filter(Boolean).map(Number);
-  const cMin=cs.length?Math.min(...cs)-2:560;const cMax=cs.length?Math.max(...cs)+2:600;
+  const cMin=cs.length?cs.reduce((a,b)=>a<b?a:b)-2:560;const cMax=cs.length?cs.reduce((a,b)=>a>b?a:b)+2:600;
   const ws=getWeekStats();const wsum=ST.weeklySummary;const pbs=ST.personalBests;
   const rankings=ST.profile?.issf_world_rankings||{};
   const wcCls={excelente:'wc-ex',buena:'wc-bu',regular:'wc-re',baja:'wc-ba',sin_actividad:'wc-na'}[wsum?.calificacion]||'wc-na';
@@ -616,7 +645,7 @@ function issfHTML(){
   const tC={world_cup:'twc',world_championship:'twch',junior_world_cup:'tjwc',continental:'tjwc',other:'tother'};
   return`<div>
   ${Object.keys(rankings).length?`<div class="issf-hero"><div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Perfil ISSF oficial</div><div style="font-family:var(--disp);font-size:16px;font-weight:800;color:#fff;margin-bottom:2px">${p?.full_name||'—'}</div><div style="font-size:11px;color:#6B8FAF;margin-bottom:10px">${prof.issf_country||p?.issf_country||''} · ${p?.issf_id||''} · ${results.length} competencias</div><div class="flex gap8 mb10 flex-wrap">${Object.entries(rankings).map(([disc,rank])=>`<div class="issf-rank-item"><div class="issf-rank-num">#${rank}</div><div class="issf-rank-disc">${disc.replace(/women|men/gi,'').trim()}</div></div>`).join('')}</div><div class="flex ic gap7"><button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#9DBDD4;border:1px solid rgba(255,255,255,.1)" id="btn-issf-resync">↻ Actualizar</button><span style="font-size:10px;color:#3A5570">Sync: ${prof.issf_last_sync?new Date(prof.issf_last_sync).toLocaleDateString('es-AR'):'—'}</span></div></div>`:''}
-  <div class="metrics m4 mb11"><div class="metric mo"><div class="ml">Competencias</div><div class="mv" style="font-size:20px">${results.length}</div></div><div class="metric mp"><div class="ml">Medallas</div><div class="mv" style="font-size:20px">${results.filter(r=>r.medal).length}</div><div class="md neu">${results.filter(r=>r.medal==='oro').length}🥇 ${results.filter(r=>r.medal==='plata').length}🥈 ${results.filter(r=>r.medal==='bronce').length}🥉</div></div><div class="metric mg"><div class="ml">Mejor posición</div><div class="mv" style="font-size:20px">${results.filter(r=>r.rank).length?'#'+Math.min(...results.filter(r=>r.rank).map(r=>r.rank)):'—'}</div></div><div class="metric mb"><div class="ml">World Cups</div><div class="mv" style="font-size:20px">${results.filter(r=>r.competition_type==='world_cup').length}</div></div></div>
+  <div class="metrics m4 mb11"><div class="metric mo"><div class="ml">Competencias</div><div class="mv" style="font-size:20px">${results.length}</div></div><div class="metric mp"><div class="ml">Medallas</div><div class="mv" style="font-size:20px">${results.filter(r=>r.medal).length}</div><div class="md neu">${results.filter(r=>r.medal==='oro').length}🥇 ${results.filter(r=>r.medal==='plata').length}🥈 ${results.filter(r=>r.medal==='bronce').length}🥉</div></div><div class="metric mg"><div class="ml">Mejor posición</div><div class="mv" style="font-size:20px">${results.filter(r=>r.rank).length?'#'+results.filter(r=>r.rank).map(r=>r.rank).reduce((a,b)=>a<b?a:b):'—'}</div></div><div class="metric mb"><div class="ml">World Cups</div><div class="mv" style="font-size:20px">${results.filter(r=>r.competition_type==='world_cup').length}</div></div></div>
   <div class="filter-tabs"><span class="txs tmuted" style="line-height:26px">Tipo:</span>${[['all','Todos'],['world_cup','World Cup'],['world_championship','World Champ.'],['junior_world_cup','Junior WC']].map(([v,l])=>`<button class="ftab ${ST.issfFilter===v?'on':''}" data-issffilter="${v}">${l}</button>`).join('')}</div>
   ${years.length?years.map(year=>`<div class="card mb9"><div class="flex ic jb mb7"><div class="flex ic gap7"><span style="font-family:var(--disp);font-size:12px;font-weight:600">${year}</span><span class="txs tmuted">${byYear[year].length} comp.</span></div></div>${byYear[year].map(r=>{const me={oro:'🥇',plata:'🥈',bronce:'🥉'}[r.medal]||null;return`<div class="issf-res-row"><div class="issf-medal ${r.medal?'med-'+r.medal:'med-none'}">${me||(r.rank?r.rank>99?'99+':'#'+r.rank:'—')}</div><div style="flex:1"><div style="font-size:12px;font-weight:500">${r.competition_name}</div><div class="txs tmuted"><span class="issf-type ${tC[r.competition_type]||'tother'}">${tL[r.competition_type]||r.competition_type}</span>${r.city?` · ${r.city}`:''}${r.discipline?` · ${r.discipline}`:''}</div></div>${r.score_qual?`<div style="font-family:var(--mono);font-size:11px;text-align:right">${r.score_qual}</div>`:''}</div>`;}).join('')}</div>`).join(''):`<div class="coming"><div class="ct">Sin resultados para este filtro</div></div>`}
   <div style="text-align:center;padding:7px 0"><button class="btn btn-s btn-sm" id="btn-issf-change-id">Cambiar ISSF ID</button></div>
@@ -632,8 +661,8 @@ function analysisHTML(){
   ${d&&!ST.analysisLoading?`
   <div class="ai-card mb11"><div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">Resumen ejecutivo</div><span class="badge ${insights?.tendencia_general==='mejorando'?'bg':insights?.tendencia_general==='declinando'?'br':'bgr'}" style="margin-left:auto">${insights?.tendencia_general==='mejorando'?'↑ Mejorando':insights?.tendencia_general==='declinando'?'↓ Declinando':'→ Estable'}</span></div><div class="ai-body">${insights?.resumen_ejecutivo||''}</div>${insights?.oportunidad_mayor?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:8px;font-size:12px;color:var(--green)"><strong>Mayor oportunidad:</strong> ${insights.oportunidad_mayor}</div>`:''}${insights?.alerta?`<div style="background:var(--redd);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:12px;color:var(--red)"><strong>⚠</strong> ${insights.alerta}</div>`:''}</div>
   ${stats?`<div class="metrics m3 mb11"><div class="card"><div class="ml">Promedio período</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.avgScore||'—'}</div></div><div class="card"><div class="ml">Entren. / Comp.</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.avgTraining||'—'}<span style="font-size:12px;color:var(--t3)"> / ${stats.avgComp||'—'}</span></div></div><div class="card"><div class="ml">Cumpl. objetivos</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.objectiveRate!=null?stats.objectiveRate+'%':'—'}</div></div></div>`:''}
-  ${stats?.ammoAnalysis?.length?`<div class="card mb11"><div class="ct mb4">Correlación munición / puntaje</div><div class="txs tmuted mb9">Promedio por lote</div>${stats.ammoAnalysis.map((a,i)=>{const mp=Math.max(...stats.ammoAnalysis.map(x=>x.avg_score));const pct=mp>0?Math.round((a.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${a.brand||'—'} ${a.model||''}<div class="txs tmuted">${a.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${i===0?'var(--green)':'rgba(29,158,117,'+(Math.max(0.2,0.6-i*0.15))+')'}"></div></div><div class="corr-val">${a.avg_score}</div></div>`;}).join('')}${insights?.mejor_municion?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:11px;color:var(--green)">★ <strong>${insights.mejor_municion.brand}</strong> — ${insights.mejor_municion.motivo}</div>`:''}</div>`:''}
-  ${stats?.mentalCorr?.length?`<div class="card mb11"><div class="ct mb4">Estado mental vs puntaje</div><div class="txs tmuted mb9">${insights?.patron_mental||'Correlación mental/rendimiento'}</div>${stats.mentalCorr.map(m=>{const mp=Math.max(...stats.mentalCorr.map(x=>x.avg_score));const pct=mp>0?Math.round((m.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${m.mental}/10<div class="txs tmuted">${m.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${m.mental>=8?'var(--green)':m.mental<=5?'var(--red)':'var(--gold)'}"></div></div><div class="corr-val">${m.avg_score}</div></div>`;}).join('')}</div>`:''}
+  ${stats?.ammoAnalysis?.length?`<div class="card mb11"><div class="ct mb4">Correlación munición / puntaje</div><div class="txs tmuted mb9">Promedio por lote</div>${stats.ammoAnalysis.map((a,i)=>{const mp=stats.ammoAnalysis.map(x=>x.avg_score).reduce((a,b)=>a>b?a:b,0);const pct=mp>0?Math.round((a.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${a.brand||'—'} ${a.model||''}<div class="txs tmuted">${a.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${i===0?'var(--green)':'rgba(29,158,117,'+(Math.max(0.2,0.6-i*0.15))+')'}"></div></div><div class="corr-val">${a.avg_score}</div></div>`;}).join('')}${insights?.mejor_municion?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:11px;color:var(--green)">★ <strong>${insights.mejor_municion.brand}</strong> — ${insights.mejor_municion.motivo}</div>`:''}</div>`:''}
+  ${stats?.mentalCorr?.length?`<div class="card mb11"><div class="ct mb4">Estado mental vs puntaje</div><div class="txs tmuted mb9">${insights?.patron_mental||'Correlación mental/rendimiento'}</div>${stats.mentalCorr.map(m=>{const mp=stats.mentalCorr.map(x=>x.avg_score).reduce((a,b)=>a>b?a:b,0);const pct=mp>0?Math.round((m.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${m.mental}/10<div class="txs tmuted">${m.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${m.mental>=8?'var(--green)':m.mental<=5?'var(--red)':'var(--gold)'}"></div></div><div class="corr-val">${m.avg_score}</div></div>`;}).join('')}</div>`:''}
   ${insights?.hallazgos?.length?`<div style="font-family:var(--disp);font-size:12px;font-weight:600;margin-bottom:8px">Hallazgos de Claude</div>${insights.hallazgos.map(h=>{const icons={municion:'🎯',mental:'🧠',condiciones:'🌬️',tecnica:'🔫',consistencia:'📊',volumen:'📈'};const bgs={alto:'var(--redd)',medio:'var(--goldd)',bajo:'var(--blued)'};return`<div class="insight-card"><div class="insight-icon" style="background:${bgs[h.impacto]||'var(--fog2)'}">${icons[h.categoria]||'💡'}</div><div><div style="font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:${h.impacto==='alto'?'var(--red)':h.impacto==='medio'?'var(--gold)':'var(--blue)'};margin-bottom:2px">${h.categoria} · ${h.impacto}</div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${h.titulo}</div><div style="font-size:11px;color:var(--t2);line-height:1.5">${h.descripcion}</div>${h.accion?`<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:500">→ ${h.accion}</div>`:''}</div></div>`;}).join('')}`:'' }
   `:''}
 </div>`;
@@ -744,8 +773,8 @@ function bind(){
   });
   $('ob-finish')?.addEventListener('click',()=>{ST.page='home';render()});
   // ── DASHBOARD ──────────────────────────────────────────────
-  document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('click',()=>{ST.chartFilter=el.dataset.cf;render()}));
-  document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{ST.chartType=el.dataset.ct;render()}));
+  document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('click',()=>{ST.chartFilter=el.dataset.cf;renderContent()}));
+  document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{ST.chartType=el.dataset.ct;renderContent()}));
   $('btn-plan')?.addEventListener('click',getTrainingPlan);
   $('btn-weekly')?.addEventListener('click',()=>getWeeklySummary(false));
   $('btn-aw-d')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
@@ -790,9 +819,9 @@ function bind(){
   $('btn-issf-view')?.addEventListener('click',()=>{ST.issfImportResult=null;loadIssfResults();});
   $('btn-issf-resync')?.addEventListener('click',()=>{if(ST.profile?.issf_id)importISSF(ST.profile.issf_id,true);});
   $('btn-issf-change-id')?.addEventListener('click',()=>{ST.issfData=null;ST.issfImportResult=null;render();});
-  document.querySelectorAll('[data-issffilter]').forEach(el=>el.addEventListener('click',()=>{ST.issfFilter=el.dataset.issffilter;render();}));
+  document.querySelectorAll('[data-issffilter]').forEach(el=>el.addEventListener('click',()=>{ST.issfFilter=el.dataset.issffilter;renderContent();}));
   // ── ANÁLISIS ───────────────────────────────────────────────
-  document.querySelectorAll('[data-period]').forEach(el=>el.addEventListener('click',()=>{ST.analysisPeriod=el.dataset.period;ST.analysisData=null;render()}));
+  document.querySelectorAll('[data-period]').forEach(el=>el.addEventListener('click',()=>{ST.analysisPeriod=el.dataset.period;ST.analysisData=null;renderContent()}));
   $('btn-run-analysis')?.addEventListener('click',runAdvancedAnalysis);
   $('btn-run-analysis-2')?.addEventListener('click',runAdvancedAnalysis);
   // ── CALENDARIO ─────────────────────────────────────────────
