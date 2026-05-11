@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PERF SHOT — Shooting Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --navy:#0B1C2D;--navy2:#132638;--navy3:#1E3A54;
@@ -269,6 +271,34 @@ body{font-family:var(--body);background:var(--fog);color:var(--t);min-height:100
 </style>
 </head>
 <body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+<symbol id="ic-home" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></g></symbol>
+<symbol id="ic-target" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></g></symbol>
+<symbol id="ic-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></g></symbol>
+<symbol id="ic-brain" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.6A3 3 0 016.5 9a3 3 0 01.5-5.88A2.5 2.5 0 019.5 2z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.6A3 3 0 0117.5 9a3 3 0 00-.5-5.88A2.5 2.5 0 0014.5 2z"/></g></symbol>
+<symbol id="ic-gun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="9" width="13" height="5" rx="1.5"/><rect x="14" y="10" width="5" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/></g></symbol>
+<symbol id="ic-bullet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="17" rx="5" ry="3.5"/><path d="M7 17V10Q7 4 12 4T17 10V17"/></g></symbol>
+<symbol id="ic-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></g></symbol>
+<symbol id="ic-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3a4 4 0 010 8"/><path d="M21 21v-2a4 4 0 00-3-4"/></g></symbol>
+<symbol id="ic-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></g></symbol>
+<symbol id="ic-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></g></symbol>
+<symbol id="ic-trophy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2"/><path d="M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2"/><path d="M6 3h12v10a6 6 0 01-12 0V3z"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></g></symbol>
+<symbol id="ic-issf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></g></symbol>
+<symbol id="ic-star" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></g></symbol>
+<symbol id="ic-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g></symbol>
+<symbol id="ic-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g></symbol>
+<symbol id="ic-edit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></g></symbol>
+<symbol id="ic-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></g></symbol>
+<symbol id="ic-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></g></symbol>
+<symbol id="ic-back" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></g></symbol>
+<symbol id="ic-chev" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></g></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></g></symbol>
+<symbol id="ic-spark" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></g></symbol>
+<symbol id="ic-msg" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></g></symbol>
+<symbol id="ic-send" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></g></symbol>
+<symbol id="ic-pdf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></g></symbol>
+<symbol id="ic-weekly" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><polyline points="8 2 8 6"/><polyline points="16 2 16 6"/><polyline points="9 14 11 16 15 12"/></g></symbol>
+</svg>
 <div id="app"></div>
 <script>
 const SURL='https://gdqpdqbkqxxmynbnanym.supabase.co';
@@ -286,7 +316,7 @@ let ST={
   obLoading:false,obResult:null,analysisData:null,analysisPeriod:'30',analysisLoading:false,
   sessionComments:[],weeklySummary:null,weeklyLoading:false,pdfLoading:false,
   issfData:null,issfLoading:false,issfImporting:false,issfImportResult:null,issfFilter:'all',
-  compData:null,compLoading:false,personalBests:[],
+  compData:null,compLoading:false,personalBests:[],sessPage:0,
 };
 let weapons=[],ammos=[],sessions=[],editItem=null;
 const $=id=>document.getElementById(id);
@@ -296,36 +326,26 @@ const avg=arr=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):'—'
 const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'}):'—';
 const fmtAgo=ts=>{const d=Math.round((Date.now()-new Date(ts))/86400000);return d===0?'hoy':d===1?'ayer':d+' días'};
 const DISC={'10m_pistola_aire_m':{label:'10m Pistola Aire',sub:'Masc · 60',shots:60,emoji:'🔫'},'10m_pistola_aire_f':{label:'10m Pistola Aire',sub:'Fem · 40',shots:40,emoji:'🔫'},'10m_rifle_aire':{label:'10m Rifle Aire',sub:'60 disp.',shots:60,emoji:'🎯'},'50m_pistola':{label:'50m Pistola',sub:'60 disp.',shots:60,emoji:'🔫'},'50m_rifle_3pos':{label:'50m Rifle 3 Pos.',sub:'120 disp.',shots:120,emoji:'🎯'},'50m_rifle_tendido':{label:'50m Rifle Tendido',sub:'60 disp.',shots:60,emoji:'🎯'}};
+const _svg=(id,w=14)=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24"><use href="#ic-${id}"/></svg>`;
 const I={
-  home:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>`,
-  target:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
-  chart:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  brain:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.6A3 3 0 016.5 9a3 3 0 01.5-5.88A2.5 2.5 0 019.5 2z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 004.96-.46 2.5 2.5 0 001.07-4.6A3 3 0 0117.5 9a3 3 0 00-.5-5.88A2.5 2.5 0 0014.5 2z"/></svg>`,
-  gun:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="1" y="9" width="13" height="5" rx="1.5"/><rect x="14" y="10" width="5" height="3" rx="1"/><line x1="4" y1="9" x2="4" y2="7"/><line x1="4" y1="7" x2="8" y2="7"/></svg>`,
-  bullet:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="17" rx="5" ry="3.5"/><path d="M7 17V10Q7 4 12 4T17 10V17"/></svg>`,
-  cal:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>`,
-  users:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3a4 4 0 010 8"/><path d="M21 21v-2a4 4 0 00-3-4"/></svg>`,
-  user:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></svg>`,
-  bell:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
-  trophy:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2"/><path d="M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2"/><path d="M6 3h12v10a6 6 0 01-12 0V3z"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>`,
-  issf:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>`,
-  star:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  plus:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-  x:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-  edit:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>`,
-  trash:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>`,
-  out:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
-  back:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>`,
-  chev:`<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`,
-  check:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
-  spark:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-  msg:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,
-  send:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
-  pdf:`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-  weekly:`<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><polyline points="8 2 8 6"/><polyline points="16 2 16 6"/><polyline points="9 14 11 16 15 12"/></svg>`,
+  home:_svg('home'),target:_svg('target'),chart:_svg('chart'),brain:_svg('brain'),
+  gun:_svg('gun'),bullet:_svg('bullet'),cal:_svg('cal'),users:_svg('users'),
+  user:_svg('user'),bell:_svg('bell'),trophy:_svg('trophy'),issf:_svg('issf'),
+  star:_svg('star'),out:_svg('out'),back:_svg('back'),check:_svg('check'),
+  msg:_svg('msg'),send:_svg('send'),weekly:_svg('weekly'),
+  plus:_svg('plus',13),x:_svg('x',13),edit:_svg('edit',13),
+  trash:_svg('trash',13),spark:_svg('spark',13),pdf:_svg('pdf',13),
+  chev:_svg('chev',12),
 };
 function render(){document.getElementById('app').innerHTML=html();bind()}
-function toast(msg,type='ok',dur=4500){ST.toast={msg,type};render();setTimeout(()=>{ST.toast=null;render()},dur);}
+function renderContent(){const el=document.querySelector('.content');if(el&&ST.user&&ST.profile?.onboarding_completed){el.innerHTML=pageHTML();bind();}else render();}
+function toast(msg,type='ok',dur=4500){
+  document.querySelector('.toast-fixed')?.remove();
+  const el=document.createElement('div');el.className=`toast toast-fixed ${type}`;
+  const ic=type==='ok'?'✓':type==='err'?'✗':'ℹ';
+  el.textContent=ic+' '+msg;document.body.appendChild(el);
+  if(dur>0)setTimeout(()=>el.remove(),dur);
+}
 // ── INIT + AUTH + EDGE FUNCTIONS ──────────────────────────────
 async function init(){
   const{data:{session}}=await sb.auth.getSession();
@@ -339,18 +359,24 @@ async function init(){
   });
 }
 async function loadProfile(){const{data}=await sb.from('profiles').select('*').eq('id',ST.user.id).single();ST.profile=data;}
+const SESSION_COLS='id,date,discipline,type,total_score,wind_level,objective_met,mental_state,physical_state,total_shots,athlete_notes,session_objective,exercise_type,planned_shots,scatt_file_url,target_photo_url,weapon_id,ammo_lot_id,import_source';
 async function loadData(){
   const uid=ST.user.id;
+  const calStart=new Date();calStart.setMonth(calStart.getMonth()-1);
+  const calEnd=new Date();calEnd.setMonth(calEnd.getMonth()+3);
+  const calFrom=calStart.toISOString().split('T')[0];
+  const calTo=calEnd.toISOString().split('T')[0];
   const[w,a,s,ce,notifs,invites,pbs]=await Promise.all([
     sb.from('weapons').select('*').eq('athlete_id',uid).eq('active',true).order('created_at',{ascending:false}),
     sb.from('ammo_lots').select('*').eq('athlete_id',uid).order('rating',{ascending:false}),
-    sb.from('sessions').select('*').eq('athlete_id',uid).order('date',{ascending:false}).limit(60),
-    sb.from('calendar_events').select('*').eq('athlete_id',uid).order('date'),
+    sb.from('sessions').select(SESSION_COLS).eq('athlete_id',uid).order('date',{ascending:false}).limit(60),
+    sb.from('calendar_events').select('*').eq('athlete_id',uid).gte('date',calFrom).lte('date',calTo).order('date'),
     sb.from('notifications').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(25),
     sb.from('coach_athletes').select('id,status,message,invited_at,coach_id').eq('athlete_id',uid).eq('status','pending'),
     sb.from('personal_bests').select('*').eq('athlete_id',uid),
   ]);
   weapons=w.data||[];ammos=a.data||[];sessions=s.data||[];
+  _chartCache={key:null,data:null};_weekCache={key:null,data:null};
   ST.calEvents=ce.data||[];ST.notifications=notifs.data||[];
   ST.notifCount=(notifs.data||[]).filter(n=>!n.read).length+(invites.data||[]).length;
   ST.invitations=invites.data||[];ST.personalBests=pbs.data||[];
@@ -391,9 +417,12 @@ async function saveCoachComment(sId,comment){const sess=sessions.find(s=>s.id===
 async function markNotificationsRead(){await sb.from('notifications').update({read:true}).eq('user_id',ST.user.id).eq('read',false);ST.notifCount=ST.invitations.length;ST.notifications=ST.notifications.map(n=>({...n,read:true}));render();}
 // DATA OPS
 async function saveSession(){
-  await ensureProfile();const d=ST.wizardData;let scUrl=null,tUrl=null;
-  if(d.scatt_file){const path=`${ST.user.id}/sc-${Date.now()}.${d.scatt_file.name.split('.').pop()}`;const{error}=await sb.storage.from('scatt-files').upload(path,d.scatt_file);if(!error){const{data:pd}=sb.storage.from('scatt-files').getPublicUrl(path);scUrl=pd.publicUrl;}}
-  if(d.target_file){const path=`${ST.user.id}/tg-${Date.now()}.${d.target_file.name.split('.').pop()}`;const{error}=await sb.storage.from('targets').upload(path,d.target_file);if(!error){const{data:pd}=sb.storage.from('targets').getPublicUrl(path);tUrl=pd.publicUrl;}}
+  await ensureProfile();const d=ST.wizardData;
+  const _upFile=async(bucket,file,prefix)=>{const path=`${ST.user.id}/${prefix}-${Date.now()}.${file.name.split('.').pop()}`;const{error}=await sb.storage.from(bucket).upload(path,file);if(error)return null;return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;};
+  const[scUrl,tUrl]=await Promise.all([
+    d.scatt_file?_upFile('scatt-files',d.scatt_file,'sc'):Promise.resolve(null),
+    d.target_file?_upFile('targets',d.target_file,'tg'):Promise.resolve(null),
+  ]);
   const{data:sess,error}=await sb.from('sessions').insert({athlete_id:ST.user.id,type:d.type,discipline:d.discipline,date:d.date,weapon_id:d.weapon_id||null,ammo_lot_id:d.ammo_lot_id||null,total_score:parseFloat(d.total_score)||null,total_shots:parseInt(d.planned_shots)||DISC[d.discipline]?.shots||60,wind_level:d.wind_level||null,mental_state:parseInt(d.mental_state)||null,physical_state:parseInt(d.physical_state)||null,athlete_notes:d.notes||null,session_objective:d.objective||null,exercise_type:d.exercise_type||null,planned_shots:parseInt(d.planned_shots)||null,objective_met:d.objective_met,scatt_file_url:scUrl,target_photo_url:tUrl,import_source:'wizard_v2'}).select().single();
   if(error){toast(error.message,'err');return;}
   await loadData();ST.page='session-detail';ST.selSession=sess.id;ST.aiInsight=null;
@@ -403,16 +432,28 @@ async function saveSession(){
   if(d.target_file&&d.target_file.type==='application/pdf')tp2='[PDF blanco adjunto]';
   render();analyzeSessionV2(sess.id,sc2,tp2);
 }
-async function saveWeapon(form){await ensureProfile();let error;if(editItem){({error}=await sb.from('weapons').update(form).eq('id',editItem.id))}else{({error}=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}))}if(!error){await loadData();ST.modal=null;editItem=null;toast('Arma guardada ✓')}else toast(error.message,'err')}
-async function deleteWeapon(id){const{error}=await sb.from('weapons').delete().eq('id',id);if(!error){await loadData();toast('Eliminada')}else toast(error.message,'err')}
-async function saveAmmo(form,photoFile){await ensureProfile();let photoUrl=form.photo_url||null;if(photoFile){const path=`${ST.user.id}/${Date.now()}.${photoFile.name.split('.').pop()}`;const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);if(!ue){const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);photoUrl=pd.publicUrl;}}const payload={...form,photo_url:photoUrl};let error;if(editItem){({error}=await sb.from('ammo_lots').update(payload).eq('id',editItem.id))}else{({error}=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}))}if(!error){await loadData();ST.modal=null;editItem=null;toast('Lote guardado ✓')}else toast(error.message,'err')}
-async function deleteAmmo(id){const{error}=await sb.from('ammo_lots').delete().eq('id',id);if(!error){await loadData();toast('Eliminado')}else toast(error.message,'err')}
+async function saveWeapon(form){await ensureProfile();let res;if(editItem){res=await sb.from('weapons').update(form).eq('id',editItem.id).select().single();}else{res=await sb.from('weapons').insert({...form,athlete_id:ST.user.id}).select().single();}if(res.error){toast(res.error.message,'err');return;}if(editItem){weapons=weapons.map(w=>w.id===editItem.id?res.data:w);}else{weapons=[res.data,...weapons];}ST.modal=null;editItem=null;toast('Arma guardada ✓');render();}
+async function deleteWeapon(id){const{error}=await sb.from('weapons').delete().eq('id',id);if(!error){weapons=weapons.filter(w=>w.id!==id);toast('Eliminada');render();}else toast(error.message,'err');}
+async function saveAmmo(form,photoFile){await ensureProfile();let photoUrl=form.photo_url||null;if(photoFile){const path=`${ST.user.id}/${Date.now()}.${photoFile.name.split('.').pop()}`;const{error:ue}=await sb.storage.from('ammo-photos').upload(path,photoFile);if(!ue){const{data:pd}=sb.storage.from('ammo-photos').getPublicUrl(path);photoUrl=pd.publicUrl;}}const payload={...form,photo_url:photoUrl};let res;if(editItem){res=await sb.from('ammo_lots').update(payload).eq('id',editItem.id).select().single();}else{res=await sb.from('ammo_lots').insert({...payload,athlete_id:ST.user.id}).select().single();}if(res.error){toast(res.error.message,'err');return;}if(editItem){ammos=ammos.map(a=>a.id===editItem.id?res.data:a);}else{ammos=[res.data,...ammos];}ST.modal=null;editItem=null;toast('Lote guardado ✓');render();}
+async function deleteAmmo(id){const{error}=await sb.from('ammo_lots').delete().eq('id',id);if(!error){ammos=ammos.filter(a=>a.id!==id);toast('Eliminado');render();}else toast(error.message,'err');}
 async function updateProfile(form){const{error}=await sb.from('profiles').update(form).eq('id',ST.user.id);if(!error){await loadProfile();toast('Perfil actualizado ✓')}else toast(error.message,'err')}
-async function saveCalEvent(form){await ensureProfile();const{error}=await sb.from('calendar_events').insert({...form,athlete_id:ST.user.id});if(!error){await loadData();ST.modal=null;toast('Evento agregado ✓')}else toast(error.message,'err')}
+async function saveCalEvent(form){await ensureProfile();const res=await sb.from('calendar_events').insert({...form,athlete_id:ST.user.id}).select().single();if(res.error){toast(res.error.message,'err');return;}ST.calEvents=[...ST.calEvents,res.data].sort((a,b)=>a.date.localeCompare(b.date));ST.modal=null;toast('Evento agregado ✓');render();}
 // HELPERS
-function getChartData(){let d=[...sessions];if(ST.chartFilter!=='all'){const days={'1m':30,'3m':90,'6m':180,'12m':365}[ST.chartFilter];const cut=new Date();cut.setDate(cut.getDate()-days);d=d.filter(s=>new Date(s.date)>=cut);}if(ST.chartType==='training')d=d.filter(s=>s.type==='training');if(ST.chartType==='competition')d=d.filter(s=>s.type==='competition');return d.slice(0,40).reverse();}
+let _chartCache={key:null,data:null};
+function getChartData(){
+  const key=`${ST.chartFilter}-${ST.chartType}-${sessions.length}-${sessions[0]?.id||''}`;
+  if(_chartCache.key===key)return _chartCache.data;
+  let d=[...sessions];if(ST.chartFilter!=='all'){const days={'1m':30,'3m':90,'6m':180,'12m':365}[ST.chartFilter];const cut=new Date();cut.setDate(cut.getDate()-days);d=d.filter(s=>new Date(s.date)>=cut);}if(ST.chartType==='training')d=d.filter(s=>s.type==='training');if(ST.chartType==='competition')d=d.filter(s=>s.type==='competition');
+  const result=d.slice(0,40).reverse();_chartCache={key,data:result};return result;
+}
 function getDefWeapon(disc){const isPistol=disc.includes('pistola');return weapons.find(w=>isPistol?w.type==='pistola':w.type==='rifle')||weapons[0]||null}
-function getWeekStats(){const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()===0?6:now.getDay()-1));mon.setHours(0,0,0,0);const lastMon=new Date(mon);lastMon.setDate(mon.getDate()-7);const tw=sessions.filter(s=>new Date(s.date+'T00:00:00')>=mon);const lw=sessions.filter(s=>{const d=new Date(s.date+'T00:00:00');return d>=lastMon&&d<mon});const twS=tw.map(s=>Number(s.total_score)).filter(Boolean);const lwS=lw.map(s=>Number(s.total_score)).filter(Boolean);const twA=twS.length?twS.reduce((a,b)=>a+b,0)/twS.length:null;const lwA=lwS.length?lwS.reduce((a,b)=>a+b,0)/lwS.length:null;return{thisWeek:tw,twA:twA?.toFixed(1),lwA:lwA?.toFixed(1),delta:twA&&lwA?(twA-lwA).toFixed(1):null,count:tw.length};}
+let _weekCache={key:null,data:null};
+function getWeekStats(){
+  const key=`${sessions.length}-${sessions[0]?.id||''}`;
+  if(_weekCache.key===key)return _weekCache.data;
+  const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()===0?6:now.getDay()-1));mon.setHours(0,0,0,0);const lastMon=new Date(mon);lastMon.setDate(mon.getDate()-7);const tw=sessions.filter(s=>new Date(s.date+'T00:00:00')>=mon);const lw=sessions.filter(s=>{const d=new Date(s.date+'T00:00:00');return d>=lastMon&&d<mon});const twS=tw.map(s=>Number(s.total_score)).filter(Boolean);const lwS=lw.map(s=>Number(s.total_score)).filter(Boolean);const twA=twS.length?twS.reduce((a,b)=>a+b,0)/twS.length:null;const lwA=lwS.length?lwS.reduce((a,b)=>a+b,0)/lwS.length:null;
+  const result={thisWeek:tw,twA:twA?.toFixed(1),lwA:lwA?.toFixed(1),delta:twA&&lwA?(twA-lwA).toFixed(1):null,count:tw.length};_weekCache={key,data:result};return result;
+}
 // ════════════════════════════════════════════════════════════════
 // HTML RENDERING
 // ════════════════════════════════════════════════════════════════
@@ -453,8 +494,7 @@ function appHTML(){
     {sec:'Cuenta'},{id:'notifications',l:'Notificaciones',i:'bell',notif:ST.notifCount},{id:'planes',l:'Planes',i:'star'},{id:'profile',l:'Mi perfil',i:'user'},
   ];
   const titles={home:'Dashboard','new-session':'Registrar sesión','sessions-list':'Historial',competitions:'Mis competencias',issf:'Historial ISSF',analysis:'Análisis IA avanzado',weapons:'Equipamiento',ammo:'Munición y balines',calendar:'Calendario',coach:isCoach?'Mi equipo':'Mi entrenador',notifications:'Notificaciones',planes:'Planes',profile:'Mi perfil','session-detail':'Detalle de sesión'};
-  return`${ST.toast?`<div class="toast ${ST.toast.type}">${ST.toast.type==='ok'?'✓':ST.toast.type==='err'?'✗':'ℹ'} ${ST.toast.msg}</div>`:''}
-<div class="app">
+  return`<div class="app">
   <aside class="sb">
     <div class="sb-logo"><div class="sb-wm">PERF<span>SHOT</span></div><div class="sb-sub">Shooting Performance</div></div>
     <nav class="sb-nav">${nav.map(item=>item.sec?`<div class="sb-sec">${item.sec}</div>`:`<button class="sb-item ${ST.page===item.id?'on':''}" data-page="${item.id}"><span style="flex-shrink:0;opacity:.7">${I[item.i]||''}</span>${item.l}${item.badge?`<span class="sb-badge">${item.badge}</span>`:item.notif?`<span class="sb-notif">${item.notif}</span>`:''}</button>`).join('')}</nav>
@@ -497,11 +537,11 @@ function pageHTML(){
 // ── DASHBOARD ────────────────────────────────────────────────────
 function dashHTML(){
   const scores=sessions.map(s=>s.total_score||0).filter(Boolean).map(Number);
-  const avgS=scores.length?parseFloat(avg(scores)):null;const best=scores.length?Math.max(...scores):null;
+  const avgS=scores.length?parseFloat(avg(scores)):null;const best=scores.length?scores.reduce((a,b)=>a>b?a:b):null;
   const compCount=sessions.filter(s=>s.type==='competition').length;
   const name=(ST.profile?.full_name||ST.user.email).split(' ')[0];
   const cd=getChartData();const cs=cd.map(s=>s.total_score||0).filter(Boolean).map(Number);
-  const cMin=cs.length?Math.min(...cs)-2:560;const cMax=cs.length?Math.max(...cs)+2:600;
+  const cMin=cs.length?cs.reduce((a,b)=>a<b?a:b)-2:560;const cMax=cs.length?cs.reduce((a,b)=>a>b?a:b)+2:600;
   const ws=getWeekStats();const wsum=ST.weeklySummary;const pbs=ST.personalBests;
   const rankings=ST.profile?.issf_world_rankings||{};
   const wcCls={excelente:'wc-ex',buena:'wc-bu',regular:'wc-re',baja:'wc-ba',sin_actividad:'wc-na'}[wsum?.calificacion]||'wc-na';
@@ -548,11 +588,17 @@ function wizS1(){const d=ST.wizardData;const dW=d.discipline?getDefWeapon(d.disc
 function wizS2(){const d=ST.wizardData;const tp=ST.todayPlan;const ex=tp?.exercise_detail;return`<div style="font-family:var(--disp);font-size:14px;font-weight:600;margin-bottom:3px">Plan del día</div><div class="txs tmuted mb9">Revisá el entrenamiento o cargá el tuyo</div>${tp&&ex?.estructura?.length?`<div style="background:linear-gradient(135deg,rgba(29,158,117,.07),rgba(77,184,255,.04));border:1px solid rgba(29,158,117,.2);border-radius:var(--r);padding:11px;margin-bottom:10px"><div class="flex ic gap5 mb6"><span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:500;background:var(--greend);color:var(--green)">${tp.generated_by==='ai'?'✦ IA':'📋 Entrenador'}</span><span class="txs tmuted">${tp.time_start||''}</span></div><div style="font-family:var(--disp);font-size:12px;font-weight:600;margin-bottom:2px">${ex.titulo||tp.title}</div><div class="txs" style="color:var(--t2);margin-bottom:7px">${ex.objetivo_principal||''}</div>${ex.estructura.map(b=>`<div style="background:var(--white);border:1px solid var(--b);border-radius:var(--rs);padding:8px;margin-bottom:5px"><div class="flex ic jb mb2"><div style="font-size:11px;font-weight:500">${b.bloque}</div><div style="font-family:var(--mono);font-size:11px;color:var(--green)">${b.disparos} disp.</div></div><div style="font-size:11px;color:var(--t2)">${b.descripcion}</div>${b.foco?`<div style="font-size:10px;color:var(--t3);margin-top:2px;font-style:italic">Foco: ${b.foco}</div>`:''}</div>`).join('')}${ex.instruccion_clave?`<div style="background:rgba(29,158,117,.1);border-left:3px solid var(--green);padding:6px 10px;border-radius:0 5px 5px 0;font-size:11px;color:var(--green);margin-top:6px">🎯 ${ex.instruccion_clave}</div>`:''}</div>`:`<div style="background:var(--fog);border:1px solid var(--b);border-radius:var(--r);padding:11px;margin-bottom:10px"><div class="txs tmuted mb7">Sin plan para hoy. Completá el detalle:</div><div class="fg"><label class="fl">Objetivo</label><input class="fi" id="w-obj" placeholder="Ej: Mejorar consistencia en series..." value="${d.objective||''}"/></div><div class="fg2"><div class="fg"><label class="fl">Tipo ejercicio</label><select class="fs" id="w-extype"><option value="">Seleccionar...</option><option value="tecnica">Técnica</option><option value="series_cortas">Series cortas</option><option value="volumen">Volumen</option><option value="calidad">Calidad</option><option value="competencia_sim">Simulacro</option><option value="recuperacion">Recuperación</option></select></div><div class="fg"><label class="fl">Disparos plan.</label><input class="fi" id="w-shots" type="number" value="${d.planned_shots||DISC[d.discipline]?.shots||60}"/></div></div></div>`}<div class="fg"><label class="fl">Puntaje obtenido</label><input class="fi" id="w-score" type="number" min="0" max="700" step="0.1" placeholder="Ej: 583.7" value="${d.total_score||''}"/></div>`}
 function wizS3(){const d=ST.wizardData;return`<div style="font-family:var(--disp);font-size:14px;font-weight:600;margin-bottom:3px">Condiciones y archivos</div><div class="txs tmuted mb10">Claude analiza con conocimiento técnico ISSF por disciplina</div><div class="fg mb9"><label class="fl">¿Se cumplió el objetivo?</label><div class="obj-check ${d.objective_met===true?'yes':d.objective_met===false?'no':''}" id="obj-toggle"><div class="obj-chk-icon">${d.objective_met===true?'✓':d.objective_met===false?'✗':''}</div><div><div style="font-size:13px;font-weight:500">${d.objective_met===true?'Sí, cumplido':d.objective_met===false?'No se cumplió':'Tocá para evaluar'}</div><div class="txs tmuted">${d.objective_met===null?'Sin evaluar':d.objective_met===true?'Logrado':'La IA lo analizará'}</div></div></div></div><div class="fg mb9"><label class="fl">Viento</label><div class="wind-cards">${[['sin_viento','🌿','Sin viento'],['bajo','🍃','Bajo'],['medio','💨','Medio'],['alto','🌬️','Alto']].map(([v,icon,label])=>`<div class="wind-card ${d.wind_level===v?'on':''}" data-wind="${v}"><div class="wind-icon">${icon}</div><div class="wind-label">${label}</div></div>`).join('')}</div></div><div class="fg mb8"><label class="fl">Estado mental (${d.mental_state||7}/10)</label><div class="rng-row"><input type="range" id="w-mental" min="1" max="10" step="1" value="${d.mental_state||7}"/><span class="rng-val" id="mental-val" style="color:${(d.mental_state||7)>=8?'var(--green)':(d.mental_state||7)<=5?'var(--red)':'var(--gold)'}">${d.mental_state||7}</span></div></div><div class="fg mb9"><label class="fl">Estado físico (${d.physical_state||7}/10)</label><div class="rng-row"><input type="range" id="w-physical" min="1" max="10" step="1" value="${d.physical_state||7}"/><span class="rng-val" id="physical-val">${d.physical_state||7}</span></div></div><div class="fg mb8"><label class="fl">Notas libres</label><textarea class="fta" id="w-notes" placeholder="Sensaciones, observaciones...">${d.notes||''}</textarea></div><div style="font-family:var(--disp);font-size:11px;font-weight:600;margin-bottom:7px">Archivos para análisis IA</div><div class="g2"><div><div class="upload-zone"><input type="file" id="scatt-file" accept=".csv,.txt,.scatt,.xml"/><div style="font-size:19px;pointer-events:none">📊</div><div style="font-size:11px;color:var(--t2);font-weight:500;pointer-events:none">SCATT</div></div>${d.scatt_file?`<div class="file-up">📊 ${d.scatt_file.name}</div>`:''}</div><div><div class="upload-zone"><input type="file" id="target-file" accept=".pdf,image/*"/><div style="font-size:19px;pointer-events:none">🎯</div><div style="font-size:11px;color:var(--t2);font-weight:500;pointer-events:none">Blanco / PDF</div></div>${d.target_file?`<div class="file-up">🎯 ${d.target_file.name}</div>`:''}</div></div><div style="background:rgba(29,158,117,.05);border:1px solid rgba(29,158,117,.12);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--t2);margin-top:9px;line-height:1.6">✦ <strong style="color:var(--green)">Claude</strong> analiza con base técnica ISSF, detecta patrones y genera próxima sesión al calendario.</div>`}
 // ── HISTORIAL + SESSION DETAIL ───────────────────────────────────
+const SESS_PAGE_SIZE=20;
 function sessListHTML(){
   const cS=sessions.filter(s=>s.type==='competition'&&s.total_score).map(s=>Number(s.total_score));
   const tS=sessions.filter(s=>s.type==='training'&&s.total_score).map(s=>Number(s.total_score));
-  return`<div class="flex ic jb mb11"><div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Historial</div><div class="txs tmuted mt8">${sessions.length} sesiones · Comp: ${cS.length?(cS.reduce((a,b)=>a+b,0)/cS.length).toFixed(1):'—'} · Entren: ${tS.length?(tS.reduce((a,b)=>a+b,0)/tS.length).toFixed(1):'—'}</div></div><button class="btn btn-p btn-sm" data-page="new-session">${I.plus} Nueva</button></div>
-<div class="card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--b)">${['Fecha','Tipo','Disciplina','Puntaje','Obj.','Mental','Viento'].map(h=>`<th style="font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:7px 9px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${sessions.map(s=>`<tr style="border-bottom:1px solid var(--b2);cursor:pointer;transition:background .15s" data-sess="${s.id}" onmouseover="this.style.background='var(--fog)'" onmouseout="this.style.background=''"><td style="padding:9px;font-family:var(--mono);font-size:11px;color:var(--t3)">${s.date}</td><td style="padding:9px"><span class="badge ${s.type==='competition'?'bo':'bb'}">${s.type==='competition'?'Comp.':'Entren.'}</span></td><td style="padding:9px;font-size:12px">${DISC[s.discipline]?.label||s.discipline}</td><td style="padding:9px;font-family:var(--disp);font-size:15px;font-weight:700;color:${sc(s.total_score)}">${s.total_score||'—'}</td><td style="padding:9px;text-align:center;font-size:13px">${s.objective_met===true?'✅':s.objective_met===false?'❌':'—'}</td><td style="padding:9px;font-family:var(--mono);font-size:11px;color:${(s.mental_state||0)>=8?'var(--green)':'var(--t3)'}">${s.mental_state?s.mental_state+'/10':'—'}</td><td style="padding:9px;font-size:11px;color:var(--t3)">${s.wind_level?s.wind_level.replace('_',' '):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+  const total=sessions.length;const pages=Math.max(1,Math.ceil(total/SESS_PAGE_SIZE));
+  const pg=Math.min(ST.sessPage,pages-1);
+  const pageSess=sessions.slice(pg*SESS_PAGE_SIZE,(pg+1)*SESS_PAGE_SIZE);
+  const thStyle='font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding:7px 9px;text-align:left';
+  return`<div class="flex ic jb mb11"><div><div style="font-family:var(--disp);font-size:16px;font-weight:700">Historial</div><div class="txs tmuted mt8">${total} sesiones · Comp: ${cS.length?(cS.reduce((a,b)=>a+b,0)/cS.length).toFixed(1):'—'} · Entren: ${tS.length?(tS.reduce((a,b)=>a+b,0)/tS.length).toFixed(1):'—'}</div></div><button class="btn btn-p btn-sm" data-page="new-session">${I.plus} Nueva</button></div>
+<div class="card" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--b)">${['Fecha','Tipo','Disciplina','Puntaje','Obj.','Mental','Viento'].map(h=>`<th style="${thStyle}">${h}</th>`).join('')}</tr></thead><tbody>${pageSess.map(s=>`<tr style="border-bottom:1px solid var(--b2);cursor:pointer;transition:background .15s" data-sess="${s.id}" onmouseover="this.style.background='var(--fog)'" onmouseout="this.style.background=''"><td style="padding:9px;font-family:var(--mono);font-size:11px;color:var(--t3)">${s.date}</td><td style="padding:9px"><span class="badge ${s.type==='competition'?'bo':'bb'}">${s.type==='competition'?'Comp.':'Entren.'}</span></td><td style="padding:9px;font-size:12px">${DISC[s.discipline]?.label||s.discipline}</td><td style="padding:9px;font-family:var(--disp);font-size:15px;font-weight:700;color:${sc(s.total_score)}">${s.total_score||'—'}</td><td style="padding:9px;text-align:center;font-size:13px">${s.objective_met===true?'✅':s.objective_met===false?'❌':'—'}</td><td style="padding:9px;font-family:var(--mono);font-size:11px;color:${(s.mental_state||0)>=8?'var(--green)':'var(--t3)'}">${s.mental_state?s.mental_state+'/10':'—'}</td><td style="padding:9px;font-size:11px;color:var(--t3)">${s.wind_level?s.wind_level.replace('_',' '):'—'}</td></tr>`).join('')}</tbody></table></div>
+${pages>1?`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px;padding:0 2px"><button class="btn btn-s btn-sm" id="sess-prev" ${pg===0?'disabled':''}>← Anterior</button><span style="font-size:11px;color:var(--t3);font-family:var(--mono)">${pg+1} / ${pages} · ${total} sesiones</span><button class="btn btn-s btn-sm" id="sess-next" ${pg>=pages-1?'disabled':''}>Siguiente →</button></div>`:''}`;
 }
 function sessDetailHTML(){
   const s=sessions.find(x=>x.id===ST.selSession);
@@ -616,7 +662,7 @@ function issfHTML(){
   const tC={world_cup:'twc',world_championship:'twch',junior_world_cup:'tjwc',continental:'tjwc',other:'tother'};
   return`<div>
   ${Object.keys(rankings).length?`<div class="issf-hero"><div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:2px">Perfil ISSF oficial</div><div style="font-family:var(--disp);font-size:16px;font-weight:800;color:#fff;margin-bottom:2px">${p?.full_name||'—'}</div><div style="font-size:11px;color:#6B8FAF;margin-bottom:10px">${prof.issf_country||p?.issf_country||''} · ${p?.issf_id||''} · ${results.length} competencias</div><div class="flex gap8 mb10 flex-wrap">${Object.entries(rankings).map(([disc,rank])=>`<div class="issf-rank-item"><div class="issf-rank-num">#${rank}</div><div class="issf-rank-disc">${disc.replace(/women|men/gi,'').trim()}</div></div>`).join('')}</div><div class="flex ic gap7"><button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#9DBDD4;border:1px solid rgba(255,255,255,.1)" id="btn-issf-resync">↻ Actualizar</button><span style="font-size:10px;color:#3A5570">Sync: ${prof.issf_last_sync?new Date(prof.issf_last_sync).toLocaleDateString('es-AR'):'—'}</span></div></div>`:''}
-  <div class="metrics m4 mb11"><div class="metric mo"><div class="ml">Competencias</div><div class="mv" style="font-size:20px">${results.length}</div></div><div class="metric mp"><div class="ml">Medallas</div><div class="mv" style="font-size:20px">${results.filter(r=>r.medal).length}</div><div class="md neu">${results.filter(r=>r.medal==='oro').length}🥇 ${results.filter(r=>r.medal==='plata').length}🥈 ${results.filter(r=>r.medal==='bronce').length}🥉</div></div><div class="metric mg"><div class="ml">Mejor posición</div><div class="mv" style="font-size:20px">${results.filter(r=>r.rank).length?'#'+Math.min(...results.filter(r=>r.rank).map(r=>r.rank)):'—'}</div></div><div class="metric mb"><div class="ml">World Cups</div><div class="mv" style="font-size:20px">${results.filter(r=>r.competition_type==='world_cup').length}</div></div></div>
+  <div class="metrics m4 mb11"><div class="metric mo"><div class="ml">Competencias</div><div class="mv" style="font-size:20px">${results.length}</div></div><div class="metric mp"><div class="ml">Medallas</div><div class="mv" style="font-size:20px">${results.filter(r=>r.medal).length}</div><div class="md neu">${results.filter(r=>r.medal==='oro').length}🥇 ${results.filter(r=>r.medal==='plata').length}🥈 ${results.filter(r=>r.medal==='bronce').length}🥉</div></div><div class="metric mg"><div class="ml">Mejor posición</div><div class="mv" style="font-size:20px">${results.filter(r=>r.rank).length?'#'+results.filter(r=>r.rank).map(r=>r.rank).reduce((a,b)=>a<b?a:b):'—'}</div></div><div class="metric mb"><div class="ml">World Cups</div><div class="mv" style="font-size:20px">${results.filter(r=>r.competition_type==='world_cup').length}</div></div></div>
   <div class="filter-tabs"><span class="txs tmuted" style="line-height:26px">Tipo:</span>${[['all','Todos'],['world_cup','World Cup'],['world_championship','World Champ.'],['junior_world_cup','Junior WC']].map(([v,l])=>`<button class="ftab ${ST.issfFilter===v?'on':''}" data-issffilter="${v}">${l}</button>`).join('')}</div>
   ${years.length?years.map(year=>`<div class="card mb9"><div class="flex ic jb mb7"><div class="flex ic gap7"><span style="font-family:var(--disp);font-size:12px;font-weight:600">${year}</span><span class="txs tmuted">${byYear[year].length} comp.</span></div></div>${byYear[year].map(r=>{const me={oro:'🥇',plata:'🥈',bronce:'🥉'}[r.medal]||null;return`<div class="issf-res-row"><div class="issf-medal ${r.medal?'med-'+r.medal:'med-none'}">${me||(r.rank?r.rank>99?'99+':'#'+r.rank:'—')}</div><div style="flex:1"><div style="font-size:12px;font-weight:500">${r.competition_name}</div><div class="txs tmuted"><span class="issf-type ${tC[r.competition_type]||'tother'}">${tL[r.competition_type]||r.competition_type}</span>${r.city?` · ${r.city}`:''}${r.discipline?` · ${r.discipline}`:''}</div></div>${r.score_qual?`<div style="font-family:var(--mono);font-size:11px;text-align:right">${r.score_qual}</div>`:''}</div>`;}).join('')}</div>`).join(''):`<div class="coming"><div class="ct">Sin resultados para este filtro</div></div>`}
   <div style="text-align:center;padding:7px 0"><button class="btn btn-s btn-sm" id="btn-issf-change-id">Cambiar ISSF ID</button></div>
@@ -632,8 +678,8 @@ function analysisHTML(){
   ${d&&!ST.analysisLoading?`
   <div class="ai-card mb11"><div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">Resumen ejecutivo</div><span class="badge ${insights?.tendencia_general==='mejorando'?'bg':insights?.tendencia_general==='declinando'?'br':'bgr'}" style="margin-left:auto">${insights?.tendencia_general==='mejorando'?'↑ Mejorando':insights?.tendencia_general==='declinando'?'↓ Declinando':'→ Estable'}</span></div><div class="ai-body">${insights?.resumen_ejecutivo||''}</div>${insights?.oportunidad_mayor?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:8px;font-size:12px;color:var(--green)"><strong>Mayor oportunidad:</strong> ${insights.oportunidad_mayor}</div>`:''}${insights?.alerta?`<div style="background:var(--redd);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:12px;color:var(--red)"><strong>⚠</strong> ${insights.alerta}</div>`:''}</div>
   ${stats?`<div class="metrics m3 mb11"><div class="card"><div class="ml">Promedio período</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.avgScore||'—'}</div></div><div class="card"><div class="ml">Entren. / Comp.</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.avgTraining||'—'}<span style="font-size:12px;color:var(--t3)"> / ${stats.avgComp||'—'}</span></div></div><div class="card"><div class="ml">Cumpl. objetivos</div><div style="font-family:var(--disp);font-size:20px;font-weight:800">${stats.objectiveRate!=null?stats.objectiveRate+'%':'—'}</div></div></div>`:''}
-  ${stats?.ammoAnalysis?.length?`<div class="card mb11"><div class="ct mb4">Correlación munición / puntaje</div><div class="txs tmuted mb9">Promedio por lote</div>${stats.ammoAnalysis.map((a,i)=>{const mp=Math.max(...stats.ammoAnalysis.map(x=>x.avg_score));const pct=mp>0?Math.round((a.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${a.brand||'—'} ${a.model||''}<div class="txs tmuted">${a.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${i===0?'var(--green)':'rgba(29,158,117,'+(Math.max(0.2,0.6-i*0.15))+')'}"></div></div><div class="corr-val">${a.avg_score}</div></div>`;}).join('')}${insights?.mejor_municion?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:11px;color:var(--green)">★ <strong>${insights.mejor_municion.brand}</strong> — ${insights.mejor_municion.motivo}</div>`:''}</div>`:''}
-  ${stats?.mentalCorr?.length?`<div class="card mb11"><div class="ct mb4">Estado mental vs puntaje</div><div class="txs tmuted mb9">${insights?.patron_mental||'Correlación mental/rendimiento'}</div>${stats.mentalCorr.map(m=>{const mp=Math.max(...stats.mentalCorr.map(x=>x.avg_score));const pct=mp>0?Math.round((m.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${m.mental}/10<div class="txs tmuted">${m.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${m.mental>=8?'var(--green)':m.mental<=5?'var(--red)':'var(--gold)'}"></div></div><div class="corr-val">${m.avg_score}</div></div>`;}).join('')}</div>`:''}
+  ${stats?.ammoAnalysis?.length?`<div class="card mb11"><div class="ct mb4">Correlación munición / puntaje</div><div class="txs tmuted mb9">Promedio por lote</div>${stats.ammoAnalysis.map((a,i)=>{const mp=stats.ammoAnalysis.map(x=>x.avg_score).reduce((a,b)=>a>b?a:b,0);const pct=mp>0?Math.round((a.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${a.brand||'—'} ${a.model||''}<div class="txs tmuted">${a.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${i===0?'var(--green)':'rgba(29,158,117,'+(Math.max(0.2,0.6-i*0.15))+')'}"></div></div><div class="corr-val">${a.avg_score}</div></div>`;}).join('')}${insights?.mejor_municion?`<div style="background:var(--greend);border-radius:var(--rs);padding:6px 10px;margin-top:7px;font-size:11px;color:var(--green)">★ <strong>${insights.mejor_municion.brand}</strong> — ${insights.mejor_municion.motivo}</div>`:''}</div>`:''}
+  ${stats?.mentalCorr?.length?`<div class="card mb11"><div class="ct mb4">Estado mental vs puntaje</div><div class="txs tmuted mb9">${insights?.patron_mental||'Correlación mental/rendimiento'}</div>${stats.mentalCorr.map(m=>{const mp=stats.mentalCorr.map(x=>x.avg_score).reduce((a,b)=>a>b?a:b,0);const pct=mp>0?Math.round((m.avg_score/mp)*100):0;return`<div class="corr-row"><div class="corr-lbl">${m.mental}/10<div class="txs tmuted">${m.sessions} ses.</div></div><div class="corr-bar-wrap"><div class="corr-bar-fill" style="width:${pct}%;background:${m.mental>=8?'var(--green)':m.mental<=5?'var(--red)':'var(--gold)'}"></div></div><div class="corr-val">${m.avg_score}</div></div>`;}).join('')}</div>`:''}
   ${insights?.hallazgos?.length?`<div style="font-family:var(--disp);font-size:12px;font-weight:600;margin-bottom:8px">Hallazgos de Claude</div>${insights.hallazgos.map(h=>{const icons={municion:'🎯',mental:'🧠',condiciones:'🌬️',tecnica:'🔫',consistencia:'📊',volumen:'📈'};const bgs={alto:'var(--redd)',medio:'var(--goldd)',bajo:'var(--blued)'};return`<div class="insight-card"><div class="insight-icon" style="background:${bgs[h.impacto]||'var(--fog2)'}">${icons[h.categoria]||'💡'}</div><div><div style="font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:${h.impacto==='alto'?'var(--red)':h.impacto==='medio'?'var(--gold)':'var(--blue)'};margin-bottom:2px">${h.categoria} · ${h.impacto}</div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${h.titulo}</div><div style="font-size:11px;color:var(--t2);line-height:1.5">${h.descripcion}</div>${h.accion?`<div style="font-size:11px;color:var(--green);margin-top:4px;font-weight:500">→ ${h.accion}</div>`:''}</div></div>`;}).join('')}`:'' }
   `:''}
 </div>`;
@@ -707,6 +753,7 @@ function bind(){
     if(pg==='new-session'){ST.wizardStep=1;ST.wizardData={discipline:'',type:'training',date:new Date().toISOString().split('T')[0],weapon_id:'',ammo_lot_id:'',objective:'',exercise_type:'',planned_shots:60,wind_level:'',mental_state:7,physical_state:7,objective_met:null,notes:'',scatt_file:null,target_file:null,total_score:''};}
     if(pg==='notifications')markNotificationsRead();
     if(pg==='competitions')ST.compData=null;
+    if(pg==='sessions-list')ST.sessPage=0;
     render();
   }));
   $('go-prf')?.addEventListener('click',()=>{ST.page='profile';render()});
@@ -744,8 +791,8 @@ function bind(){
   });
   $('ob-finish')?.addEventListener('click',()=>{ST.page='home';render()});
   // ── DASHBOARD ──────────────────────────────────────────────
-  document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('click',()=>{ST.chartFilter=el.dataset.cf;render()}));
-  document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{ST.chartType=el.dataset.ct;render()}));
+  document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('click',()=>{ST.chartFilter=el.dataset.cf;renderContent()}));
+  document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{ST.chartType=el.dataset.ct;renderContent()}));
   $('btn-plan')?.addEventListener('click',getTrainingPlan);
   $('btn-weekly')?.addEventListener('click',()=>getWeeklySummary(false));
   $('btn-aw-d')?.addEventListener('click',()=>{editItem=null;ST.modal='weapon';render()});
@@ -790,9 +837,9 @@ function bind(){
   $('btn-issf-view')?.addEventListener('click',()=>{ST.issfImportResult=null;loadIssfResults();});
   $('btn-issf-resync')?.addEventListener('click',()=>{if(ST.profile?.issf_id)importISSF(ST.profile.issf_id,true);});
   $('btn-issf-change-id')?.addEventListener('click',()=>{ST.issfData=null;ST.issfImportResult=null;render();});
-  document.querySelectorAll('[data-issffilter]').forEach(el=>el.addEventListener('click',()=>{ST.issfFilter=el.dataset.issffilter;render();}));
+  document.querySelectorAll('[data-issffilter]').forEach(el=>el.addEventListener('click',()=>{ST.issfFilter=el.dataset.issffilter;renderContent();}));
   // ── ANÁLISIS ───────────────────────────────────────────────
-  document.querySelectorAll('[data-period]').forEach(el=>el.addEventListener('click',()=>{ST.analysisPeriod=el.dataset.period;ST.analysisData=null;render()}));
+  document.querySelectorAll('[data-period]').forEach(el=>el.addEventListener('click',()=>{ST.analysisPeriod=el.dataset.period;ST.analysisData=null;renderContent()}));
   $('btn-run-analysis')?.addEventListener('click',runAdvancedAnalysis);
   $('btn-run-analysis-2')?.addEventListener('click',runAdvancedAnalysis);
   // ── CALENDARIO ─────────────────────────────────────────────
@@ -805,6 +852,9 @@ function bind(){
   document.querySelectorAll('[data-accept]').forEach(el=>el.addEventListener('click',()=>acceptInvitation(el.dataset.accept)));
   document.querySelectorAll('[data-reject]').forEach(el=>el.addEventListener('click',()=>rejectInvitation(el.dataset.reject)));
   $('btn-refresh-coach')?.addEventListener('click',()=>{ST.coachData=null;render()});
+  // ── HISTORIAL PAGINACIÓN ───────────────────────────────────
+  $('sess-prev')?.addEventListener('click',()=>{if(ST.sessPage>0){ST.sessPage--;renderContent();}});
+  $('sess-next')?.addEventListener('click',()=>{const pages=Math.ceil(sessions.length/SESS_PAGE_SIZE);if(ST.sessPage<pages-1){ST.sessPage++;renderContent();}});
   // ── NOTIFICACIONES ─────────────────────────────────────────
   $('btn-mark-read')?.addEventListener('click',markNotificationsRead);
   // ── ARMAS ──────────────────────────────────────────────────
