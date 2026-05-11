@@ -789,7 +789,11 @@ function bind(){
     if(!ST.obData.disciplines.length){toast('Seleccioná al menos una disciplina','err');return}
     await runOnboarding();
   });
-  $('ob-finish')?.addEventListener('click',()=>{ST.page='home';render()});
+  $('ob-finish')?.addEventListener('click',async()=>{
+    if(ST.profile)ST.profile.onboarding_completed=true;
+    await sb.from('profiles').update({onboarding_completed:true}).eq('id',ST.user.id);
+    ST.page='home';render();
+  });
   // ── DASHBOARD ──────────────────────────────────────────────
   document.querySelectorAll('[data-cf]').forEach(el=>el.addEventListener('click',()=>{ST.chartFilter=el.dataset.cf;renderContent()}));
   document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{ST.chartType=el.dataset.ct;renderContent()}));
