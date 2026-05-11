@@ -348,8 +348,13 @@ function toast(msg,type='ok',dur=4500){
 }
 // ── INIT + AUTH + EDGE FUNCTIONS ──────────────────────────────
 async function init(){
-  const{data:{session}}=await sb.auth.getSession();
-  if(session?.user){ST.user=session.user;await loadProfile();await loadData();}
+  let{data:{session}}=await sb.auth.getSession();
+  if(session?.user){
+    // Proactively refresh to ensure token is valid after project restores / password resets
+    const{data:ref}=await sb.auth.refreshSession();
+    if(ref?.session)session=ref.session;
+    ST.user=session.user;await loadProfile();await loadData();
+  }
   ST.loading=false;render();
   sb.auth.onAuthStateChange(async(e,s)=>{
     ST.user=s?.user||null;
@@ -383,16 +388,28 @@ async function loadData(){
   const today=new Date().toISOString().split('T')[0];
   ST.todayPlan=ST.calEvents.find(e=>e.date===today&&e.event_type==='training')||null;
 }
-async function signIn(email,pass){const{error}=await sb.auth.signInWithPassword({email,password:pass});return error?.message||null}
+async function signIn(email,pass){const{data,error}=await sb.auth.signInWithPassword({email,password:pass});if(error)return error.message;if(data?.session)await sb.auth.setSession(data.session);return null;}
 async function signUp(email,pass,name,role){const{data,error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name,role}}});if(error)return error.message;if(data.user)await sb.from('profiles').upsert({id:data.user.id,full_name:name,email,role,disciplines:['10m_pistola_aire_m'],onboarding_completed:false});return null;}
 async function signOut(){await sb.auth.signOut();ST.page='home';render()}
 async function ensureProfile(){if(!ST.profile){await sb.from('profiles').upsert({id:ST.user.id,email:ST.user.email,role:'athlete',full_name:ST.user.email.split('@')[0],disciplines:['10m_pistola_aire_m'],onboarding_completed:false});await loadProfile();}}
 async function callEdge(name,body){
+  const _do=async(token)=>fetch(`${SURL}/functions/v1/${name}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify(body)});
   try{
-    const{data:{session}}=await sb.auth.getSession();
+    let{data:{session}}=await sb.auth.getSession();
     if(!session?.access_token)throw new Error('Sin sesión activa. Ingresá de nuevo.');
-    const res=await fetch(`${SURL}/functions/v1/${name}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},body:JSON.stringify(body)});
-    const data=await res.json();if(data.error)throw new Error(data.error);return data;
+    let res=await _do(session.access_token);
+    if(res.status===401){
+      const{data:ref,error:re}=await sb.auth.refreshSession();
+      if(re||!ref?.session?.access_token){
+        await sb.auth.signOut();ST.user=null;ST.profile=null;render();
+        throw new Error('Sesión expirada. Ingresá de nuevo.');
+      }
+      res=await _do(ref.session.access_token);
+    }
+    const data=await res.json();
+    if(!res.ok&&!data.error)throw new Error(`Error ${res.status} en ${name}`);
+    if(data.error)throw new Error(data.error);
+    return data;
   }catch(e){throw e}
 }
 async function analyzeSessionV2(sId,sc2=null,tp2=null){
@@ -760,11 +777,11 @@ function bind(){
   $('btn-so')?.addEventListener('click',signOut);
   $('btn-back')?.addEventListener('click',()=>{ST.page='sessions-list';ST.selSession=null;ST.aiInsight=null;render()});
   // ── AUTH ───────────────────────────────────────────────────
-  $('btn-li')?.addEventListener('click',async()=>{const e=$('ae')?.value,p=$('ap')?.value;if(!e||!p)return;$('btn-li').innerHTML='<span class="spinner"></span>';const err=await signIn(e,p);if(err)$('auth-inner').innerHTML=loginHTML(err);});
+  $('btn-li')?.addEventListener('click',async()=>{const e=$('ae')?.value,p=$('ap')?.value;if(!e||!p){$('auth-inner').innerHTML=loginHTML('Completá email y contraseña.');return;}$('btn-li').innerHTML='<span class="spinner"></span>';$('btn-li').disabled=true;const err=await signIn(e,p);if(err){$('auth-inner').innerHTML=loginHTML(err);}});
   $('to-reg')?.addEventListener('click',()=>{$('auth-inner').innerHTML=regHTML();bind()});
   $('to-li')?.addEventListener('click',()=>{$('auth-inner').innerHTML=loginHTML();bind()});
   document.querySelectorAll('.rcard').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.rcard').forEach(x=>x.classList.remove('on'));c.classList.add('on');if($('rrole'))$('rrole').value=c.dataset.role;}));
-  $('btn-reg')?.addEventListener('click',async()=>{const n=$('rn')?.value,e=$('re')?.value,p=$('rp')?.value,r=$('rrole')?.value||'athlete';if(!n||!e||!p)return;$('btn-reg').innerHTML='<span class="spinner"></span>';const err=await signUp(e,p,n,r);if(err)$('auth-inner').innerHTML=regHTML(err);});
+  $('btn-reg')?.addEventListener('click',async()=>{const n=$('rn')?.value?.trim(),e=$('re')?.value?.trim(),p=$('rp')?.value;if(!n||!e||!p){$('auth-inner').innerHTML=regHTML('Completá todos los campos.');return;}if(p.length<6){$('auth-inner').innerHTML=regHTML('La contraseña debe tener al menos 6 caracteres.');return;}$('btn-reg').innerHTML='<span class="spinner"></span>';$('btn-reg').disabled=true;const err=await signUp(e,p,n,r=$('rrole')?.value||'athlete');if(err)$('auth-inner').innerHTML=regHTML(err);});
   // ── ONBOARDING ─────────────────────────────────────────────
   document.querySelectorAll('[data-ob-disc]').forEach(el=>el.addEventListener('click',()=>{const v=el.dataset.obDisc;const idx=ST.obData.disciplines.indexOf(v);if(idx>=0)ST.obData.disciplines.splice(idx,1);else ST.obData.disciplines.push(v);render()}));
   document.querySelectorAll('[data-ob-comp]').forEach(el=>el.addEventListener('click',()=>{ST.obData.competition_level=el.dataset.obComp;render()}));
