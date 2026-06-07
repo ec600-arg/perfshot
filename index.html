@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PerfShot — 25M Sport Pistol</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-tap-highlight-color:transparent;background:#0B1C2D;color:#fff}
+
+/* ── Screens ── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .18s}
+.screen.active{opacity:1;pointer-events:all}
+
+/* ── HOME ── */
+#home{background:#0B1C2D;
+  padding:max(env(safe-area-inset-top),16px) 20px max(env(safe-area-inset-bottom),16px);
+  overflow-y:auto}
+.app-header{text-align:center;padding:28px 0 22px}
+.app-title{font-size:36px;font-weight:900;letter-spacing:6px}
+.app-sub{font-size:12px;color:#8BA5BB;letter-spacing:2px;margin-top:5px}
+.cards{display:flex;flex-direction:column;gap:16px}
+.card{background:#132638;border-radius:16px;border:1.5px solid transparent;overflow:hidden}
+.card-top{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.card-icon{font-size:28px}
+.card-title{font-size:22px;font-weight:800;letter-spacing:3px}
+.card-title-es{font-size:12px;color:#8BA5BB;margin-top:2px}
+.card-detail{font-size:15px;font-weight:600;padding:0 16px 10px;line-height:22px}
+.bullets{padding:0 16px 12px;display:flex;flex-direction:column;gap:5px}
+.bullet{display:flex;gap:8px;align-items:center;font-size:13px;color:#8BA5BB}
+.start-btn{display:block;margin:0 12px 14px;border-radius:10px;padding:15px;
+  text-align:center;font-size:14px;font-weight:800;letter-spacing:2px;
+  color:#fff;cursor:pointer;border:none;width:calc(100% - 24px);-webkit-appearance:none}
+.footer{text-align:center;font-size:11px;color:#4A6278;letter-spacing:1px;padding:18px 0 6px}
+
+/* ── TRAINING ── */
+#training{padding:max(env(safe-area-inset-top),12px) 20px max(env(safe-area-inset-bottom),24px);
+  transition:background-color .12s ease}
+.bg-neutral{background:#0B1C2D}
+.bg-green  {background:#1A8F3C}
+.bg-red    {background:#BF1A1A}
+
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px}
+.series-bar{font-size:13px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.75);flex:1}
+.close-btn{font-size:20px;color:rgba(255,255,255,.6);font-weight:700;
+  cursor:pointer;padding:6px;background:none;border:none;color:rgba(255,255,255,.6)}
+
+.center{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;text-align:center;padding:10px 0}
+.phase-label{font-size:clamp(26px,8vw,38px);font-weight:900;letter-spacing:5px}
+.timer-text{font-size:clamp(80px,23vw,120px);font-weight:900;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.timer-urgent{color:#FFE066}
+.sublabel{font-size:clamp(14px,4vw,17px);color:rgba(255,255,255,.72);letter-spacing:1px}
+.idle-mode{font-size:clamp(40px,12vw,62px);font-weight:900;letter-spacing:4px}
+.idle-sub{font-size:clamp(14px,4vw,16px);color:rgba(255,255,255,.65);line-height:24px;
+  margin-top:10px;white-space:pre-line}
+.done-check{font-size:68px}
+.done-title{font-size:clamp(34px,10vw,54px);font-weight:900;letter-spacing:4px;line-height:1.1}
+.done-sub{font-size:15px;color:rgba(255,255,255,.6);margin-top:14px;letter-spacing:1px}
+.hidden{display:none!important}
+
+/* ── Controls ── */
+.controls{display:flex;flex-direction:column;gap:12px}
+.control-row{display:flex;gap:12px}
+.btn{border-radius:14px;padding:18px;text-align:center;font-size:14px;font-weight:800;
+  letter-spacing:2px;cursor:pointer;border:none;color:#fff;-webkit-appearance:none;
+  transition:opacity .1s;width:100%}
+.btn:active{opacity:.72}
+.btn-half{flex:1;width:auto}
+.btn-primary{background:#4DB8FF;color:#0B1C2D}
+.btn-secondary{background:rgba(255,255,255,.18)}
+.btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,.32);color:rgba(255,255,255,.82)}
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══════════════════════════════════════════════════ -->
+<div id="home" class="screen active">
+  <div class="app-header">
+    <div class="app-title">PERFSHOT</div>
+    <div class="app-sub">25M SPORT PISTOL TIMER</div>
+  </div>
+
+  <div class="cards">
+    <div class="card" style="border-color:#1A8F3C">
+      <div class="card-top" style="background:rgba(26,143,60,.14)">
+        <div class="card-icon">🎯</div>
+        <div>
+          <div class="card-title" style="color:#1A8F3C">PRECISION</div>
+          <div class="card-title-es">Fase de Precisión</div>
+        </div>
+      </div>
+      <div class="card-detail">6 competition series × 5 shots<br>4 minutes per series</div>
+      <div class="bullets">
+        <div class="bullet"><span style="color:#1A8F3C">•</span>1 min to load</div>
+        <div class="bullet"><span style="color:#1A8F3C">•</span>7s delay after ATTENTION</div>
+        <div class="bullet"><span style="color:#1A8F3C">•</span>240s fire window</div>
+      </div>
+      <button class="start-btn" style="background:#1A8F3C" onclick="startMode('precision')">START SESSION</button>
+    </div>
+
+    <div class="card" style="border-color:#BF1A1A">
+      <div class="card-top" style="background:rgba(191,26,26,.14)">
+        <div class="card-icon">⚡</div>
+        <div>
+          <div class="card-title" style="color:#BF1A1A">RAPID-FIRE</div>
+          <div class="card-title-es">Fase de Velocidad</div>
+        </div>
+      </div>
+      <div class="card-detail">6 competition series × 5 shots<br>3 seconds per shot</div>
+      <div class="bullets">
+        <div class="bullet"><span style="color:#BF1A1A">•</span>1 min to load</div>
+        <div class="bullet"><span style="color:#BF1A1A">•</span>7s delay after ATTENTION</div>
+        <div class="bullet"><span style="color:#BF1A1A">•</span>3s fire / 7s ready</div>
+      </div>
+      <button class="start-btn" style="background:#BF1A1A" onclick="startMode('rapidfire')">START SESSION</button>
+    </div>
+  </div>
+  <div class="footer">ISSF 25m Sport Pistol — Official Timing</div>
+</div>
+
+<!-- ══ TRAINING ══════════════════════════════════════════════ -->
+<div id="training" class="screen bg-neutral">
+
+  <div class="top-bar">
+    <div class="series-bar" id="series-bar">—</div>
+    <button class="close-btn" onclick="handleStop()">✕</button>
+  </div>
+
+  <div class="center">
+    <div id="s-idle">
+      <div class="idle-mode" id="idle-label">PRECISION</div>
+      <div class="idle-sub" id="idle-sub">—</div>
+    </div>
+
+    <div id="s-run" class="hidden">
+      <div class="phase-label" id="phase-label">FIRE</div>
+      <div class="timer-text" id="timer-text">4:00</div>
+      <div class="sublabel" id="sublabel">—</div>
+    </div>
+
+    <div id="s-done" class="hidden">
+      <div class="done-check">✓</div>
+      <div class="done-title">TRAINING<br>COMPLETE</div>
+      <div class="done-sub">6 competition series</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div id="c-idle">
+      <button class="btn btn-primary" onclick="handleStart()">▶  START SESSION</button>
+    </div>
+    <div id="c-run" class="hidden">
+      <div class="control-row">
+        <button class="btn btn-secondary btn-half" id="pause-btn" onclick="handlePauseResume()">⏸  PAUSE</button>
+        <button class="btn btn-ghost btn-half" onclick="handleSkip()">SKIP ▶▶</button>
+      </div>
+    </div>
+    <div id="c-done" class="hidden">
+      <button class="btn btn-primary" onclick="goHome()">← HOME</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ AUDIO ═══════════════════════════════════════════════════════════════════
+let actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  return actx;
+}
+function tone(freq, dur) {
+  try {
+    const c = ctx(), osc = c.createOscillator(), g = c.createGain();
+    osc.connect(g); g.connect(c.destination);
+    osc.type = 'sine'; osc.frequency.value = freq;
+    g.gain.setValueAtTime(.65, c.currentTime);
+    g.gain.linearRampToValueAtTime(.65, c.currentTime + .01);
+    g.gain.exponentialRampToValueAtTime(.001, c.currentTime + dur);
+    osc.start(); osc.stop(c.currentTime + dur + .05);
+  } catch(e) {}
+}
+function snd(name) {
+  if (name === 'start')     tone(880, .35);
+  if (name === 'stop')      tone(392, 1.20);
+  if (name === 'shortStop') tone(660, .22);
+}
+function speak(txt) {
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'en-US'; u.rate = .88;
+    speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+// ══ SEQUENCES ════════════════════════════════════════════════════════════════
+const T = { PREP:180, LOAD:60, ATT:7, PREC:240, RFG:3, RFR:7, STOP:4, UNL:10, REST:60 };
+
+function loadCmd(s) {
+  if (s===0) return 'For the sighting series. Load.';
+  if (s===1) return 'For the first competition series. Load.';
+  return 'For the next competition series. Load.';
+}
+function slabel(s) { return s===0 ? 'SIGHTING SERIES' : `SERIES ${s} / 6`; }
+
+function buildSeq(mode) {
+  const a = [];
+  const N = 7;
+  a.push({id:'PREP',phase:'PREP',color:'neutral',label:'PREPARATION',
+    sub:'3 minutes — get ready',dur:T.PREP,cmd:'Preparation time. Three minutes.',snd:null});
+
+  for (let s=0; s<N; s++) {
+    const sl = slabel(s);
+    a.push({id:`L${s}`,phase:'LOAD',color:'neutral',sl,
+      label:'LOAD',sub:sl,dur:T.LOAD,cmd:loadCmd(s),snd:null});
+    a.push({id:`A${s}`,phase:'ATTENTION',color:'red',sl,
+      label:'ATTENTION',
+      sub: mode==='precision' ? 'Targets turning — get ready' : 'Arm down — ready position (≤ 45°)',
+      dur:T.ATT,
+      cmd: mode==='precision' ? 'Attention.' : 'Attention. Ready position.',
+      snd:null});
+
+    if (mode==='precision') {
+      a.push({id:`F${s}`,phase:'FIRE',color:'green',sl,
+        label:'FIRE',sub:'5 shots — 4 minutes',dur:T.PREC,cmd:null,snd:'start'});
+    } else {
+      for (let sh=1; sh<=5; sh++) {
+        a.push({id:`F${s}_${sh}`,phase:'FIRE',color:'green',sl,
+          label:`SHOT ${sh}`,sub:'FIRE NOW',dur:T.RFG,cmd:null,snd:'start'});
+        if (sh<5)
+          a.push({id:`R${s}_${sh}`,phase:'READY',color:'red',sl,
+            label:'READY',sub:'Lower arm — ≤ 45°',dur:T.RFR,cmd:null,snd:'shortStop'});
+      }
+    }
+
+    a.push({id:`ST${s}`,phase:'STOP',color:'red',sl,
+      label:'STOP',sub: mode==='precision' ? 'Time up' : 'Series complete',
+      dur:T.STOP,cmd:'Stop.',snd:'stop'});
+    a.push({id:`U${s}`,phase:'UNLOAD',color:'red',sl,
+      label:'UNLOAD',sub:'Show clear firearm',dur:T.UNL,cmd:'Unload.',snd:null});
+    if (s<N-1)
+      a.push({id:`RE${s}`,phase:'REST',color:'neutral',sl,
+        label:'REST',sub:`Next: ${slabel(s+1)}`,dur:T.REST,cmd:null,snd:null});
+  }
+
+  a.push({id:'DONE',phase:'DONE',color:'neutral',
+    label:'DONE',sub:'',dur:0,cmd:'Training complete. Well done.',snd:null});
+  return a;
+}
+
+// ══ STATE ════════════════════════════════════════════════════════════════════
+let G = { session:'idle', mode:null, seq:[], idx:0, rem:0, tmr:null, wl:null };
+
+function fmtMs(ms) {
+  if (ms<=0) return '0';
+  if (ms<10000) return (ms/1000).toFixed(1);
+  const s = Math.ceil(ms/1000), m = Math.floor(s/60), ss = s%60;
+  return m>0 ? m+':'+String(ss).padStart(2,'0') : String(s);
+}
+
+function clrTmr() { if (G.tmr){clearInterval(G.tmr);G.tmr=null;} }
+
+function runStep(idx) {
+  const step = G.seq[idx];
+  if (!step) return;
+  G.idx = idx;
+
+  if (step.cmd) speak(step.cmd);
+  if (step.snd) snd(step.snd);
+
+  renderStep(step);
+
+  if (step.phase==='DONE') {
+    G.session='done'; renderCtrl(); relWL(); return;
+  }
+  if (step.dur===0) { setTimeout(()=>runStep(idx+1),60); return; }
+
+  G.rem = step.dur * 1000;
+  updTimer(G.rem);
+
+  const end = Date.now() + G.rem;
+  clrTmr();
+  G.tmr = setInterval(()=>{
+    const r = end - Date.now();
+    if (r<=0) { clrTmr(); G.rem=0; updTimer(0); runStep(idx+1); }
+    else      { G.rem=r; updTimer(r); }
+  }, 100);
+}
+
+const BGCLS = {neutral:'bg-neutral',green:'bg-green',red:'bg-red'};
+
+function renderStep(step) {
+  const t = document.getElementById('training');
+  t.className = 'screen active ' + (BGCLS[step.color]||'bg-neutral');
+  document.getElementById('series-bar').textContent = step.sl || (G.mode.toUpperCase()+' MODE');
+  document.getElementById('phase-label').textContent = step.label;
+  document.getElementById('sublabel').textContent = step.sub;
+  const te = document.getElementById('timer-text');
+  te.style.display = step.dur>0 ? '' : 'none';
+  if (step.dur>0) te.textContent = fmtMs(step.dur*1000);
+  tog('s-idle',false); tog('s-run',true); tog('s-done',false);
+  renderCtrl();
+}
+
+function updTimer(ms) {
+  const el = document.getElementById('timer-text');
+  el.textContent = fmtMs(ms);
+  const step = G.seq[G.idx];
+  el.classList.toggle('timer-urgent', !!(step && step.color==='green' && ms<4000));
+}
+
+function renderCtrl() {
+  const s = G.session;
+  tog('c-idle',    s==='idle');
+  tog('c-run',     s==='running'||s==='paused');
+  tog('c-done',    s==='done');
+  if (s==='done') {
+    tog('s-idle',false); tog('s-run',false); tog('s-done',true);
+    document.getElementById('training').className='screen active bg-neutral';
+  }
+  const pb = document.getElementById('pause-btn');
+  if (pb) pb.textContent = s==='paused' ? '▶  RESUME' : '⏸  PAUSE';
+}
+
+function tog(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('hidden', !show);
+}
+
+// ══ CONTROLS ════════════════════════════════════════════════════════════════
+function startMode(mode) {
+  G.mode = mode; G.seq = buildSeq(mode); G.session = 'idle';
+  document.getElementById('idle-label').textContent = mode==='precision' ? 'PRECISION' : 'RAPID-FIRE';
+  document.getElementById('idle-sub').textContent   = mode==='precision'
+    ? '6 competition series\n5 shots × 4 minutes'
+    : '6 competition series\n5 shots × 3 seconds each';
+  document.getElementById('series-bar').textContent = mode==='precision' ? 'PRECISION MODE' : 'RAPID-FIRE MODE';
+  document.getElementById('training').className = 'screen bg-neutral';
+  tog('s-idle',true); tog('s-run',false); tog('s-done',false);
+  renderCtrl();
+  document.getElementById('home').classList.remove('active');
+  document.getElementById('training').classList.add('active');
+}
+
+function handleStart() {
+  G.session='running'; renderCtrl(); reqWL(); runStep(0);
+}
+
+function handlePauseResume() {
+  if (G.session==='running') {
+    clrTmr(); speechSynthesis.cancel(); G.session='paused'; renderCtrl();
+  } else if (G.session==='paused') {
+    G.session='running'; renderCtrl();
+    const end = Date.now() + G.rem, si = G.idx;
+    G.tmr = setInterval(()=>{
+      const r = end-Date.now();
+      if (r<=0) { clrTmr(); G.rem=0; updTimer(0); runStep(si+1); }
+      else      { G.rem=r; updTimer(r); }
+    },100);
+  }
+}
+
+function handleSkip() {
+  clrTmr(); speechSynthesis.cancel(); runStep(G.idx+1);
+}
+
+function handleStop() {
+  if (G.session==='idle'||G.session==='done') { goHome(); return; }
+  if (confirm('Stop training session?')) {
+    clrTmr(); speechSynthesis.cancel(); relWL(); goHome();
+  }
+}
+
+function goHome() {
+  clrTmr(); speechSynthesis.cancel(); relWL(); G.session='idle';
+  document.getElementById('training').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+}
+
+// ══ WAKE LOCK ════════════════════════════════════════════════════════════════
+async function reqWL() {
+  try { if ('wakeLock' in navigator) G.wl = await navigator.wakeLock.request('screen'); } catch(e) {}
+}
+function relWL() {
+  try { if (G.wl) { G.wl.release(); G.wl=null; } } catch(e) {}
+}
+document.addEventListener('visibilitychange', ()=>{
+  if (document.visibilityState==='visible' && G.session==='running') reqWL();
+});
+</script>
+</body>
+</html>
