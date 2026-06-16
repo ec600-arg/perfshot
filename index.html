@@ -321,7 +321,7 @@ if(typeof supabase==='undefined'||!supabase.createClient){
 }
 const sb=supabase.createClient(SURL,SKEY);
 let ST={
-  user:null,profile:null,page:'home',loading:true,toast:null,modal:null,selSession:null,
+  user:null,profile:null,page:'home',loading:true,toast:null,modal:null,selSession:null,recovery:false,
   chartFilter:'all',chartType:'all',aiInsight:null,aiLoading:false,
   trainingPlan:null,advisorLoading:false,wizardStep:1,
   wizardData:{discipline:'',type:'training',date:new Date().toISOString().split('T')[0],weapon_id:'',ammo_lot_id:'',objective:'',exercise_type:'',planned_shots:60,wind_level:'',mental_state:7,physical_state:7,objective_met:null,notes:'',scatt_file:null,target_file:null,total_score:''},
@@ -402,6 +402,8 @@ async function init(){
   }catch(e){toast('Error de conexión: '+(e?.message||e),'err');}
   finally{clearTimeout(safety);ST.loading=false;render();}
   sb.auth.onAuthStateChange(async(e,s)=>{
+    // User arrived from a password-reset email link → show "set new password" screen
+    if(e==='PASSWORD_RECOVERY'){ST.recovery=true;ST.user=s?.user||null;ST.loading=false;render();return;}
     ST.user=s?.user||null;
     try{
       if(ST.user){await loadProfile();await loadData();}
@@ -410,6 +412,8 @@ async function init(){
     render();
   });
 }
+async function resetPassword(email){const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});return error?error.message:null;}
+async function updatePassword(newPass){const{error}=await sb.auth.updateUser({password:newPass});return error?error.message:null;}
 async function loadProfile(){const{data}=await sb.from('profiles').select('*').eq('id',ST.user.id).single();ST.profile=data;}
 const SESSION_COLS='id,date,discipline,type,total_score,wind_level,objective_met,mental_state,physical_state,total_shots,athlete_notes,session_objective,exercise_type,planned_shots,scatt_file_url,target_photo_url,weapon_id,ammo_lot_id,import_source';
 async function loadData(){
@@ -523,13 +527,16 @@ function getWeekStats(){
 // ════════════════════════════════════════════════════════════════
 function html(){
   if(ST.loading)return`<div class="loading"><div class="load-logo">PERF<span>SHOT</span></div><div class="spinner"></div></div>`;
+  if(ST.recovery)return authHTML();
   if(!ST.user)return authHTML();
   if(ST.profile&&!ST.profile.onboarding_completed&&ST.page!=='profile')return onboardingHTML();
   return appHTML();
 }
 // AUTH
-function authHTML(){return`<div class="auth-sc"><div class="auth-card"><div class="auth-lm">PERF<span>SHOT</span></div><div class="auth-ls">Shooting Performance</div><div id="auth-inner">${loginHTML()}</div></div></div>`}
-function loginHTML(err=''){return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Bienvenido</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:14px">Iniciá sesión para continuar</div>${err?`<div class="auth-err">${err}</div>`:''}<input class="auth-in" id="ae" placeholder="Email" type="email"/><input class="auth-in" id="ap" placeholder="Contraseña" type="password"/><button class="auth-btn" id="btn-li">Iniciar sesión</button><div class="auth-sw">¿No tenés cuenta? <a id="to-reg">Registrate</a></div>`}
+function authHTML(){return`<div class="auth-sc"><div class="auth-card"><div class="auth-lm">PERF<span>SHOT</span></div><div class="auth-ls">Shooting Performance</div><div id="auth-inner">${ST.recovery?newPassHTML():loginHTML()}</div></div></div>`}
+function loginHTML(err=''){return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Bienvenido</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:14px">Iniciá sesión para continuar</div>${err?`<div class="auth-err">${err}</div>`:''}<input class="auth-in" id="ae" placeholder="Email" type="email"/><input class="auth-in" id="ap" placeholder="Contraseña" type="password"/><div style="text-align:right;margin:-2px 0 9px"><a id="to-forgot" style="font-size:11px;color:#6B8FAF;cursor:pointer">¿Olvidaste tu contraseña?</a></div><button class="auth-btn" id="btn-li">Iniciar sesión</button><div class="auth-sw">¿No tenés cuenta? <a id="to-reg">Registrate</a></div>`}
+function forgotHTML(err='',sent=false){if(sent)return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Revisá tu email</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:14px;line-height:1.6">Te enviamos un link para crear una nueva contraseña. Abrilo desde este mismo dispositivo y vas a poder elegir una clave nueva.</div><div style="background:var(--greend);border:1px solid rgba(0,212,138,.2);border-radius:var(--rs);padding:10px 12px;font-size:11px;color:var(--green);margin-bottom:14px;line-height:1.6">📧 Si no lo ves en unos minutos, revisá la carpeta de spam.</div><button class="auth-btn" id="to-li-2">Volver al inicio</button>`;return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Recuperar contraseña</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:14px;line-height:1.6">Ingresá tu email y te mandamos un link para crear una contraseña nueva.</div>${err?`<div class="auth-err">${err}</div>`:''}<input class="auth-in" id="fe" placeholder="Email" type="email"/><button class="auth-btn" id="btn-forgot">Enviar link de recuperación</button><div class="auth-sw">¿Te acordaste? <a id="to-li">Volver al inicio</a></div>`}
+function newPassHTML(err=''){return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Nueva contraseña</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:14px">Elegí una contraseña nueva para tu cuenta.</div>${err?`<div class="auth-err">${err}</div>`:''}<input class="auth-in" id="np1" placeholder="Nueva contraseña" type="password"/><input class="auth-in" id="np2" placeholder="Repetir contraseña" type="password"/><button class="auth-btn" id="btn-newpass">Guardar contraseña</button>`}
 function regHTML(err=''){return`<div style="font-family:var(--disp);font-size:15px;font-weight:600;color:#fff;margin-bottom:3px">Crear cuenta</div><div style="font-size:12px;color:#6B8FAF;margin-bottom:11px">¿Cómo vas a usar PERF SHOT?</div><div class="role-cards"><div class="rcard on" data-role="athlete" id="rc-a"><div style="font-size:19px">🎯</div><div class="rcard-n">Atleta</div></div><div class="rcard" data-role="coach" id="rc-c"><div style="font-size:19px">📋</div><div class="rcard-n">Entrenador</div></div></div><input type="hidden" id="rrole" value="athlete"/>${err?`<div class="auth-err">${err}</div>`:''}<input class="auth-in" id="rn" placeholder="Nombre completo"/><input class="auth-in" id="re" placeholder="Email" type="email"/><input class="auth-in" id="rp" placeholder="Contraseña" type="password"/><button class="auth-btn" id="btn-reg">Crear cuenta</button><div class="auth-sw">¿Ya tenés cuenta? <a id="to-li">Iniciá sesión</a></div>`}
 // ONBOARDING
 function onboardingHTML(){
@@ -841,6 +848,10 @@ function bind(){
   $('btn-li')?.addEventListener('click',async()=>{const e=$('ae')?.value,p=$('ap')?.value;if(!e||!p){$('auth-inner').innerHTML=loginHTML('Completá email y contraseña.');return;}$('btn-li').innerHTML='<span class="spinner"></span>';$('btn-li').disabled=true;const err=await signIn(e,p);if(err){$('auth-inner').innerHTML=loginHTML(err);}});
   $('to-reg')?.addEventListener('click',()=>{$('auth-inner').innerHTML=regHTML();bind()});
   $('to-li')?.addEventListener('click',()=>{$('auth-inner').innerHTML=loginHTML();bind()});
+  $('to-li-2')?.addEventListener('click',()=>{$('auth-inner').innerHTML=loginHTML();bind()});
+  $('to-forgot')?.addEventListener('click',()=>{$('auth-inner').innerHTML=forgotHTML();bind()});
+  $('btn-forgot')?.addEventListener('click',async()=>{const e=$('fe')?.value?.trim();if(!e){$('auth-inner').innerHTML=forgotHTML('Ingresá tu email.');bind();return;}$('btn-forgot').innerHTML='<span class="spinner"></span>';$('btn-forgot').disabled=true;const err=await resetPassword(e);if(err){$('auth-inner').innerHTML=forgotHTML(err);bind();}else{$('auth-inner').innerHTML=forgotHTML('',true);bind();}});
+  $('btn-newpass')?.addEventListener('click',async()=>{const p1=$('np1')?.value,p2=$('np2')?.value;if(!p1||!p2){$('auth-inner').innerHTML=newPassHTML('Completá ambos campos.');bind();return;}if(p1.length<6){$('auth-inner').innerHTML=newPassHTML('La contraseña debe tener al menos 6 caracteres.');bind();return;}if(p1!==p2){$('auth-inner').innerHTML=newPassHTML('Las contraseñas no coinciden.');bind();return;}$('btn-newpass').innerHTML='<span class="spinner"></span>';$('btn-newpass').disabled=true;const err=await updatePassword(p1);if(err){$('auth-inner').innerHTML=newPassHTML(err);bind();}else{ST.recovery=false;toast('Contraseña actualizada. ¡Bienvenido de nuevo!','ok');try{await loadProfile();await loadData();}catch(e){}render();}});
   document.querySelectorAll('.rcard').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.rcard').forEach(x=>x.classList.remove('on'));c.classList.add('on');if($('rrole'))$('rrole').value=c.dataset.role;}));
   $('btn-reg')?.addEventListener('click',async()=>{const n=$('rn')?.value?.trim(),e=$('re')?.value?.trim(),p=$('rp')?.value;if(!n||!e||!p){$('auth-inner').innerHTML=regHTML('Completá todos los campos.');return;}if(p.length<6){$('auth-inner').innerHTML=regHTML('La contraseña debe tener al menos 6 caracteres.');return;}$('btn-reg').innerHTML='<span class="spinner"></span>';$('btn-reg').disabled=true;const err=await signUp(e,p,n,r=$('rrole')?.value||'athlete');if(err)$('auth-inner').innerHTML=regHTML(err);});
   // ── ONBOARDING ─────────────────────────────────────────────
