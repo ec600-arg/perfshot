@@ -28,7 +28,10 @@
   --mono:'DM Mono',monospace;--disp:'Syne',sans-serif;--body:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--body);background:var(--bg);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6}
+body{font-family:var(--body);background:var(--bg);color:var(--t);min-height:100vh;font-size:14px;line-height:1.6;position:relative}
+body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 15% -5%,rgba(0,212,138,.06),transparent 60%),radial-gradient(ellipse 70% 50% at 100% 10%,rgba(77,184,255,.05),transparent 55%),radial-gradient(ellipse 60% 50% at 50% 110%,rgba(157,133,255,.04),transparent 60%);animation:ambient 24s ease-in-out infinite alternate}
+@keyframes ambient{0%{opacity:.7;transform:translate3d(0,0,0) scale(1)}50%{opacity:1;transform:translate3d(0,-1.5%,0) scale(1.04)}100%{opacity:.8;transform:translate3d(1%,1%,0) scale(1.02)}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}*{animation-duration:.01ms!important;transition-duration:.05ms!important}}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
 .app{display:flex;min-height:100vh}
 .sb{width:220px;flex-shrink:0;background:rgba(6,12,23,.95);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
@@ -279,7 +282,54 @@ body{font-family:var(--body);background:var(--bg);color:var(--t);min-height:100v
 .loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:12px;background-image:radial-gradient(ellipse at 30% 70%,rgba(0,212,138,.05),transparent 50%)}
 .load-logo{font-family:var(--disp);font-size:30px;font-weight:800;color:#fff;letter-spacing:.05em}.load-logo span{color:var(--green);text-shadow:0 0 24px rgba(0,212,138,.4)}
 .coming{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:7px;padding:26px;text-align:center;box-shadow:var(--sh)}
-@media(max-width:768px){.sb{display:none}.main{margin-left:0}.m5,.m4,.m3,.btm,.g2,.g3,.fg2,.fg3,.sess-stats,.disc-cards,.wind-cards,.ob-options.c2,.ob-options.c3,.coach-module,.pricing-grid{grid-template-columns:1fr}}
+/* ══ QUALITY PASS — motion, depth, skeletons, micro-interactions ══ */
+/* Staggered content entrance: children of .content rise & fade in sequence */
+.content>*{animation:riseIn .5s cubic-bezier(.16,1,.3,1) both}
+.content>*:nth-child(1){animation-delay:.02s}.content>*:nth-child(2){animation-delay:.06s}.content>*:nth-child(3){animation-delay:.1s}.content>*:nth-child(4){animation-delay:.14s}.content>*:nth-child(5){animation-delay:.18s}.content>*:nth-child(6){animation-delay:.22s}.content>*:nth-child(n+7){animation-delay:.26s}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* Refined depth: layered, softer shadows with a subtle top highlight on cards */
+.card,.metric,.chart-card,.ai-card,.mini,.sess-list,.sess-hdr,.ai-analysis-card,.insight-card,.comp-card,.plan-card,.ecard,.acard,.issf-hero,.adv-card{position:relative}
+.card::after,.metric::after,.chart-card::after,.mini::after,.sess-list::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);z-index:0}
+.card>*,.metric>*,.chart-card>*,.mini>*{position:relative;z-index:1}
+/* Cards lift on hover with a green-tinted ambient glow */
+.card,.chart-card,.mini,.ai-card{transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s,border-color .22s}
+.card:hover,.chart-card:hover,.mini:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:var(--sh),0 12px 40px rgba(0,0,0,.28)}
+/* Metric cards: brighter accent bar on hover + glow */
+.metric::before{transition:filter .22s,box-shadow .22s}.metric:hover::before{filter:brightness(1.3)}
+.metric.mg:hover{box-shadow:var(--sh),0 10px 36px rgba(0,212,138,.1)}
+/* Button micro-interactions: shine sweep + tactile press */
+.btn{position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-18deg);transition:left .55s ease;pointer-events:none}
+.btn:hover::after{left:130%}
+.btn:active{transform:translateY(1px) scale(.985)}
+.auth-btn,.adv-btn,.plan-btn{position:relative;overflow:hidden}.auth-btn:active,.adv-btn:active{transform:translateY(1px) scale(.99)}
+/* Interactive selectable cards: smoother, springier */
+.disc-card,.wind-card,.ob-opt,.rcard,.cf,.ptab,.ftab{transition:all .18s cubic-bezier(.16,1,.3,1)}
+.disc-card:hover,.wind-card:hover,.ob-opt:hover,.rcard:hover{transform:translateY(-1px)}
+.disc-card.on,.wind-card.on,.ob-opt.on,.rcard.on{box-shadow:0 0 0 1px rgba(0,212,138,.25),0 6px 20px rgba(0,212,138,.08)}
+/* Shimmer skeleton loaders */
+.skel{position:relative;overflow:hidden;background:var(--glass2);border-radius:var(--rs)}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:shimmer 1.4s infinite}
+@keyframes shimmer{to{transform:translateX(100%)}}
+.skel-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);margin-bottom:12px}
+.skel-line{height:11px;border-radius:5px;margin-bottom:9px}
+/* Polished spinner: dual-tone conic ring */
+.spinner{width:14px;height:14px;border:2px solid rgba(0,212,138,.15);border-top-color:var(--green);border-right-color:var(--green);border-radius:50%;animation:spin .55s cubic-bezier(.6,.1,.4,.9) infinite;display:inline-block}
+/* Elevated loading screen with animated ring + pulsing wordmark */
+.loading{position:relative}
+.load-ring{width:48px;height:48px;border-radius:50%;border:2px solid rgba(0,212,138,.12);border-top-color:var(--green);animation:spin .8s linear infinite;box-shadow:0 0 24px rgba(0,212,138,.12)}
+.load-logo{animation:logoPulse 2.4s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{opacity:1}50%{opacity:.55}}
+/* Sidebar nav: icon nudges right on hover */
+.sb-item svg{transition:transform .18s}.sb-item:hover svg{transform:translateX(2px)}
+/* Focus-visible accessibility ring */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[data-page]:focus-visible,[data-disc]:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:4px}
+/* Toast: slide-up with glow accent */
+.toast{animation:toastIn .32s cubic-bezier(.16,1,.3,1)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+/* Score numbers get a subtle tabular alignment */
+.s-score,.big-score,.mv,.cs-v,.ss-v{font-variant-numeric:tabular-nums}
+@media(max-width:768px){.sb{display:none}.main{margin-left:0}.m5,.m4,.m3,.btm,.g2,.g3,.fg2,.fg3,.sess-stats,.disc-cards,.wind-cards,.ob-options.c2,.ob-options.c3,.coach-module,.pricing-grid{grid-template-columns:1fr}.content>*{animation-delay:0s!important}}
 </style>
 </head>
 <body>
@@ -525,8 +575,17 @@ function getWeekStats(){
 // ════════════════════════════════════════════════════════════════
 // HTML RENDERING
 // ════════════════════════════════════════════════════════════════
+// Shimmer skeleton placeholder — used while content loads (feels faster than a bare spinner)
+function skel(kind='dash'){
+  const line=(w,h=11)=>`<div class="skel skel-line" style="width:${w};height:${h}px"></div>`;
+  const card=inner=>`<div class="skel-card">${inner}</div>`;
+  if(kind==='metrics')return`<div class="metrics m5" style="margin-bottom:12px">${Array.from({length:5}).map(()=>`<div class="skel-card" style="margin:0;padding:14px">${line('50%',9)}${line('70%',22)}${line('40%',9)}</div>`).join('')}</div>`;
+  if(kind==='cards')return Array.from({length:3}).map(()=>card(line('40%')+line('90%')+line('75%'))).join('');
+  // default: dashboard-like skeleton
+  return skel('metrics')+card(line('30%')+`<div class="skel skel-line" style="width:100%;height:90px;border-radius:9px"></div>`)+Array.from({length:2}).map(()=>card(line('35%')+line('85%')+line('65%'))).join('');
+}
 function html(){
-  if(ST.loading)return`<div class="loading"><div class="load-logo">PERF<span>SHOT</span></div><div class="spinner"></div></div>`;
+  if(ST.loading)return`<div class="loading"><div class="load-logo">PERF<span>SHOT</span></div><div class="load-ring"></div><div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)">Cargando tu rendimiento</div></div>`;
   if(ST.recovery)return authHTML();
   if(!ST.user)return authHTML();
   if(ST.profile&&!ST.profile.onboarding_completed&&ST.page!=='profile')return onboardingHTML();
@@ -588,8 +647,8 @@ function pageHTML(){
     case'sessions-list':return sessListHTML();
     case'session-detail':return sessDetailHTML();
     case'competitions':
-      if(!ST.compData&&!ST.compLoading){setTimeout(()=>loadCompData(),80);return`<div class="coming"><div class="spinner"></div></div>`;}
-      if(ST.compLoading)return`<div class="coming"><div class="spinner"></div></div>`;
+      if(!ST.compData&&!ST.compLoading){setTimeout(()=>loadCompData(),80);return skel('dash');}
+      if(ST.compLoading)return skel('dash');
       return compHTML();
     case'issf':
       if(ST.profile?.issf_id&&!ST.issfData&&!ST.issfLoading&&!ST.issfImporting){setTimeout(()=>loadIssfResults(),80);return`<div class="coming"><div class="spinner"></div><div class="tsm tmuted mt9">Cargando historial ISSF...</div></div>`;}
@@ -788,8 +847,8 @@ function calendarHTML(){
 function coachHTML(){
   const isCoach=(ST.profile?.role||'athlete')==='coach';
   if(!isCoach)return`<div><div style="font-family:var(--disp);font-size:16px;font-weight:700;margin-bottom:3px">Mi entrenador</div><div class="txs tmuted mb12">Vinculación y feedback</div>${ST.invitations.length?`<div style="font-family:var(--disp);font-size:12px;font-weight:600;margin-bottom:8px">Invitaciones pendientes</div>${ST.invitations.map(inv=>`<div class="invite-card"><div class="inv-av">EN</div><div style="flex:1"><div style="font-size:12px;font-weight:500;margin-bottom:2px">Invitación de entrenador</div><div class="txs tmuted">Recibida ${fmtAgo(inv.invited_at)}</div>${inv.message?`<div style="font-size:11px;color:var(--t2);margin-top:3px;font-style:italic">"${inv.message}"</div>`:''}</div><div class="flex gap5"><button class="btn btn-p btn-sm" data-accept="${inv.id}">Aceptar</button><button class="btn btn-s btn-sm" data-reject="${inv.id}">Rechazar</button></div></div>`).join('')}`:`<div class="coming"><div style="font-size:26px;opacity:.3;margin-bottom:7px">📋</div><div class="ct mb7">Sin entrenador vinculado</div><div class="txs tmuted">Cuando un entrenador te invite, aparecerá acá.</div></div>`}</div>`;
-  if(!ST.coachData&&!ST.coachLoading){setTimeout(()=>{ST.coachLoading=true;render();callEdge('coach-dashboard',{}).then(r=>{ST.coachLoading=false;ST.coachData=r;render()}).catch(e=>{ST.coachLoading=false;toast(e.message,'err');render()})},80);return`<div class="coming"><div class="spinner"></div></div>`;}
-  if(ST.coachLoading)return`<div class="coming"><div class="spinner"></div></div>`;
+  if(!ST.coachData&&!ST.coachLoading){setTimeout(()=>{ST.coachLoading=true;render();callEdge('coach-dashboard',{}).then(r=>{ST.coachLoading=false;ST.coachData=r;render()}).catch(e=>{ST.coachLoading=false;toast(e.message,'err');render()})},80);return skel('dash');}
+  if(ST.coachLoading)return skel('dash');
   const{athletes=[],summary}=ST.coachData||{};
   return`<div><div style="background:var(--white);border:1px solid var(--b);border-radius:var(--r);padding:15px;box-shadow:var(--sh);margin-bottom:12px"><div class="ct mb4">Invitar atleta</div><div class="txs tmuted mb7">Email del atleta registrado en PERF SHOT</div><div class="flex gap7"><input class="fi" id="invite-email" placeholder="email@atleta.com" type="email" style="flex:1"/><button class="btn btn-p" id="btn-invite">Invitar</button></div><div class="fg mt7"><label class="fl">Mensaje opcional</label><input class="fi" id="invite-msg" placeholder="Te invito a mi equipo..."/></div></div>
   ${summary?`<div class="ai-card mb11"><div class="ai-hd"><div class="ai-dot"></div><div class="ai-title">PERF AI · Equipo</div><button class="btn-i btn-sm" style="margin-left:auto" id="btn-refresh-coach">↻</button></div><div class="ai-body"><strong>${summary.resumen||''}</strong>${summary.atleta_destacado?`<br><br>⭐ <strong>${summary.atleta_destacado}</strong>`:''}${summary.atleta_necesita_atencion?`<br>⚠ <strong>${summary.atleta_necesita_atencion}</strong>`:''}${summary.recomendacion_semana?`<br><br>→ ${summary.recomendacion_semana}`:''}</div></div>`:''}
