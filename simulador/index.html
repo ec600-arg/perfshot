@@ -1,0 +1,3183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04060d">
+<title>ISSF FINALS · Simulador de Finales de Tiro Olímpico</title>
+<meta name="description" content="Simulador realista de finales ISSF de 10m aire comprimido: rifle, pistola y equipo mixto. Balística real, audio sintetizado y locución en vivo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISSF FINALS — Hoja de estilos
+   ───────────────────────────────────────────────────────────────────────────
+   Organización:
+     1. Tokens de diseño (paleta, tipografías, radios, sombras)
+     2. Reset y superficie base (fondo, grano, scanlines)
+     3. Primitivas reutilizables (paneles, botones, chips, barras)
+     4. Pantallas (boot, setup, match, podio)
+     5. Módulos del match (leaderboard, blanco, telemetría, comandos)
+     6. Animaciones y responsive
+   La estética busca una transmisión deportiva del futuro: vidrio oscuro,
+   líneas de neón frío, datos monoespaciados y mucho contraste en los números.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Tokens ─────────────────────────────────────────────────────────── */
+:root{
+  /* Fondos, del más profundo al más elevado */
+  --void:#04060d; --deep:#070c17; --panel:rgba(13,20,37,.72); --panel2:rgba(20,30,52,.72);
+  /* Líneas y bordes: siempre azulados para que el vidrio parezca frío */
+  --line:rgba(120,190,255,.13); --line2:rgba(120,190,255,.24);
+  /* Acentos */
+  --cyan:#35e6ff; --ice:#a6f2ff; --magenta:#ff2e88; --amber:#ffc247;
+  --lime:#6dff9e; --red:#ff4d5e; --violet:#a184ff;
+  /* Texto */
+  --tx:#d3e6ff; --tx2:#7f9dc4; --tx3:#4b6584;
+  /* Tipografías */
+  --disp:'Orbitron',system-ui,sans-serif;
+  --ui:'Rajdhani',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  /* Geometría */
+  --r:12px; --rs:8px; --rx:20px;
+  /* Sombras y brillos */
+  --sh:0 2px 4px rgba(0,0,0,.5),0 12px 40px rgba(0,0,0,.45);
+  --glow-c:0 0 24px rgba(53,230,255,.28);
+  --glow-m:0 0 24px rgba(255,46,136,.28);
+}
+
+/* ─── 2. Reset y superficie ─────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--ui);background:var(--void);color:var(--tx);
+  font-size:15px;line-height:1.45;overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+/* Capa 1 del fondo: auroras que respiran lentamente. */
+body::before{
+  content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 45% at 12% 0%,rgba(53,230,255,.10),transparent 62%),
+    radial-gradient(ellipse 55% 45% at 92% 8%,rgba(255,46,136,.07),transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 108%,rgba(161,132,255,.07),transparent 62%);
+  animation:aurora 26s ease-in-out infinite alternate;
+}
+/* Capa 2: rejilla en perspectiva + scanlines. Da el aire de "monitor táctico". */
+body::after{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px),
+    linear-gradient(0deg,rgba(53,230,255,.05),transparent 40%);
+  mix-blend-mode:screen;
+}
+@keyframes aurora{
+  0%{opacity:.75;transform:translate3d(0,0,0) scale(1)}
+  50%{opacity:1;transform:translate3d(-1.5%,-1%,0) scale(1.05)}
+  100%{opacity:.8;transform:translate3d(1%,1.5%,0) scale(1.02)}
+}
+@media (prefers-reduced-motion:reduce){
+  body::before{animation:none}
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.06ms!important}
+}
+::selection{background:rgba(53,230,255,.3);color:#fff}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:rgba(120,190,255,.18);border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ─── 3. Primitivas ─────────────────────────────────────────────────────── */
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:var(--sh);position:relative;overflow:hidden;
+}
+/* Esquina biselada de neón: un detalle barato que "futuriza" cualquier caja. */
+.panel::after{
+  content:'';position:absolute;top:0;right:0;width:22px;height:22px;pointer-events:none;
+  background:linear-gradient(225deg,rgba(53,230,255,.5),transparent 60%);
+}
+.panel-h{
+  display:flex;align-items:center;gap:8px;padding:9px 13px;
+  border-bottom:1px solid var(--line);
+  font-family:var(--disp);font-size:10px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--tx2);
+}
+.panel-h .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.panel-b{padding:12px 13px}
+
+.btn{
+  font-family:var(--disp);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:11px 20px;border-radius:var(--rs);border:1px solid var(--line2);
+  background:rgba(53,230,255,.07);color:var(--ice);cursor:pointer;
+  transition:transform .14s cubic-bezier(.2,.9,.3,1),box-shadow .18s,background .18s,border-color .18s;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;position:relative;overflow:hidden;
+}
+.btn:hover:not(:disabled){background:rgba(53,230,255,.15);border-color:var(--cyan);box-shadow:var(--glow-c);transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.985)}
+.btn:disabled{opacity:.34;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#0aa6c8);color:#02121a;border-color:transparent;font-weight:900}
+.btn-primary:hover:not(:disabled){background:linear-gradient(135deg,var(--ice),var(--cyan));box-shadow:0 0 32px rgba(53,230,255,.45)}
+.btn-danger{background:rgba(255,77,94,.1);border-color:rgba(255,77,94,.35);color:#ffb3ba}
+.btn-danger:hover:not(:disabled){background:rgba(255,77,94,.2);box-shadow:0 0 22px rgba(255,77,94,.3);border-color:var(--red)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--tx2)}
+.btn-ghost:hover:not(:disabled){color:var(--tx);border-color:var(--line2);background:rgba(255,255,255,.04)}
+.btn-sm{padding:7px 12px;font-size:9px;letter-spacing:.12em}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--tx2);
+}
+.chip.c{background:rgba(53,230,255,.12);border-color:rgba(53,230,255,.3);color:var(--ice)}
+.chip.g{background:rgba(109,255,158,.12);border-color:rgba(109,255,158,.3);color:var(--lime)}
+.chip.r{background:rgba(255,77,94,.12);border-color:rgba(255,77,94,.32);color:#ffa8b0}
+.chip.a{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.3);color:var(--amber)}
+
+/* Barra de nivel genérica (pulso, estabilidad, fatiga…) */
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
+.bar > i{display:block;height:100%;border-radius:3px;transition:width .18s linear,background .3s}
+
+.lbl{font-family:var(--disp);font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700}
+.hidden{display:none!important}
+
+/* ─── 4. Pantallas ──────────────────────────────────────────────────────── */
+#app{position:relative;z-index:2;height:100%;width:100%}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;animation:screen-in .5s cubic-bezier(.2,.9,.3,1)}
+.screen.on{display:flex}
+@keyframes screen-in{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
+
+/* --- 4.1 Boot / portada ------------------------------------------------- */
+#s-boot{align-items:center;justify-content:center;text-align:center;gap:22px;padding:24px}
+.boot-mark{position:relative;display:inline-block}
+.boot-rings{width:min(38vh,220px);height:min(38vh,220px);display:block}
+.boot-title{font-family:var(--disp);font-size:clamp(30px,7vw,62px);font-weight:900;letter-spacing:.14em;
+  background:linear-gradient(135deg,#fff,var(--ice) 42%,var(--cyan) 68%,var(--magenta));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px rgba(53,230,255,.35));line-height:1}
+.boot-sub{font-family:var(--disp);font-size:clamp(9px,1.6vw,12px);letter-spacing:.5em;text-transform:uppercase;color:var(--tx3);margin-top:10px}
+.boot-tag{max-width:520px;color:var(--tx2);font-size:15px}
+.boot-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+
+/* --- 4.2 Setup / configuración ------------------------------------------ */
+#s-setup{padding:clamp(14px,3vh,32px);overflow-y:auto;gap:16px}
+.setup-wrap{width:min(1080px,100%);margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.setup-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.setup-head h2{font-family:var(--disp);font-size:24px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.setup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.opt-row{display:grid;gap:9px}
+.opt{
+  display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border-radius:var(--rs);cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);transition:all .16s;text-align:left;color:inherit;font:inherit;
+}
+.opt:hover{border-color:var(--line2);background:rgba(255,255,255,.05);transform:translateX(2px)}
+.opt.on{border-color:var(--cyan);background:rgba(53,230,255,.1);box-shadow:inset 3px 0 0 var(--cyan),var(--glow-c)}
+.opt-ic{font-size:19px;line-height:1.2;filter:saturate(1.2)}
+.opt-t{font-weight:600;font-size:14px;color:var(--tx)}
+.opt-d{font-size:12px;color:var(--tx3);line-height:1.4}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input[type=text]{
+  font-family:var(--ui);font-size:15px;font-weight:600;color:var(--tx);padding:10px 12px;
+  background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:var(--rs);outline:none;transition:all .16s;
+}
+.field input[type=text]:focus{border-color:var(--cyan);box-shadow:var(--glow-c)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-radius:var(--rs);
+  border:1px solid var(--line);background:rgba(255,255,255,.025);cursor:pointer;transition:all .16s}
+.switch:hover{border-color:var(--line2)}
+.switch-k{width:38px;height:20px;border-radius:999px;background:rgba(255,255,255,.1);position:relative;flex-shrink:0;transition:background .2s}
+.switch-k::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--tx3);transition:all .22s cubic-bezier(.2,.9,.3,1)}
+.switch.on .switch-k{background:rgba(53,230,255,.35)}
+.switch.on .switch-k::after{left:20px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+
+/* --- 4.3 Match: rejilla general ----------------------------------------- */
+#s-match{display:none;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(230px,268px) 1fr minmax(230px,272px);
+  grid-template-areas:"bc bc bc" "bd st tl" "cm cm cm";gap:10px;padding:10px;height:100%}
+#s-match.on{display:grid}
+
+/* --- 4.4 Barra de transmisión ------------------------------------------- */
+.broadcast{grid-area:bc;display:flex;align-items:stretch;gap:10px;min-height:58px}
+.bc-id{display:flex;flex-direction:column;justify-content:center;padding:6px 15px;flex:0 0 auto}
+.bc-ev{font-family:var(--disp);font-size:13px;font-weight:900;letter-spacing:.1em;color:var(--tx);white-space:nowrap}
+.bc-loc{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--tx3);text-transform:uppercase}
+.bc-stage{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 12px;min-width:0}
+.bc-phase{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ice);
+  text-shadow:0 0 18px rgba(53,230,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-shot{display:flex;align-items:baseline;gap:5px}
+.bc-shot b{font-family:var(--disp);font-size:24px;font-weight:900;color:#fff;line-height:1}
+.bc-shot span{font-family:var(--mono);font-size:11px;color:var(--tx3)}
+.bc-clock{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:6px 16px}
+.clock{font-family:var(--disp);font-size:31px;font-weight:900;letter-spacing:.04em;line-height:1;color:var(--tx);
+  font-variant-numeric:tabular-nums;transition:color .2s,text-shadow .2s}
+.clock.warn{color:var(--amber);text-shadow:0 0 20px rgba(255,194,71,.6)}
+.clock.crit{color:var(--red);text-shadow:0 0 22px rgba(255,77,94,.75);animation:tick-crit .6s steps(1) infinite}
+@keyframes tick-crit{50%{opacity:.35}}
+.bc-tools{display:flex;gap:6px;align-items:center}
+.icon-btn{width:32px;height:32px;border-radius:var(--rs);border:1px solid var(--line);background:rgba(255,255,255,.03);
+  color:var(--tx2);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s}
+.icon-btn:hover{color:var(--ice);border-color:var(--line2);background:rgba(53,230,255,.1)}
+.icon-btn.off{opacity:.4}
+
+/* --- 4.5 Leaderboard ---------------------------------------------------- */
+.board{grid-area:bd;display:flex;flex-direction:column;min-height:0}
+.board-list{flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:5px}
+.ath{
+  display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:9px;
+  padding:7px 9px;border-radius:var(--rs);border:1px solid transparent;
+  background:rgba(255,255,255,.028);position:relative;overflow:hidden;
+  transition:background .25s,border-color .25s,opacity .4s,filter .4s;
+}
+.ath::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .25s}
+.ath.me{background:rgba(53,230,255,.1);border-color:rgba(53,230,255,.28)}
+.ath.me::before{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.ath.shooting{background:rgba(255,194,71,.1);border-color:rgba(255,194,71,.32)}
+.ath.out{opacity:.3;filter:grayscale(.85)}
+.ath.out .ath-nm{text-decoration:line-through;text-decoration-color:rgba(255,77,94,.7)}
+.ath-rk{font-family:var(--disp);font-size:14px;font-weight:900;color:var(--tx3);text-align:center}
+.ath.p1 .ath-rk{color:var(--amber);text-shadow:0 0 12px rgba(255,194,71,.6)}
+.ath.p2 .ath-rk{color:#d6e4f0}
+.ath.p3 .ath-rk{color:#e0a878}
+.ath-mid{min-width:0}
+.ath-nm{font-size:13.5px;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+.ath-sub{display:flex;align-items:center;gap:6px;margin-top:2px}
+.ath-ctry{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--tx3)}
+.ath-last{font-family:var(--mono);font-size:9.5px;color:var(--tx2)}
+.ath-tot{font-family:var(--mono);font-size:17px;font-weight:700;color:#fff;text-align:right;line-height:1;font-variant-numeric:tabular-nums}
+.ath-gap{font-family:var(--mono);font-size:9.5px;text-align:right;margin-top:2px;color:var(--tx3)}
+.ath-gap.lead{color:var(--amber)}
+/* Destello cuando el atleta acaba de disparar */
+.ath.flash{animation:ath-flash .7s ease-out}
+@keyframes ath-flash{0%{box-shadow:inset 0 0 0 60px rgba(53,230,255,.22)}100%{box-shadow:inset 0 0 0 60px transparent}}
+/* Barrido rojo de eliminación */
+.ath.eliminating::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,77,94,.55),transparent);animation:sweep .8s ease-out forwards}
+@keyframes sweep{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+/* Marcador de equipos (modo mixto) */
+.team-score{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.team-score .ts-n{font-family:var(--disp);font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--tx2);text-align:center}
+.team-score .ts-p{font-family:var(--disp);font-size:30px;font-weight:900;line-height:1;text-align:center}
+.team-score .ts-a .ts-p{color:var(--cyan);text-shadow:0 0 18px rgba(53,230,255,.4)}
+.team-score .ts-b .ts-p{color:var(--magenta);text-shadow:0 0 18px rgba(255,46,136,.4)}
+.team-score .ts-vs{font-family:var(--disp);font-size:10px;color:var(--tx3);letter-spacing:.2em}
+
+/* --- 4.6 Escenario / blanco --------------------------------------------- */
+.stage{grid-area:st;display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.range{flex:1;position:relative;display:grid;place-items:center;min-height:0;overflow:hidden;border-radius:var(--r);
+  border:1px solid var(--line);background:radial-gradient(ellipse at 50% 40%,rgba(20,32,56,.85),rgba(4,6,13,.96) 72%)}
+/* Halo respiratorio del recinto: sugiere focos de estadio */
+.range::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 45% 38% at 50% 42%,rgba(53,230,255,.09),transparent 70%);animation:aurora 12s ease-in-out infinite alternate}
+#target{position:relative;z-index:2;max-width:100%;max-height:100%;display:block;touch-action:none;cursor:crosshair}
+/* Puntaje flotante del último disparo */
+.pop{position:absolute;z-index:6;left:50%;top:16%;transform:translateX(-50%);pointer-events:none;text-align:center;opacity:0}
+.pop.show{animation:pop-in 2.1s cubic-bezier(.16,1,.3,1) forwards}
+.pop-v{font-family:var(--disp);font-size:clamp(38px,7vw,72px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 34px rgba(53,230,255,.65)}
+.pop-v.great{color:var(--lime);text-shadow:0 0 40px rgba(109,255,158,.7)}
+.pop-v.bad{color:var(--red);text-shadow:0 0 40px rgba(255,77,94,.7)}
+.pop-t{font-family:var(--disp);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--tx2);margin-top:4px}
+@keyframes pop-in{0%{opacity:0;transform:translateX(-50%) scale(.6)}14%{opacity:1;transform:translateX(-50%) scale(1.1)}24%{transform:translateX(-50%) scale(1)}78%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-22px) scale(.96)}}
+/* Viñeta que se cierra al apuntar: simula la visión túnel del tirador */
+.tunnel{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .5s;
+  background:radial-gradient(ellipse 42% 42% at 50% 50%,transparent 52%,rgba(2,4,9,.86) 100%)}
+.range.aiming .tunnel{opacity:1}
+/* Etiqueta de estado sobre el blanco */
+.range-tag{position:absolute;z-index:5;left:12px;top:11px;display:flex;gap:6px;flex-wrap:wrap;max-width:70%}
+.range-hint{position:absolute;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);font-family:var(--disp);
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--tx3);text-align:center;white-space:nowrap}
+/* Tira de disparos bajo el blanco */
+.strip{display:flex;gap:5px;overflow-x:auto;padding:8px 9px;flex:0 0 auto;align-items:center;min-height:52px}
+.sh{flex:0 0 auto;min-width:42px;padding:5px 7px;border-radius:var(--rs);text-align:center;border:1px solid var(--line);
+  background:rgba(255,255,255,.03);animation:sh-in .35s cubic-bezier(.2,.9,.3,1)}
+.sh b{display:block;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--tx);line-height:1.1}
+.sh i{display:block;font-family:var(--mono);font-size:8.5px;font-style:normal;color:var(--tx3);margin-top:1px}
+.sh.hi{border-color:rgba(109,255,158,.4);background:rgba(109,255,158,.1)}.sh.hi b{color:var(--lime)}
+.sh.lo{border-color:rgba(255,77,94,.4);background:rgba(255,77,94,.1)}.sh.lo b{color:var(--red)}
+.sh.ser{border-left-width:2px;border-left-color:var(--cyan)}
+@keyframes sh-in{from{opacity:0;transform:translateY(9px) scale(.85)}to{opacity:1;transform:none}}
+
+/* --- 4.7 Telemetría ----------------------------------------------------- */
+.tele{grid-area:tl;display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}
+.vit{display:grid;gap:9px}
+.vit-row{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+.vit-row .lbl{grid-column:1}
+.vit-row .val{grid-column:2;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--tx)}
+.vit-row .bar{grid-column:1/-1}
+.hr{display:flex;align-items:center;gap:9px}
+.hr-ico{font-size:17px;animation:beat 1s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}12%{transform:scale(1.22)}24%{transform:scale(1)}36%{transform:scale(1.12)}}
+.hr-v{font-family:var(--disp);font-size:25px;font-weight:900;color:#fff;line-height:1}
+.hr-u{font-family:var(--mono);font-size:9px;color:var(--tx3)}
+#ecg{display:block;width:100%;height:34px;margin-top:4px;opacity:.85}
+.coach{font-size:13px;color:var(--tx2);line-height:1.5;min-height:56px}
+.coach b{color:var(--ice);font-weight:700}
+.feed{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
+.feed-i{font-size:12px;color:var(--tx2);padding:5px 8px;border-left:2px solid var(--line2);background:rgba(255,255,255,.022);
+  border-radius:0 var(--rs) var(--rs) 0;animation:sh-in .3s ease-out;line-height:1.35}
+.feed-i b{color:var(--tx);font-weight:700}
+.feed-i.hot{border-left-color:var(--amber);color:var(--tx)}
+.feed-i.out{border-left-color:var(--red)}
+
+/* --- 4.8 Barra de comandos ---------------------------------------------- */
+.cmd{grid-area:cm;display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:70px}
+.cmd-word{font-family:var(--disp);font-size:clamp(17px,2.4vw,28px);font-weight:900;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--tx3);transition:all .3s;white-space:nowrap;min-width:160px}
+.cmd-word.load{color:var(--amber);text-shadow:0 0 26px rgba(255,194,71,.6)}
+.cmd-word.start{color:var(--lime);text-shadow:0 0 30px rgba(109,255,158,.65);animation:cmd-pulse 1.6s ease-in-out infinite}
+.cmd-word.stop{color:var(--red);text-shadow:0 0 26px rgba(255,77,94,.6)}
+@keyframes cmd-pulse{0%,100%{opacity:1}50%{opacity:.62}}
+.cmd-mid{flex:1;min-width:0}
+.cmd-hint{font-size:12.5px;color:var(--tx3);line-height:1.35}
+.cmd-acts{display:flex;gap:8px;align-items:center;flex-shrink:0}
+/* Botón grande de disparo: se mantiene presionado para apuntar */
+.fire{
+  font-family:var(--disp);font-size:13px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;
+  padding:15px 32px;border-radius:var(--rs);border:1px solid rgba(255,46,136,.4);color:#fff;
+  background:linear-gradient(135deg,rgba(255,46,136,.28),rgba(255,46,136,.1));cursor:pointer;
+  transition:all .16s;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.fire:hover:not(:disabled){background:linear-gradient(135deg,rgba(255,46,136,.45),rgba(255,46,136,.18));box-shadow:var(--glow-m)}
+.fire:disabled{opacity:.3;cursor:not-allowed}
+.fire.armed{border-color:var(--magenta);box-shadow:0 0 34px rgba(255,46,136,.5);animation:cmd-pulse 1.1s ease-in-out infinite}
+
+/* ─── 5. Podio ──────────────────────────────────────────────────────────── */
+#s-podium{align-items:center;justify-content:center;padding:24px;gap:20px;overflow-y:auto}
+.podium-wrap{width:min(860px,100%);display:flex;flex-direction:column;gap:18px;align-items:center}
+.podium-h{text-align:center}
+.podium-h h2{font-family:var(--disp);font-size:clamp(22px,4.4vw,40px);font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--amber),#fff 55%,var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(255,194,71,.35))}
+.steps{display:grid;grid-template-columns:1fr 1.14fr 1fr;gap:10px;align-items:end;width:100%}
+.step{display:flex;flex-direction:column;align-items:center;gap:8px;animation:rise .8s cubic-bezier(.16,1,.3,1) backwards}
+.step:nth-child(1){animation-delay:.5s}.step:nth-child(2){animation-delay:.15s}.step:nth-child(3){animation-delay:.75s}
+@keyframes rise{from{opacity:0;transform:translateY(46px)}to{opacity:1;transform:none}}
+.step-med{font-size:34px;filter:drop-shadow(0 0 16px rgba(255,194,71,.5))}
+.step-nm{font-family:var(--disp);font-size:13px;font-weight:700;text-align:center;color:var(--tx);letter-spacing:.05em}
+.step-sc{font-family:var(--mono);font-size:20px;font-weight:700;color:#fff}
+.step-pl{width:100%;border-radius:var(--rs) var(--rs) 0 0;border:1px solid var(--line2);border-bottom:none;
+  background:linear-gradient(180deg,rgba(53,230,255,.16),rgba(53,230,255,.03));display:grid;place-items:center;
+  font-family:var(--disp);font-size:26px;font-weight:900;color:rgba(255,255,255,.6)}
+.step.g .step-pl{height:132px;background:linear-gradient(180deg,rgba(255,194,71,.3),rgba(255,194,71,.04));border-color:rgba(255,194,71,.45)}
+.step.s .step-pl{height:96px}
+.step.b .step-pl{height:72px;background:linear-gradient(180deg,rgba(224,168,120,.24),rgba(224,168,120,.03));border-color:rgba(224,168,120,.4)}
+.rank-table{width:100%;border-collapse:collapse;font-size:13px}
+.rank-table th{font-family:var(--disp);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);
+  text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
+.rank-table td{padding:7px 9px;border-bottom:1px solid rgba(120,190,255,.06);color:var(--tx2)}
+.rank-table td.n{font-family:var(--mono);font-weight:700;color:var(--tx);text-align:right}
+.rank-table tr.me td{color:var(--ice);background:rgba(53,230,255,.06)}
+
+/* ─── 6. Overlays y utilidades ──────────────────────────────────────────── */
+.toast-zone{position:fixed;z-index:200;left:50%;bottom:96px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{padding:9px 18px;border-radius:999px;background:rgba(8,14,26,.94);border:1px solid var(--line2);
+  font-family:var(--disp);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ice);
+  box-shadow:var(--sh);animation:toast .3s cubic-bezier(.2,.9,.3,1)}
+@keyframes toast{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* Cartel de eliminación a pantalla completa */
+.slate{position:fixed;inset:0;z-index:190;display:grid;place-items:center;pointer-events:none;opacity:0;background:rgba(3,5,11,.62);backdrop-filter:blur(4px)}
+.slate.show{animation:slate 2.3s ease-out forwards}
+@keyframes slate{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.slate-in{text-align:center;padding:26px 40px;border:1px solid rgba(255,77,94,.4);border-radius:var(--r);background:rgba(10,6,12,.9);box-shadow:0 0 60px rgba(255,77,94,.25)}
+.slate-k{font-family:var(--disp);font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--red)}
+.slate-n{font-family:var(--disp);font-size:clamp(22px,4.6vw,42px);font-weight:900;color:#fff;margin-top:8px;letter-spacing:.06em}
+.slate-s{font-family:var(--mono);font-size:13px;color:var(--tx2);margin-top:6px}
+/* Modal genérico (ayuda / reglas) */
+.modal{position:fixed;inset:0;z-index:210;display:none;place-items:center;padding:20px;background:rgba(3,5,11,.78);backdrop-filter:blur(8px)}
+.modal.on{display:grid}
+.modal-box{width:min(620px,100%);max-height:82vh;overflow-y:auto}
+.modal-box h3{font-family:var(--disp);font-size:15px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;color:var(--ice)}
+.modal-box h4{font-family:var(--disp);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:14px 0 5px}
+.modal-box p,.modal-box li{font-size:13.5px;color:var(--tx2);line-height:1.55}
+.modal-box ul{padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.modal-box kbd{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.08);border:1px solid var(--line2);color:var(--tx)}
+
+/* ─── 7. Responsive ─────────────────────────────────────────────────────── */
+@media (max-width:1080px){
+  #s-match.on{grid-template-columns:minmax(200px,1fr) minmax(200px,1fr);
+    grid-template-areas:"bc bc" "st st" "bd tl" "cm cm";grid-template-rows:auto minmax(240px,1fr) auto auto;overflow-y:auto;height:100%}
+  .tele{max-height:280px}
+  .board{max-height:280px}
+}
+@media (max-width:660px){
+  body{font-size:14px}
+  #s-match.on{grid-template-columns:1fr;grid-template-areas:"bc" "st" "cm" "bd" "tl";grid-template-rows:auto minmax(230px,42vh) auto auto auto}
+  .broadcast{flex-wrap:wrap;min-height:0}
+  .bc-id{flex:1 1 100%;padding:6px 10px}
+  .clock{font-size:25px}
+  .cmd{flex-wrap:wrap;gap:8px}
+  .cmd-word{min-width:0;font-size:16px}
+  .fire{flex:1;padding:13px 18px}
+  .steps{grid-template-columns:1fr;align-items:stretch}
+  .step-pl{height:52px!important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════ PANTALLA 1 · PORTADA ══════════════════════════════════
+       Primera impresión: aros olímpicos dibujados en SVG (sin imágenes
+       externas) + título con degradado. El botón grande también sirve para
+       "desbloquear" el AudioContext, que los navegadores exigen que se cree
+       a partir de un gesto del usuario.                                    -->
+  <section class="screen on" id="s-boot">
+    <div class="boot-mark">
+      <svg class="boot-rings" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <filter id="fg" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3.4" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#fg)" fill="none" stroke-width="4" opacity=".95">
+          <!-- Blanco de 10m estilizado: anillos concéntricos que laten -->
+          <circle cx="100" cy="100" r="82" stroke="rgba(120,190,255,.18)"/>
+          <circle cx="100" cy="100" r="64" stroke="rgba(120,190,255,.26)"/>
+          <circle cx="100" cy="100" r="46" stroke="rgba(53,230,255,.5)"/>
+          <circle cx="100" cy="100" r="28" stroke="rgba(53,230,255,.8)"/>
+          <circle cx="100" cy="100" r="11" stroke="#ff2e88" stroke-width="5"/>
+          <circle cx="100" cy="100" r="3" fill="#ff2e88" stroke="none"/>
+          <path d="M100 6v22M100 172v22M6 100h22M172 100h22" stroke="rgba(53,230,255,.55)" stroke-width="2"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h1 class="boot-title">ISSF FINALS</h1>
+      <div class="boot-sub" data-i18n="boot.sub">Simulador de finales · 10 m aire comprimido</div>
+    </div>
+    <p class="boot-tag" data-i18n="boot.tag">Balística real, reglamento ISSF vigente, locución en vivo y audio generado íntegramente en el navegador. Ocho finalistas. Veinticuatro disparos. Una sola medalla de oro.</p>
+    <div class="boot-meta">
+      <span class="chip c">10 m RIFLE</span>
+      <span class="chip c">10 m PISTOLA</span>
+      <span class="chip c">EQUIPO MIXTO</span>
+      <span class="chip">DECIMALES</span>
+      <span class="chip">SIN DEPENDENCIAS</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <button class="btn btn-primary" id="b-enter" data-i18n="boot.enter">Entrar al polígono</button>
+      <button class="btn btn-ghost" id="b-rules" data-i18n="boot.rules">Reglamento</button>
+      <button class="btn btn-ghost" id="b-lang">ES / EN</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ PANTALLA 2 · CONFIGURACIÓN ═════════════════════════════
+       Todo lo que define la partida: prueba, formato, dificultad, control,
+       identidad del jugador y opciones de audio.                            -->
+  <section class="screen" id="s-setup">
+    <div class="setup-wrap">
+      <div class="setup-head">
+        <div>
+          <h2 data-i18n="setup.title">Configurar final</h2>
+          <div class="lbl" data-i18n="setup.sub">Elegí prueba, formato y nivel de exigencia</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="b-back-boot" data-i18n="setup.back">Volver</button>
+          <button class="btn btn-primary" id="b-start" data-i18n="setup.start">Comenzar final</button>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <!-- Prueba: rifle o pistola. Cambia la geometría del blanco, el
+             tipo de puntuación (decimal vs. entera) y el timing. -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.event">Prueba</span></div>
+          <div class="panel-b opt-row" id="o-event"></div>
+        </div>
+
+        <!-- Formato: individual (8 finalistas, 24 disparos) o equipo mixto
+             (match a 16 puntos, series de 2 disparos por equipo). -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.format">Formato</span></div>
+          <div class="panel-b opt-row" id="o-format"></div>
+        </div>
+
+        <!-- Dificultad: escala el temblor propio y el nivel de los rivales. -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.level">Nivel</span></div>
+          <div class="panel-b opt-row" id="o-level"></div>
+        </div>
+
+        <!-- Control: mantener para apuntar (realista) o clic simple (rápido). -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.control">Control</span></div>
+          <div class="panel-b opt-row" id="o-control"></div>
+        </div>
+
+        <!-- Identidad del jugador. -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.you">Tu ficha</span></div>
+          <div class="panel-b" style="display:grid;gap:10px">
+            <div class="field">
+              <span class="lbl" data-i18n="setup.name">Nombre</span>
+              <input type="text" id="i-name" maxlength="22" placeholder="Tu nombre" autocomplete="off">
+            </div>
+            <div class="field">
+              <span class="lbl" data-i18n="setup.country">País (3 letras)</span>
+              <input type="text" id="i-country" maxlength="3" placeholder="ARG" autocomplete="off" style="text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em">
+            </div>
+            <div class="field">
+              <span class="lbl" data-i18n="setup.gender">Categoría</span>
+              <div class="opt-row" id="o-gender"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audio y accesibilidad. -->
+        <div class="panel">
+          <div class="panel-h"><i class="dot"></i><span data-i18n="setup.audio">Audio</span></div>
+          <div class="panel-b" style="display:grid;gap:8px">
+            <div class="switch on" data-sw="music"><span data-i18n="setup.music">Música adaptativa</span><i class="switch-k"></i></div>
+            <div class="switch on" data-sw="sfx"><span data-i18n="setup.sfx">Efectos y ambiente</span><i class="switch-k"></i></div>
+            <div class="switch on" data-sw="voice"><span data-i18n="setup.voice">Juez y relator</span><i class="switch-k"></i></div>
+            <div class="switch on" data-sw="crowd"><span data-i18n="setup.crowd">Público</span><i class="switch-k"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ PANTALLA 3 · LA FINAL ══════════════════════════════════ -->
+  <section class="screen" id="s-match">
+
+    <!-- Barra superior de transmisión -->
+    <header class="broadcast panel">
+      <div class="bc-id">
+        <div class="bc-ev" id="bc-ev">10 m AIR RIFLE — FINAL</div>
+        <div class="bc-loc" id="bc-loc">OLYMPIC SHOOTING CENTRE</div>
+      </div>
+      <div class="bc-stage">
+        <div class="bc-shot"><b id="bc-n">0</b><span id="bc-of">/ 24</span></div>
+        <div class="bc-phase" id="bc-phase">PREPARACIÓN</div>
+      </div>
+      <div class="bc-clock">
+        <div class="clock" id="clock">50.0</div>
+        <div class="bc-tools">
+          <button class="icon-btn" id="t-music" title="Música">♪</button>
+          <button class="icon-btn" id="t-voice" title="Voz">🗣</button>
+          <button class="icon-btn" id="t-help" title="Reglamento">?</button>
+          <button class="icon-btn" id="t-quit" title="Abandonar">✕</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Clasificación en vivo -->
+    <aside class="board panel">
+      <div class="panel-h"><i class="dot"></i><span id="board-title">Clasificación en vivo</span></div>
+      <div id="team-score" class="team-score hidden">
+        <div class="ts-a"><div class="ts-n" id="tsa-n">EQUIPO A</div><div class="ts-p" id="tsa-p">0</div></div>
+        <div class="ts-vs">VS</div>
+        <div class="ts-b"><div class="ts-n" id="tsb-n">EQUIPO B</div><div class="ts-p" id="tsb-p">0</div></div>
+      </div>
+      <div class="board-list" id="board-list"></div>
+    </aside>
+
+    <!-- Escenario: blanco + tira de disparos -->
+    <main class="stage">
+      <div class="range" id="range">
+        <canvas id="target" width="720" height="720"></canvas>
+        <div class="tunnel"></div>
+        <div class="range-tag" id="range-tag"></div>
+        <div class="pop" id="pop"><div class="pop-v" id="pop-v">10.9</div><div class="pop-t" id="pop-t">CENTRO</div></div>
+        <div class="range-hint" id="range-hint"></div>
+      </div>
+      <div class="strip panel" id="strip"></div>
+    </main>
+
+    <!-- Telemetría del tirador + relato -->
+    <aside class="tele">
+      <div class="panel">
+        <div class="panel-h"><i class="dot"></i><span data-i18n="tele.bio">Biometría</span></div>
+        <div class="panel-b vit">
+          <div class="hr">
+            <span class="hr-ico" id="hr-ico">❤</span>
+            <div><div class="hr-v" id="hr-v">72</div><div class="hr-u">BPM</div></div>
+            <div style="flex:1"></div>
+            <div style="text-align:right">
+              <div class="lbl" data-i18n="tele.press">Presión</div>
+              <div class="num" id="press-v" style="font-size:12px;color:var(--tx)">BAJA</div>
+            </div>
+          </div>
+          <canvas id="ecg" width="520" height="80"></canvas>
+          <div class="vit-row">
+            <span class="lbl" data-i18n="tele.hold">Estabilidad</span><span class="val" id="hold-v">100%</span>
+            <div class="bar"><i id="hold-b" style="width:100%;background:linear-gradient(90deg,var(--lime),var(--cyan))"></i></div>
+          </div>
+          <div class="vit-row">
+            <span class="lbl" data-i18n="tele.breath">Respiración</span><span class="val" id="breath-v">—</span>
+            <div class="bar"><i id="breath-b" style="width:50%;background:linear-gradient(90deg,var(--cyan),var(--violet))"></i></div>
+          </div>
+          <div class="vit-row">
+            <span class="lbl" data-i18n="tele.fatigue">Fatiga</span><span class="val" id="fat-v">0%</span>
+            <div class="bar"><i id="fat-b" style="width:0%;background:linear-gradient(90deg,var(--amber),var(--red))"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><i class="dot"></i><span data-i18n="tele.coach">Entrenador</span></div>
+        <div class="panel-b"><div class="coach" id="coach">—</div></div>
+      </div>
+      <div class="panel" style="flex:1;min-height:120px;display:flex;flex-direction:column">
+        <div class="panel-h"><i class="dot"></i><span data-i18n="tele.feed">Relato</span></div>
+        <div class="panel-b feed" id="feed" style="flex:1"></div>
+      </div>
+    </aside>
+
+    <!-- Comandos del juez de campo + acción -->
+    <footer class="cmd panel">
+      <div class="cmd-word" id="cmd-word">—</div>
+      <div class="cmd-mid"><div class="cmd-hint" id="cmd-hint">—</div></div>
+      <div class="cmd-acts">
+        <button class="btn btn-ghost btn-sm" id="b-replay" data-i18n="cmd.replay">Repetición</button>
+        <button class="fire" id="b-fire" disabled data-i18n="cmd.fire">Disparar</button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ══════════════ PANTALLA 4 · PODIO ═════════════════════════════════════ -->
+  <section class="screen" id="s-podium">
+    <div class="podium-wrap">
+      <div class="podium-h">
+        <div class="lbl" id="pod-ev">10 m AIR RIFLE — FINAL</div>
+        <h2 id="pod-title">Ceremonia de premiación</h2>
+      </div>
+      <div class="steps" id="pod-steps"></div>
+      <div class="panel" style="width:100%">
+        <div class="panel-h"><i class="dot"></i><span data-i18n="pod.rank">Clasificación final</span></div>
+        <div class="panel-b" style="padding:0 4px 4px"><table class="rank-table" id="pod-table"></table></div>
+      </div>
+      <div class="panel" style="width:100%">
+        <div class="panel-h"><i class="dot"></i><span data-i18n="pod.stats">Tu análisis</span></div>
+        <div class="panel-b" id="pod-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" id="b-again" data-i18n="pod.again">Otra final</button>
+        <button class="btn btn-ghost" id="b-setup2" data-i18n="pod.config">Cambiar configuración</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Capas flotantes -->
+  <div class="toast-zone" id="toasts"></div>
+  <div class="slate" id="slate"><div class="slate-in">
+    <div class="slate-k" id="slate-k">ELIMINADO</div>
+    <div class="slate-n" id="slate-n">—</div>
+    <div class="slate-s" id="slate-s">—</div>
+  </div></div>
+  <div class="modal" id="modal"><div class="panel modal-box">
+    <div class="panel-h"><i class="dot"></i><span data-i18n="rules.h">Reglamento y controles</span></div>
+    <div class="panel-b" id="modal-body"></div>
+    <div class="panel-b" style="border-top:1px solid var(--line);text-align:right">
+      <button class="btn btn-ghost btn-sm" id="b-modal-close" data-i18n="rules.close">Cerrar</button>
+    </div>
+  </div></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISSF FINALS — Simulador de finales de tiro olímpico (10 m aire comprimido)
+   ───────────────────────────────────────────────────────────────────────────
+   Un único archivo, cero dependencias, cero assets externos: el audio se
+   sintetiza con Web Audio y las voces salen de SpeechSynthesis.
+
+   Mapa del código
+     §1  Utilidades y estado global
+     §2  Textos (ES / EN)
+     §3  Datos de las pruebas y del plantel de atletas
+     §4  Motor de audio  (música adaptativa + efectos + público)
+     §5  Motor de voz    (juez de campo + relator)
+     §6  Balística       (geometría del blanco, puntuación, dispersión)
+     §7  Atletas         (jugador y rivales controlados por IA)
+     §8  Máquina de estados de la final
+     §9  Render          (blanco, ECG, clasificación, telemetría)
+     §10 Interfaz        (portada, configuración, podio, atajos)
+   ═══════════════════════════════════════════════════════════════════════════ */
+'use strict';
+
+/* ═══ §1 · Utilidades ═══════════════════════════════════════════════════════ */
+
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp  = (a, b, t) => a + (b - a) * t;
+/** Interpolación suave (ease in-out cúbica) usada en animaciones y curvas. */
+const smooth = t => (t = clamp(t, 0, 1)) * t * (3 - 2 * t);
+const rnd   = (a = 1, b = 0) => b + Math.random() * (a - b);
+const pick  = arr => arr[(Math.random() * arr.length) | 0];
+
+/**
+ * Número aleatorio con distribución normal (media 0, desvío 1).
+ * Box–Muller: la base de toda la dispersión balística del simulador.
+ */
+function gauss() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/** Espera `ms` milisegundos respetando la bandera de abandono de la partida. */
+const wait = ms => new Promise(res => {
+  const id = setTimeout(res, ms);
+  ST.timers.push(id);
+});
+
+/** Formatea un puntaje según la prueba (rifle = décimas, pistola = entero). */
+function fmt(score, decimal) {
+  return decimal ? score.toFixed(1) : String(Math.round(score));
+}
+/** Suma de una lista de disparos, ya redondeada al formato de la prueba. */
+function total(shots, decimal) {
+  const t = shots.reduce((a, s) => a + s.score, 0);
+  return decimal ? Math.round(t * 10) / 10 : Math.round(t);
+}
+
+/* Estado global. Un único objeto para que sea trivial inspeccionarlo o
+   serializarlo desde la consola del navegador. */
+const ST = {
+  lang: 'es',
+  screen: 'boot',
+  cfg: { event: 'AR', format: 'individual', level: 'pro', control: 'hold',
+         name: 'Tu Nombre', country: 'ARG', gender: 'M',
+         music: true, sfx: true, voice: true, crowd: true },
+  match: null,     // instancia activa de la final
+  timers: [],      // setTimeout pendientes, para poder abortar limpiamente
+  abort: false,
+};
+
+/** Cancela todos los temporizadores pendientes (al abandonar una final). */
+function clearTimers() {
+  ST.timers.forEach(clearTimeout);
+  ST.timers = [];
+}
+
+/* ═══ §2 · Textos ═══════════════════════════════════════════════════════════ */
+
+const I18N = {
+  es: {
+    'boot.sub': 'Simulador de finales · 10 m aire comprimido',
+    'boot.tag': 'Balística real, reglamento ISSF vigente, locución en vivo y audio generado íntegramente en el navegador. Ocho finalistas. Veinticuatro disparos. Una sola medalla de oro.',
+    'boot.enter': 'Entrar al polígono', 'boot.rules': 'Reglamento',
+    'setup.title': 'Configurar final', 'setup.sub': 'Elegí prueba, formato y nivel de exigencia',
+    'setup.back': 'Volver', 'setup.start': 'Comenzar final',
+    'setup.event': 'Prueba', 'setup.format': 'Formato', 'setup.level': 'Nivel',
+    'setup.control': 'Control', 'setup.you': 'Tu ficha', 'setup.name': 'Nombre',
+    'setup.country': 'País (3 letras)', 'setup.audio': 'Audio',
+    'setup.gender': 'Categoría',
+    'setup.music': 'Música adaptativa', 'setup.sfx': 'Efectos y ambiente',
+    'setup.voice': 'Juez y relator', 'setup.crowd': 'Público',
+    'tele.bio': 'Biometría', 'tele.press': 'Presión', 'tele.hold': 'Estabilidad',
+    'tele.breath': 'Respiración', 'tele.fatigue': 'Fatiga', 'tele.coach': 'Entrenador',
+    'tele.feed': 'Relato',
+    'cmd.fire': 'Disparar', 'cmd.replay': 'Repetición',
+    'pod.rank': 'Clasificación final', 'pod.stats': 'Tu análisis',
+    'pod.teams': 'Equipos', 'pod.gold': 'ORO', 'pod.silver': 'PLATA',
+    'pod.again': 'Otra final', 'pod.config': 'Cambiar configuración',
+    'rules.h': 'Reglamento y controles', 'rules.close': 'Cerrar',
+    'board.live': 'Clasificación en vivo',
+    'phase.prep': 'Preparación', 'phase.series': 'Serie de competencia',
+    'phase.single': 'Disparo individual', 'phase.elim': 'Eliminación',
+    'phase.gold': 'Duelo por el oro', 'phase.done': 'Final terminada',
+    'cmd.load': 'CARGUEN', 'cmd.start': 'COMIENCEN', 'cmd.stop': 'ALTO', 'cmd.wait': 'ESPEREN',
+    'hint.hold': 'Mantené presionado para apuntar y soltá para disparar. También sirve la barra espaciadora.',
+    'hint.click': 'Hacé clic en el blanco (o barra espaciadora) para disparar cuando la estabilidad esté alta.',
+    'hint.wait': 'Esperá la orden del juez de campo.',
+    'hint.done': 'Final terminada.',
+    'tag.settling': 'ASENTANDO', 'tag.stable': 'ZONA ÓPTIMA', 'tag.decay': 'PERDIENDO EL PUNTO',
+    'tag.pause': 'PAUSA RESPIRATORIA',
+    'out.elim': 'ELIMINADO', 'out.you': '¡Quedaste eliminado!',
+    'pop.center': 'CENTRO', 'pop.inner': 'DIEZ INTERIOR', 'pop.deep': 'DIEZ PROFUNDO',
+    'pop.ten': 'DIEZ', 'pop.ok': 'BUEN DISPARO',
+    'pop.mid': 'ACEPTABLE', 'pop.bad': 'TIRO ABIERTO', 'pop.miss': 'DISPARO PERDIDO',
+    'toast.timeout': 'Se acabó el tiempo — cero',
+    'stat.avg': 'Promedio', 'stat.best': 'Mejor disparo', 'stat.tens': 'Dieces',
+    'stat.inner': 'Dieces centrados', 'stat.group': 'Grupo (mm)', 'stat.rank': 'Puesto',
+    'pod.title': 'Ceremonia de premiación',
+  },
+  en: {
+    'boot.sub': 'Finals simulator · 10 m air events',
+    'boot.tag': 'Real ballistics, current ISSF rules, live commentary and audio generated entirely in the browser. Eight finalists. Twenty-four shots. One gold medal.',
+    'boot.enter': 'Enter the range', 'boot.rules': 'Rules',
+    'setup.title': 'Set up the final', 'setup.sub': 'Pick event, format and difficulty',
+    'setup.back': 'Back', 'setup.start': 'Start final',
+    'setup.event': 'Event', 'setup.format': 'Format', 'setup.level': 'Level',
+    'setup.control': 'Control', 'setup.you': 'Your profile', 'setup.name': 'Name',
+    'setup.country': 'Country (3 letters)', 'setup.audio': 'Audio',
+    'setup.gender': 'Category',
+    'setup.music': 'Adaptive score', 'setup.sfx': 'Effects & ambience',
+    'setup.voice': 'Range officer & commentary', 'setup.crowd': 'Crowd',
+    'tele.bio': 'Biometrics', 'tele.press': 'Pressure', 'tele.hold': 'Hold',
+    'tele.breath': 'Breathing', 'tele.fatigue': 'Fatigue', 'tele.coach': 'Coach',
+    'tele.feed': 'Commentary',
+    'cmd.fire': 'Fire', 'cmd.replay': 'Replay',
+    'pod.rank': 'Final standings', 'pod.stats': 'Your analysis',
+    'pod.teams': 'Teams', 'pod.gold': 'GOLD', 'pod.silver': 'SILVER',
+    'pod.again': 'Another final', 'pod.config': 'Change setup',
+    'rules.h': 'Rules and controls', 'rules.close': 'Close',
+    'board.live': 'Live standings',
+    'phase.prep': 'Preparation', 'phase.series': 'Competition series',
+    'phase.single': 'Single shot', 'phase.elim': 'Elimination',
+    'phase.gold': 'Gold medal duel', 'phase.done': 'Final over',
+    'cmd.load': 'LOAD', 'cmd.start': 'START', 'cmd.stop': 'STOP', 'cmd.wait': 'STAND BY',
+    'hint.hold': 'Hold to aim, release to fire. The space bar works too.',
+    'hint.click': 'Click the target (or press space) to fire when your hold is steady.',
+    'hint.wait': 'Wait for the range officer.',
+    'hint.done': 'Final over.',
+    'tag.settling': 'SETTLING', 'tag.stable': 'OPTIMAL WINDOW', 'tag.decay': 'LOSING THE HOLD',
+    'tag.pause': 'RESPIRATORY PAUSE',
+    'out.elim': 'ELIMINATED', 'out.you': 'You have been eliminated!',
+    'pop.center': 'DEAD CENTRE', 'pop.inner': 'INNER TEN', 'pop.deep': 'DEEP TEN',
+    'pop.ten': 'TEN', 'pop.ok': 'GOOD SHOT',
+    'pop.mid': 'ACCEPTABLE', 'pop.bad': 'LOOSE SHOT', 'pop.miss': 'SHOT DROPPED',
+    'toast.timeout': 'Time expired — zero',
+    'stat.avg': 'Average', 'stat.best': 'Best shot', 'stat.tens': 'Tens',
+    'stat.inner': 'Centred tens', 'stat.group': 'Group (mm)', 'stat.rank': 'Place',
+    'pod.title': 'Medal ceremony',
+  },
+};
+
+/** Traduce una clave al idioma activo. Si falta, devuelve la clave. */
+const T = key => (I18N[ST.lang] && I18N[ST.lang][key]) || I18N.es[key] || key;
+
+/** Reaplica todos los textos marcados con data-i18n. */
+function applyI18n() {
+  $$('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+  $('#board-title').textContent = T('board.live');
+  $('#pod-title').textContent = T('pod.title');
+  document.documentElement.lang = ST.lang;
+}
+
+/* ═══ §3 · Pruebas y plantel ════════════════════════════════════════════════ */
+
+/**
+ * Geometría oficial ISSF de los blancos de 10 m.
+ *
+ *   ringStep  distancia (mm) desde el centro que cubre cada punto entero.
+ *             Coincide con el paso radial de los anillos porque el radio del
+ *             balín (2,25 mm) se cancela al puntuar «por el borde»:
+ *               un 10 exige  d <= r10 + 2,25   y  r10 + 2,25 == ringStep.
+ *   subStep   ringStep / 10 → ancho de cada décima en el puntaje decimal.
+ *   blackFrom primer anillo (hacia afuera) que forma el visual negro.
+ */
+const EVENTS = {
+  AR: {
+    id: 'AR',
+    name: { es: '10 m Rifle de Aire', en: '10 m Air Rifle' },
+    short: { es: 'RIFLE', en: 'RIFLE' },
+    icon: '🎯',
+    desc: { es: 'Anillo de diez de 0,5 mm. El grupo entero de un finalista cabe dentro de un poroto.',
+            en: 'A 0.5 mm ten ring. A finalist\u2019s whole group fits inside a grain of rice.' },
+    decimal: true,
+    tenRadius: 0.25,     // mm — radio del anillo de 10
+    ringStep: 2.5,       // mm — ancho radial de cada anillo
+    blackFrom: 4,        // el visual negro llega hasta el anillo 4
+    viewMM: 18,          // radio en mm que encuadra la cámara (vista de transmisión)
+    innerMM: 1.0,        // «diez profundo»: 10,5 o mejor
+    innerKey: 'pop.deep',
+    // Desvío por eje (mm) del mejor y del más flojo de una final de élite.
+    // La banda es deliberadamente estrecha: ocho finalistas olímpicos están
+    // separados por unas dos décimas por disparo, no más. El drama sale de la
+    // varianza y de los nervios, no de la diferencia de nivel.
+    // Referencias: campeón 250-253 en 24 disparos; octavo, 123-124 a los 12.
+    sigmaBest: 0.88,
+    sigmaWorst: 1.16,
+    seriesTime: 150,     // s para una serie de 3 disparos
+    singleTime: 50,      // s para un disparo individual
+    fireSound: 'rifle',
+  },
+  AP: {
+    id: 'AP',
+    name: { es: '10 m Pistola de Aire', en: '10 m Air Pistol' },
+    short: { es: 'PISTOLA', en: 'PISTOL' },
+    icon: '🔫',
+    desc: { es: 'Diez de 11,5 mm: más blanco, pero a un brazo y sin apoyo.',
+            en: 'An 11.5 mm ten: a bigger ring, but one-handed and unsupported.' },
+    // Desde 2013 las finales de pistola de aire también se puntúan con
+    // decimales (Tokio 2020, oro masculino: 244,8). El entero se usa en la
+    // clasificación, no acá.
+    decimal: true,
+    tenRadius: 5.75,
+    ringStep: 8.0,
+    blackFrom: 7,
+    viewMM: 48,
+    innerMM: 3.2,        // 10,5 o mejor
+    innerKey: 'pop.deep',
+    // Campeón 240-244 en 24 disparos; octavo, 116-118 a los 12.
+    sigmaBest: 4.90,
+    sigmaWorst: 6.40,
+    seriesTime: 200,
+    singleTime: 50,
+    fireSound: 'pistol',
+  },
+};
+
+/** Devuelve la definición de la prueba activa. */
+const EV = () => EVENTS[ST.cfg.event];
+
+/**
+ * Niveles de dificultad.
+ *
+ * `playerMul` y `fieldMul` multiplican el desvío base (mm) de tu grupo y el
+ * del plantel rival. Lo que define lo difícil que es ganar no es cada valor
+ * por separado sino su **cociente** player/field:
+ *
+ *   club  0,67 → tirás bastante mejor que el resto
+ *   nac   0,81 → ventaja moderada
+ *   copa  1,00 → estás exactamente al nivel del plantel
+ *   juegos 1,16 → el plantel tira mejor que vos: hay que jugar perfecto
+ *
+ * Los dos multiplicadores suben juntos en los niveles bajos para que los
+ * puntajes absolutos también sean realistas: en un torneo de club nadie
+ * promedia 10,5.
+ */
+const LEVELS = {
+  club:  { id: 'club',  name: { es: 'Club', en: 'Club' },
+           desc: { es: 'Rivales accesibles y mucho margen en tu pulso.', en: 'Forgiving field, generous hold.' },
+           icon: '🎽', playerMul: 1.55, fieldMul: 2.30, pressure: .45 },
+  nat:   { id: 'nat',   name: { es: 'Nacional', en: 'National' },
+           desc: { es: 'Un campeonato nacional exigente pero justo.', en: 'A demanding but fair national championship.' },
+           icon: '🥉', playerMul: 1.25, fieldMul: 1.55, pressure: .7 },
+  pro:   { id: 'pro',   name: { es: 'Copa del Mundo', en: 'World Cup' },
+           desc: { es: 'Ocho finalistas de nivel mundial. Recomendado.', en: 'Eight world-class finalists. Recommended.' },
+           icon: '🥇', playerMul: 1.00, fieldMul: 1.00, pressure: 1 },
+  olymp: { id: 'olymp', name: { es: 'Juegos Olímpicos', en: 'Olympic Games' },
+           desc: { es: 'El plantel más duro posible y presión máxima.', en: 'Toughest possible field, maximum pressure.' },
+           icon: '🏅', playerMul: 1.00, fieldMul: .86, pressure: 1.35 },
+};
+
+const FORMATS = {
+  individual: { id: 'individual', icon: '👤',
+    name: { es: 'Final individual', en: 'Individual final' },
+    desc: { es: '8 finalistas · 24 disparos · eliminación desde el disparo 12.',
+            en: '8 finalists · 24 shots · elimination from shot 12.' } },
+  mixed: { id: 'mixed', icon: '👥',
+    name: { es: 'Equipo mixto', en: 'Mixed team' },
+    desc: { es: 'Match por puntos: 2 por serie ganada, primero a 16.',
+            en: 'Points match: 2 per series won, first to 16.' } },
+};
+
+const CONTROLS = {
+  hold:  { id: 'hold', icon: '🎚️', name: { es: 'Mantener y soltar', en: 'Hold and release' },
+           desc: { es: 'Realista: el punto se asienta y después se degrada. Soltás en la ventana buena.',
+                   en: 'Realistic: the hold settles then decays. Release inside the good window.' } },
+  click: { id: 'click', icon: '👆', name: { es: 'Clic simple', en: 'Single click' },
+           desc: { es: 'Directo: un clic dispara con la estabilidad del momento.',
+                   en: 'Direct: one click fires with whatever hold you have.' } },
+  auto:  { id: 'auto', icon: '🤖', name: { es: 'Automático (espectador)', en: 'Auto (spectator)' },
+           desc: { es: 'La IA dispara por vos. Ideal para ver la final como transmisión.',
+                   en: 'The AI shoots for you. Watch the final like a broadcast.' } },
+};
+
+/* Plantel de rivales. Los nombres son ficticios; el `tier` marca su nivel
+   relativo (1 = el mejor del circuito) y `nerve` su resistencia a la presión. */
+/* Plantel de rivales. Los nombres son ficticios.
+     q      índice de calidad: 0 = el mejor del circuito, 1 = el finalista más
+            flojo. Interpola entre `sigmaBest` y `sigmaWorst` de la prueba.
+     nerve  resistencia a la presión (0..1).
+     g      género; hace falta para armar los equipos mixtos, que por
+            reglamento ISSF son un hombre y una mujer. */
+const ROSTER = [
+  { n: 'Lin Wei-Chen',      c: 'CHN', g: 'F', q: .02, nerve: .90 },
+  { n: 'Kim Do-Hyun',       c: 'KOR', g: 'M', q: .07, nerve: .89 },
+  { n: 'Jonas Brandt',      c: 'GER', g: 'M', q: .13, nerve: .92 },
+  { n: 'Mateja Kovačević',  c: 'SRB', g: 'M', q: .20, nerve: .88 },
+  { n: 'Hana Ishikawa',     c: 'JPN', g: 'F', q: .27, nerve: .84 },
+  { n: 'Viktor Novák',      c: 'CZE', g: 'M', q: .34, nerve: .87 },
+  { n: 'Priya Ramanathan',  c: 'IND', g: 'F', q: .42, nerve: .81 },
+  { n: 'Camille Dubois',    c: 'FRA', g: 'F', q: .50, nerve: .82 },
+  { n: 'Anders Løvold',     c: 'NOR', g: 'M', q: .57, nerve: .78 },
+  { n: 'Sofia Marchetti',   c: 'ITA', g: 'F', q: .64, nerve: .83 },
+  { n: 'Ruby Callaghan',    c: 'AUS', g: 'F', q: .71, nerve: .85 },
+  { n: 'Elif Demirtaş',     c: 'TUR', g: 'F', q: .78, nerve: .80 },
+  { n: 'Nadia Petrova',     c: 'BUL', g: 'F', q: .85, nerve: .77 },
+  { n: 'Lucas Ferreira',    c: 'BRA', g: 'M', q: .92, nerve: .74 },
+  { n: 'Tomás Aguirre',     c: 'ARG', g: 'M', q: .98, nerve: .76 },
+];
+
+/* Categoría del jugador. Sólo cambia con quién se lo empareja en mixto. */
+const GENDERS = {
+  M: { id: 'M', icon: '♂', name: { es: 'Masculino', en: 'Men' },
+       desc: { es: 'En equipo mixto te toca una compañera.', en: 'In mixed team you are paired with a woman.' } },
+  F: { id: 'F', icon: '♀', name: { es: 'Femenino', en: 'Women' },
+       desc: { es: 'En equipo mixto te toca un compañero.', en: 'In mixed team you are paired with a man.' } },
+};
+
+const VENUES = [
+  'OLYMPIC SHOOTING CENTRE', 'NATIONAL SHOOTING RANGE', 'ISSF WORLD CUP ARENA',
+  'CENTRO OLÍMPICO DE TIRO', 'MEGALINK FINALS HALL',
+];
+
+/* ═══ §4 · Motor de audio ═══════════════════════════════════════════════════
+   Todo se sintetiza en tiempo real: no hay un solo archivo de sonido.
+   Ventajas: carga instantánea, funciona sin conexión y la música puede
+   reaccionar a la tensión de la final sin cortes ni crossfades de pistas.
+
+   Arquitectura de buses:
+
+        música ──┐
+        efectos ─┼─► master ─► compresor ─► salida
+        público ─┘        ▲
+        voz ──────────────┘  (la voz baja el resto por "ducking")
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const AUDIO = (() => {
+  let ctx = null;                 // AudioContext (se crea con el primer gesto)
+  let bus = {};                   // GainNodes por bus
+  let noiseBuf = null;            // ruido blanco reutilizable
+  let started = false;
+  let seq = null;                 // handle del secuenciador musical
+  let tension = 0;                // 0..1 → cuán dramática suena la música
+  let crowdSrc = null;            // murmullo continuo del público
+
+  /* --- Infraestructura --------------------------------------------------- */
+
+  /** Crea el contexto. Debe llamarse desde un gesto del usuario. */
+  function init() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.knee.value = 26;
+    comp.ratio.value = 7; comp.attack.value = .004; comp.release.value = .22;
+    comp.connect(ctx.destination);
+
+    bus.master = gain(0.9, comp);
+    bus.music  = gain(0.0, bus.master);   // entra con fade cuando arranca la final
+    bus.sfx    = gain(0.85, bus.master);
+    bus.crowd  = gain(0.0, bus.master);
+    bus.voice  = gain(1.0, bus.master);
+
+    // Reverb corto de recinto cerrado: le da cuerpo a disparos y aplausos.
+    bus.verb = ctx.createConvolver();
+    bus.verb.buffer = impulse(1.6, 2.4);
+    const verbGain = gain(0.26, bus.master);
+    bus.verb.connect(verbGain);
+
+    noiseBuf = makeNoise(2);
+    return ctx;
+  }
+
+  const now = () => ctx.currentTime;
+  function gain(v, dest) { const g = ctx.createGain(); g.gain.value = v; if (dest) g.connect(dest); return g; }
+
+  /** Buffer de ruido blanco de `sec` segundos, reutilizado por todos los FX. */
+  function makeNoise(sec) {
+    const b = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return b;
+  }
+
+  /** Respuesta al impulso sintética (ruido con caída exponencial) para el reverb. */
+  function impulse(sec, decay) {
+    const len = ctx.sampleRate * sec;
+    const b = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    return b;
+  }
+
+  /** Fuente de ruido con envolvente y filtro. Es el ladrillo de casi todos los FX. */
+  function noise({ dur = .2, type = 'bandpass', freq = 2000, q = 1, vol = .5,
+                   attack = .002, dest = null, sweepTo = null, verb = 0 } = {}) {
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = gain(0, dest || bus.sfx);
+    const t = now();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    if (sweepTo) f.frequency.exponentialRampToValueAtTime(Math.max(40, sweepTo), t + dur);
+    src.connect(f); f.connect(g);
+    if (verb > 0) { const vg = gain(verb, bus.verb); g.connect(vg); }
+    src.start(t); src.stop(t + dur + .05);
+    return g;
+  }
+
+  /** Oscilador con envolvente ADSR simplificada. */
+  function tone({ freq = 440, to = null, dur = .3, type = 'sine', vol = .3,
+                  attack = .005, dest = null, detune = 0, verb = 0 } = {}) {
+    const o = ctx.createOscillator();
+    o.type = type; o.frequency.value = freq; o.detune.value = detune;
+    const g = gain(0, dest || bus.sfx);
+    const t = now();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    if (to) o.frequency.exponentialRampToValueAtTime(Math.max(20, to), t + dur);
+    o.connect(g);
+    if (verb > 0) { const vg = gain(verb, bus.verb); g.connect(vg); }
+    o.start(t); o.stop(t + dur + .05);
+    return g;
+  }
+
+  /* --- Efectos de la galería --------------------------------------------- */
+
+  /**
+   * Disparo de aire comprimido. Tiene tres capas:
+   *   1. el «puf» del aire liberado (ruido agudo muy corto),
+   *   2. el golpe mecánico del pistón contra el tope (seno grave),
+   *   3. el resorte / muelle (ruido con barrido descendente).
+   * El rifle suena más seco y agudo; la pistola, más hueca.
+   */
+  function shot(kind = 'rifle') {
+    if (!ctx || !ST.cfg.sfx) return;
+    const rifle = kind === 'rifle';
+    noise({ dur: rifle ? .055 : .075, type: 'highpass', freq: rifle ? 2600 : 1500,
+            vol: .5, verb: .5, sweepTo: rifle ? 900 : 500 });
+    tone({ freq: rifle ? 190 : 140, to: rifle ? 70 : 52, dur: .1, type: 'sine', vol: .34, verb: .3 });
+    noise({ dur: .16, type: 'bandpass', freq: rifle ? 3400 : 2200, q: 3, vol: .1, sweepTo: 700 });
+  }
+
+  /**
+   * Impacto del balín en el blanco. Se programa con el retardo real de vuelo:
+   * 10 m a ~170 m/s de velocidad de boca ≈ 59 ms. Ese pequeño desfase es lo
+   * que hace que el disparo «suene a polígono» y no a videojuego.
+   */
+  function impact(quality = 1) {
+    if (!ctx || !ST.cfg.sfx) return;
+    setTimeout(() => {
+      if (!ctx) return;
+      noise({ dur: .045, type: 'bandpass', freq: 4200 + quality * 2600, q: 9, vol: .3, verb: .6 });
+      tone({ freq: 1500 + quality * 900, to: 600, dur: .07, type: 'triangle', vol: .12 });
+    }, 59);
+  }
+
+  /** Bip del cronómetro. `urgent` sube tono y volumen en los últimos segundos. */
+  function beep(urgent = false) {
+    if (!ctx || !ST.cfg.sfx) return;
+    tone({ freq: urgent ? 1320 : 880, dur: urgent ? .13 : .08, type: 'square', vol: urgent ? .16 : .09 });
+  }
+
+  /** Acorde ascendente para «CARGUEN / COMIENCEN». */
+  function cue(up = true) {
+    if (!ctx || !ST.cfg.sfx) return;
+    const base = up ? 440 : 330;
+    [0, 4, 7].forEach((semi, i) => setTimeout(() => {
+      if (ctx) tone({ freq: base * Math.pow(2, semi / 12), dur: .5, type: 'triangle', vol: .1, attack: .01, verb: .4 });
+    }, i * 70));
+  }
+
+  /** Golpe grave y disonante para una eliminación. */
+  function sting() {
+    if (!ctx || !ST.cfg.sfx) return;
+    tone({ freq: 160, to: 42, dur: 1.5, type: 'sawtooth', vol: .2, verb: .7 });
+    tone({ freq: 168, to: 44, dur: 1.4, type: 'sawtooth', vol: .14, detune: -22 });
+    noise({ dur: .8, type: 'lowpass', freq: 700, vol: .16, sweepTo: 120, verb: .5 });
+  }
+
+  /** Fanfarria de medalla de oro. */
+  function fanfare() {
+    if (!ctx || !ST.cfg.sfx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5, 1318.5];
+    notes.forEach((f, i) => setTimeout(() => {
+      if (!ctx) return;
+      tone({ freq: f, dur: i === notes.length - 1 ? 1.6 : .34, type: 'triangle', vol: .18, attack: .01, verb: .6 });
+      tone({ freq: f / 2, dur: .4, type: 'sine', vol: .1 });
+    }, i * 190));
+  }
+
+  /* --- Público ------------------------------------------------------------ */
+
+  /** Murmullo continuo: ruido marrón filtrado, muy por debajo de la mezcla. */
+  function crowdStart() {
+    if (!ctx || crowdSrc) return;
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf; src.loop = true;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 620; lp.Q.value = .6;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 160;
+    src.connect(hp); hp.connect(lp); lp.connect(bus.crowd);
+    src.start();
+    crowdSrc = src;
+    bus.crowd.gain.setTargetAtTime(ST.cfg.crowd ? .1 : 0, now(), 1.5);
+  }
+
+  /**
+   * Reacción del público. `level` 0..1 controla si es un murmullo de
+   * aprobación, un «oooh» de decepción o una ovación completa.
+   */
+  function crowdReact(level = .5, negative = false) {
+    if (!ctx || !ST.cfg.crowd) return;
+    const dur = .5 + level * 2.2;
+    const g = gain(0, bus.master);
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = negative ? 380 : 900; bp.Q.value = .8;
+    src.connect(bp); bp.connect(g);
+    const vg = gain(.5, bus.verb); g.connect(vg);
+    const t = now();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.06 + level * .17, t + (negative ? .35 : .12));
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    // Un «oooh» decepcionado cae de tono; una ovación sube.
+    bp.frequency.linearRampToValueAtTime(negative ? 240 : 1500, t + dur);
+    src.start(t); src.stop(t + dur + .1);
+
+    // Aplausos: pulsos de ruido agudo con densidad proporcional al nivel.
+    if (!negative && level > .45) {
+      const claps = (28 + level * 90) | 0;
+      for (let i = 0; i < claps; i++) {
+        const d = Math.random() * dur * .9;
+        setTimeout(() => {
+          if (ctx) noise({ dur: .035, type: 'bandpass', freq: 1800 + Math.random() * 2600,
+                           q: 2, vol: .012 + Math.random() * .022, verb: .8 });
+        }, d * 1000);
+      }
+    }
+  }
+
+  /* --- Música adaptativa -------------------------------------------------- */
+
+  /* Escala menor natural sobre A. La música se mueve en dos acordes que se
+     alternan; la «tensión» cambia el registro, el brillo y la densidad. */
+  const ROOT = 55;                              // A1
+  const SCALE = [0, 2, 3, 5, 7, 8, 10];         // menor natural
+  const CHORDS = [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-2, 2, 5]];
+  const hz = semi => ROOT * Math.pow(2, semi / 12);
+
+  /**
+   * Secuenciador con «lookahead»: cada 25 ms programa los eventos de los
+   * próximos 120 ms usando el reloj del AudioContext. Es la técnica estándar
+   * para que el tempo no se vaya de ritmo cuando el hilo principal se traba
+   * dibujando en el canvas.
+   */
+  function musicStart() {
+    if (!ctx || seq) return;
+    let step = 0;
+    let nextTime = now() + .1;
+
+    const timer = setInterval(() => {
+      if (!ctx) return;
+      const bpm = 74 + tension * 26;
+      const spb = 60 / bpm / 4;                 // duración de una semicorchea
+      while (nextTime < now() + .12) {
+        schedule(step, nextTime, tension);
+        nextTime += spb;
+        step = (step + 1) % 64;
+      }
+    }, 25);
+
+    seq = { timer };
+    bus.music.gain.setTargetAtTime(ST.cfg.music ? .22 : 0, now(), 2.5);
+  }
+
+  /** Programa un paso de 1/16 de la grilla. */
+  function schedule(step, t, ten) {
+    const bar = (step / 16) | 0;
+    const chord = CHORDS[bar % CHORDS.length];
+    const beat = step % 16;
+    const M = bus.music;
+
+    // Sub-bajo: la fundamental sostenida al inicio de cada compás.
+    if (beat === 0) {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.value = hz(chord[0]);
+      const g = gain(0, M);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.5, t + .04);
+      g.gain.setTargetAtTime(.0001, t + 1.0, .5);
+      o.connect(g); o.start(t); o.stop(t + 2.4);
+    }
+
+    // Bombo: pulso cardíaco de la pieza. Se dobla cuando la tensión es alta.
+    if (beat % 8 === 0 || (ten > .55 && beat % 8 === 6)) {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(115, t);
+      o.frequency.exponentialRampToValueAtTime(44, t + .13);
+      const g = gain(0, M);
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.linearRampToValueAtTime(.55, t + .005);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .2);
+      o.connect(g); o.start(t); o.stop(t + .25);
+    }
+
+    // Hi-hats: sólo aparecen con tensión media para arriba.
+    if (ten > .3 && beat % 2 === 1) {
+      const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7200;
+      const g = gain(0, M);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.05 + ten * .07, t + .002);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .05);
+      src.connect(f); f.connect(g); src.start(t); src.stop(t + .08);
+    }
+
+    // Arpegio: sierra filtrada. El brillo del filtro sigue a la tensión.
+    if (beat % 2 === 0 || ten > .7) {
+      const note = chord[(step + bar) % chord.length] + 24 + (step % 8 === 6 ? 12 : 0);
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.value = hz(note);
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.value = 500 + ten * 3200; f.Q.value = 6 + ten * 6;
+      const g = gain(0, M);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.08 + ten * .06, t + .006);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .28);
+      o.connect(f); f.connect(g);
+      const vg = gain(.22, bus.verb); g.connect(vg);
+      o.start(t); o.stop(t + .32);
+    }
+
+    // Pad: dos sierras desafinadas, ataque largo. Es el «colchón» emocional.
+    if (beat === 0 && bar % 2 === 0) {
+      const f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.value = 700 + ten * 1400;
+      const g = gain(0, M);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.06 + ten * .05, t + 1.1);
+      g.gain.setTargetAtTime(.0001, t + 2.0, .8);
+      f.connect(g);
+      const vg = gain(.5, bus.verb); g.connect(vg);
+      chord.forEach((semi, i) => {
+        const o = ctx.createOscillator(); o.type = 'sawtooth';
+        o.frequency.value = hz(semi + 12);
+        o.detune.value = (i - 1) * 9;
+        o.connect(f); o.start(t); o.stop(t + 3.6);
+      });
+    }
+  }
+
+  /* --- Control externo ----------------------------------------------------- */
+
+  /** Ajusta la tensión dramática (0 = calma, 1 = duelo por el oro). */
+  function setTension(v) { tension = clamp(v, 0, 1); }
+
+  /** Baja música y ambiente mientras habla el juez o el relator. */
+  function duck(on) {
+    if (!ctx) return;
+    const m = ST.cfg.music ? (on ? .07 : .22) : 0;
+    const c = ST.cfg.crowd ? (on ? .03 : .1) : 0;
+    bus.music.gain.setTargetAtTime(m, now(), .25);
+    bus.crowd.gain.setTargetAtTime(c, now(), .25);
+  }
+
+  /** Re-aplica los interruptores de la pantalla de configuración. */
+  function refreshMix() {
+    if (!ctx) return;
+    bus.music.gain.setTargetAtTime(ST.cfg.music ? .22 : 0, now(), .4);
+    bus.crowd.gain.setTargetAtTime(ST.cfg.crowd ? .1 : 0, now(), .4);
+    bus.sfx.gain.setTargetAtTime(ST.cfg.sfx ? .85 : 0, now(), .2);
+  }
+
+  /** Arranca todo el paisaje sonoro (se llama al iniciar una final). */
+  function begin() {
+    init();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    if (!started) { crowdStart(); musicStart(); started = true; }
+    refreshMix();
+  }
+
+  function fadeOut() {
+    if (!ctx) return;
+    bus.music.gain.setTargetAtTime(0, now(), .8);
+    bus.crowd.gain.setTargetAtTime(0, now(), .8);
+  }
+
+  return { init, begin, shot, impact, beep, cue, sting, fanfare,
+           crowdReact, setTension, duck, refreshMix, fadeOut,
+           get ctx() { return ctx; } };
+})();
+
+/* ═══ §5 · Motor de voz ═════════════════════════════════════════════════════
+   Dos personajes con SpeechSynthesis:
+     · JUEZ     — órdenes de campo, grave y pausado.
+     · RELATOR  — comenta puntajes y posiciones, más ágil.
+   El motor elige la mejor voz disponible para el idioma activo y encola los
+   textos para que nunca se pisen entre sí.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const VOICE = (() => {
+  const synth = window.speechSynthesis || null;
+  let voices = [];
+  let queue = [];
+  let busy = false;
+
+  /** Refresca la lista de voces del sistema (llega de forma asíncrona). */
+  function load() {
+    if (!synth) return;
+    voices = synth.getVoices() || [];
+  }
+  if (synth) {
+    load();
+    synth.onvoiceschanged = load;
+  }
+
+  /**
+   * Elige una voz para el idioma y el personaje pedidos.
+   * Preferimos voces locales (suenan al instante y no necesitan red).
+   */
+  function choose(role) {
+    if (!voices.length) load();
+    const want = ST.lang === 'es' ? 'es' : 'en';
+    const cands = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(want));
+    if (!cands.length) return null;
+    const local = cands.filter(v => v.localService);
+    const pool = local.length ? local : cands;
+    // Repartimos: el juez toma la primera voz, el relator la segunda si existe.
+    return role === 'judge' ? pool[0] : (pool[1] || pool[0]);
+  }
+
+  /** Convierte 10.9 → «diez coma nueve» / «ten point nine» para que se lea bien. */
+  function sayScore(score, decimal) {
+    if (!decimal) return String(Math.round(score));
+    const whole = Math.floor(score + 1e-9);
+    const tenth = Math.round((score - whole) * 10);
+    const sep = ST.lang === 'es' ? ' coma ' : ' point ';
+    return whole + sep + tenth;
+  }
+
+  /** Encola una frase. `role` = 'judge' | 'caster'. */
+  function say(text, role = 'caster', opts = {}) {
+    if (!synth || !ST.cfg.voice || !text) return;
+    queue.push({ text, role, opts });
+    if (!busy) next();
+  }
+
+  function next() {
+    if (!queue.length) { busy = false; AUDIO.duck(false); return; }
+    busy = true;
+    const { text, role, opts } = queue.shift();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = choose(role);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    else u.lang = ST.lang === 'es' ? 'es-ES' : 'en-US';
+    if (role === 'judge') { u.rate = opts.rate ?? .82; u.pitch = opts.pitch ?? .78; u.volume = 1; }
+    else                  { u.rate = opts.rate ?? 1.06; u.pitch = opts.pitch ?? 1.06; u.volume = .95; }
+    AUDIO.duck(true);
+    u.onend = u.onerror = () => setTimeout(next, 90);
+    try { synth.speak(u); } catch (e) { setTimeout(next, 50); }
+  }
+
+  /** Vacía la cola (al abandonar la final o cambiar de pantalla). */
+  function stop() {
+    queue = []; busy = false;
+    try { synth && synth.cancel(); } catch (e) {}
+    AUDIO.duck(false);
+  }
+
+  return { say, stop, sayScore, get available() { return !!synth; } };
+})();
+
+/* ═══ §6 · Balística ════════════════════════════════════════════════════════
+   El corazón «serio» del simulador. Un disparo es un punto (x, y) en
+   milímetros sobre la cara del blanco; todo lo demás — puntaje, décimas,
+   grupo, comentarios — se deriva de ahí.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const BAL = {
+  /** Radio (mm) del borde exterior del anillo `n` (1..10). */
+  ringRadius(ev, n) { return ev.tenRadius + ev.ringStep * (10 - n); },
+
+  /**
+   * Puntaje decimal a partir de la distancia al centro.
+   *
+   * Se puntúa «por el borde del balín»: el impacto vale el anillo más alto
+   * que el balín toque. Como el radio del balín (2,25 mm) es exactamente la
+   * diferencia entre `ringStep` y el radio del diez, la cuenta se reduce a
+   * dividir la distancia por el paso del anillo.
+   *
+   *   entero  = 10 - floor(d / ringStep)
+   *   decimal = 10,9 - floor(d / (ringStep/10)) · 0,1
+   *
+   * Comprobación rápida en rifle (ringStep 2,5 mm):
+   *   d = 0      → 10,9   (centro perfecto)
+   *   d = 2,49   → 10,0   (justo dentro del diez)
+   *   d = 2,50   → 9,9    (primera décima fuera del diez)
+   *   d = 5,00   → 8,9
+   */
+  score(ev, d) {
+    const sub = ev.ringStep / 10;
+    const dec = 10.9 - Math.floor(d / sub) * 0.1;
+    const int = 10 - Math.floor(d / ev.ringStep);
+    if (int <= 0) return { score: 0, ring: 0, decimal: 0 };
+    return {
+      score: ev.decimal ? Math.round(dec * 10) / 10 : int,
+      decimal: Math.round(dec * 10) / 10,
+      ring: int,
+    };
+  },
+
+  /**
+   * ¿Diez «interior»? El umbral depende de la prueba: en pistola es el anillo
+   * oficial de 5 mm; en rifle, el 10,5 que los tiradores llaman diez profundo.
+   */
+  isInner(ev, d) { return d <= ev.innerMM; },
+
+  /**
+   * Genera un impacto.
+   *
+   * @param ev      definición de la prueba
+   * @param sigma   desvío por eje en mm (calidad del tirador en este disparo)
+   * @param bias    {x,y} desvío sistemático en mm (reglaje, tendencia del día)
+   * @param offset  {x,y} desplazamiento del punto de mira al soltar (jugador)
+   */
+  shoot(ev, sigma, bias = { x: 0, y: 0 }, offset = { x: 0, y: 0 }) {
+    const x = offset.x + bias.x + gauss() * sigma;
+    const y = offset.y + bias.y + gauss() * sigma;
+    const d = Math.hypot(x, y);
+    const s = this.score(ev, d);
+    return { x, y, d, ...s, inner: this.isInner(ev, d) };
+  },
+
+  /**
+   * Diámetro del grupo (mm): la mayor distancia entre dos impactos, que es
+   * la medida que usan los tiradores para juzgar consistencia.
+   */
+  groupSize(shots) {
+    let max = 0;
+    for (let i = 0; i < shots.length; i++)
+      for (let j = i + 1; j < shots.length; j++)
+        max = Math.max(max, Math.hypot(shots[i].x - shots[j].x, shots[i].y - shots[j].y));
+    return max;
+  },
+
+  /** Etiqueta cualitativa del disparo, para el cartel flotante y el relato. */
+  label(ev, sh) {
+    if (sh.ring === 0) return { key: 'pop.miss', tone: 'bad', crowd: [.2, true] };
+    const norm = sh.decimal;                        // siempre comparamos en decimal
+    if (norm >= 10.8) return { key: 'pop.center', tone: 'great', crowd: [1, false] };
+    if (sh.inner)     return { key: ev.innerKey, tone: 'great', crowd: [.8, false] };
+    if (sh.ring === 10) return { key: 'pop.ten',  tone: 'great', crowd: [.6, false] };
+    if (norm >= 9.5)  return { key: 'pop.ok',     tone: '',      crowd: [.35, false] };
+    if (norm >= 9.0)  return { key: 'pop.mid',    tone: '',      crowd: [.15, false] };
+    return { key: 'pop.bad', tone: 'bad', crowd: [.5, true] };
+  },
+};
+
+/* ═══ §7 · Atletas ══════════════════════════════════════════════════════════ */
+
+/**
+ * Un finalista. Cubre tanto al jugador (`human = true`) como a los rivales.
+ *
+ * Modelo de rendimiento, de más lento a más rápido:
+ *   forma     — deriva lenta a lo largo de la final (el «día» del tirador)
+ *   fatiga    — crece con cada disparo y ensancha el grupo
+ *   presión   — depende del contexto (eliminación cerca, duelo por el oro)
+ *   temblor   — oscilación instantánea del punto de mira (solo el jugador)
+ */
+class Athlete {
+  constructor({ name, country, q = .5, nerve = .8, human = false, team = null, gender = 'M' }) {
+    const ev = EV();
+    const lvl = LEVELS[ST.cfg.level];
+
+    this.name = name;
+    this.country = country;
+    this.human = human;
+    this.team = team;                 // 'A' | 'B' en equipo mixto
+    this.gender = gender;             // 'M' | 'F' — sólo importa en mixto
+    this.nerve = nerve;               // 0..1 resistencia a la presión
+
+    this.q = q;
+    // Desvío base por eje: se interpola entre el mejor y el peor finalista de
+    // esta prueba según el índice de calidad, y después lo escala el nivel
+    // elegido (el jugador con `playerMul`, el plantel con `fieldMul`).
+    this.sigma0 = lerp(ev.sigmaBest, ev.sigmaWorst, clamp(q, 0, 1))
+                * (human ? lvl.playerMul : lvl.fieldMul);
+
+    // Reglaje imperfecto: un sesgo pequeño y constante durante toda la final.
+    const biasMag = ev.ringStep * 0.06;
+    this.bias = { x: gauss() * biasMag, y: gauss() * biasMag };
+
+    this.form = 0;                    // −1 frío … +1 encendido
+    this.fatigue = 0;                 // 0..1
+    this.shots = [];
+    this.out = false;                 // eliminado
+    this.rank = 0;
+    this.seriesPoints = 0;            // sólo equipo mixto
+  }
+
+  get total() { return total(this.shots, EV().decimal); }
+  get last() { return this.shots[this.shots.length - 1] || null; }
+
+  /** Promedio por disparo, en decimal, para comparar entre pruebas. */
+  get avg() {
+    if (!this.shots.length) return 0;
+    return this.shots.reduce((a, s) => a + s.decimal, 0) / this.shots.length;
+  }
+
+  /**
+   * Desvío efectivo de este disparo concreto.
+   * @param pressure 0..1 — cuánto pesa el momento
+   */
+  sigmaNow(pressure = 0) {
+    const lvl = LEVELS[ST.cfg.level];
+    const p = pressure * lvl.pressure * (1 - this.nerve);   // nervios
+    const f = this.fatigue * .35;                            // cansancio
+    const fo = -this.form * .16;                             // estar «fino» aprieta el grupo
+    return this.sigma0 * (1 + p + f + fo);
+  }
+
+  /**
+   * Hace evolucionar forma y fatiga después de cada disparo.
+   * La forma es un paseo aleatorio con retorno a la media: así aparecen
+   * rachas creíbles sin que nadie se dispare para siempre.
+   */
+  tick(shot) {
+    const good = shot.decimal >= 10.4;
+    this.form = clamp(this.form * .82 + (good ? .18 : -.14) + gauss() * .06, -1, 1);
+    this.fatigue = clamp(this.fatigue + .022 + Math.random() * .012, 0, 1);
+  }
+
+  /** Dispara (usado por la IA y por el modo automático del jugador). */
+  fireAI(pressure = 0) {
+    const sh = BAL.shoot(EV(), this.sigmaNow(pressure), this.bias);
+    this.shots.push(sh);
+    this.tick(sh);
+    return sh;
+  }
+}
+
+/**
+ * Modelo del pulso del jugador.
+ *
+ * El punto de mira nunca está quieto. Se compone de:
+ *   · una oscilación lenta (el balanceo del cuerpo),
+ *   · un temblor rápido de baja amplitud (tono muscular),
+ *   · la respiración, que empuja el punto en vertical salvo en la pausa.
+ *
+ * La «estabilidad» describe la curva clásica del sostén: se asienta en unos
+ * dos segundos, aguanta una ventana buena de unos cuatro y después se
+ * degrada rápido. Quien sostiene demasiado, tira peor: igual que en la vida.
+ */
+class Hold {
+  constructor() { this.reset(); }
+
+  reset() {
+    this.t = 0;
+    this.active = false;
+    // Fases aleatorias: cada disparo tiene un patrón de temblor distinto.
+    this.ph = Array.from({ length: 6 }, () => Math.random() * Math.PI * 2);
+    this.breathPhase = Math.random() * Math.PI * 2;
+    this.hr = 72;
+  }
+
+  start() { this.reset(); this.active = true; }
+
+  /**
+   * Curva de estabilidad 0..1 en función del tiempo sostenido.
+   *   0,0 – 1,8 s  asentando
+   *   1,8 – 6,0 s  ventana óptima
+   *   6,0 – 14 s   deterioro
+   */
+  stability(t = this.t) {
+    if (t < 1.8) return smooth(t / 1.8) * .96;
+    if (t < 6.0) return .96 - (t - 1.8) * .012;
+    return Math.max(.16, .91 - (t - 6.0) * .105);
+  }
+
+  /** Etiqueta de la fase actual, para mostrar sobre el blanco. */
+  phase() {
+    if (this.t < 1.8) return 'tag.settling';
+    if (this.t < 6.0) return 'tag.stable';
+    return 'tag.decay';
+  }
+
+  /** Fase respiratoria 0..1; cerca de 0,5 el tirador está en pausa. */
+  breath() { return (Math.sin(this.t * 1.15 + this.breathPhase) + 1) / 2; }
+
+  /**
+   * Avanza el modelo y devuelve el desplazamiento del punto de mira en mm.
+   * @param dt      segundos transcurridos
+   * @param athlete el jugador (para su sigma base y su fatiga)
+   * @param press   presión del momento 0..1
+   */
+  update(dt, athlete, press = 0) {
+    if (!this.active) return { x: 0, y: 0 };
+    this.t += dt;
+
+    const s = this.stability();
+    const ev = EV();
+
+    // Amplitud del balanceo, en mm. Escala con el sigma del tirador para que
+    // rifle y pistola se sientan coherentes con sus propias tolerancias.
+    const amp = athlete.sigma0 * (2.6 - 1.9 * s) * (1 + press * .5) * (1 + athlete.fatigue * .4);
+
+    const t = this.t;
+    // Tres senos incomensurables ≈ movimiento cuasi-aleatorio pero suave.
+    const x = amp * (0.62 * Math.sin(t * 1.7 + this.ph[0])
+                   + 0.26 * Math.sin(t * 4.3 + this.ph[1])
+                   + 0.12 * Math.sin(t * 9.1 + this.ph[2]));
+    let   y = amp * (0.58 * Math.sin(t * 1.3 + this.ph[3])
+                   + 0.28 * Math.sin(t * 3.7 + this.ph[4])
+                   + 0.14 * Math.sin(t * 8.3 + this.ph[5]));
+
+    // La respiración desplaza el punto en vertical. En la pausa (fase ≈ 0,5)
+    // el efecto casi desaparece: es la ventana que hay que aprovechar.
+    const b = this.breath();
+    const breathGain = Math.abs(b - .5) * 2;
+    y += amp * 1.5 * breathGain * (b > .5 ? 1 : -1);
+
+    // Pulso: sube con la presión y con el tiempo que llevás sosteniendo.
+    this.hr = 68 + press * 34 + Math.min(18, this.t * 2.4) + Math.sin(t * 3) * 1.5;
+
+    return { x, y, stability: s, breath: b, breathGain };
+  }
+
+  /**
+   * Error extra al soltar el disparador (tirón, anticipación).
+   * Un sostén estable perdona más; uno degradado castiga.
+   */
+  triggerError(athlete) {
+    const s = this.stability();
+    const mag = athlete.sigma0 * (0.92 - 0.50 * s);
+    return { x: gauss() * mag, y: gauss() * mag };
+  }
+}
+
+/* ═══ §8 · Máquina de estados de la final ═══════════════════════════════════
+   Formato individual (reglamento ISSF vigente):
+     · 8 finalistas.
+     · Etapa 1 — dos series de 3 disparos por orden («CARGUEN / COMIENCEN»).
+     · Etapa 2 — disparos individuales, 50 s cada uno.
+     · Tras el disparo 12 y luego cada dos disparos (14, 16, 18, 20, 22) queda
+       eliminado el último clasificado.
+     · Los dos que sobreviven definen oro y plata en los disparos 23 y 24.
+
+   Formato equipo mixto:
+     · Dos equipos de dos tiradores.
+     · Cada serie los cuatro tiran un disparo; gana la serie el equipo con
+       mayor suma: 2 puntos. Empate: 1 punto cada uno.
+     · Gana el match el primer equipo que llega a 16 puntos.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+class Match {
+  constructor() {
+    this.ev = EV();
+    this.format = ST.cfg.format;
+    this.venue = pick(VENUES);
+    this.hold = new Hold();
+    this.shotNo = 0;          // disparos totales efectuados (todos los atletas)
+    this.shotIndex = 0;       // número de disparo dentro de la final (1..24)
+    this.phaseKey = 'phase.prep';
+    this.cmd = 'cmd.wait';
+    this.win = null;          // ventana de tiro activa
+    this.trace = [];          // recorrido del punto de mira (para la repetición)
+    this.lastTrace = null;
+    this.over = false;
+    this.aiming = false;
+    this.reticle = { x: 0, y: 0, stability: 0, breath: .5 };
+    this.buildField();
+  }
+
+  /* --- Construcción del plantel ------------------------------------------ */
+
+  buildField() {
+    const pool = [...ROSTER].sort(() => Math.random() - .5);
+    this.player = new Athlete({
+      name: ST.cfg.name || 'Tu Nombre',
+      country: (ST.cfg.country || 'ARG').toUpperCase().slice(0, 3),
+      q: .30, nerve: .8, human: true, gender: ST.cfg.gender,   // arrancás en la mitad alta del plantel
+      team: this.format === 'mixed' ? 'A' : null,
+    });
+
+    if (this.format === 'mixed') {
+      // Dos equipos de dos, cada uno con un hombre y una mujer.
+      const other = ST.cfg.gender === 'F' ? 'M' : 'F';
+      const men   = pool.filter(r => r.g === 'M');
+      const women = pool.filter(r => r.g === 'F');
+      const takeOther = () => (other === 'M' ? men : women).shift();
+      const m1 = takeOther();                       // tu compañero/a
+      const m2 = men.shift(), m3 = women.shift();   // la pareja rival
+      this.mate = new Athlete({ ...this.mk(m1), team: 'A' });
+      this.rivals = [new Athlete({ ...this.mk(m2), team: 'B' }),
+                     new Athlete({ ...this.mk(m3), team: 'B' })];
+      this.athletes = [this.player, this.mate, ...this.rivals];
+      this.teams = {
+        A: { id: 'A', pts: 0, members: [this.player, this.mate],
+             name: this.player.country },
+        B: { id: 'B', pts: 0, members: this.rivals,
+             name: this.rivals[0].country },
+      };
+      // Si ambos equipos quedaran con el mismo código de país, desempatamos.
+      if (this.teams.A.name === this.teams.B.name) this.teams.B.name += '-2';
+    } else {
+      this.athletes = [this.player, ...pool.slice(0, 7).map(r => new Athlete(this.mk(r)))];
+    }
+    this.rankBoard();
+  }
+
+  mk(r) { return { name: r.n, country: r.c, q: r.q, nerve: r.nerve, gender: r.g }; }
+
+  /* --- Consultas ---------------------------------------------------------- */
+
+  alive() { return this.athletes.filter(a => !a.out); }
+  playerAlive() { return !this.player.out; }
+
+  /** Ordena la lista por puntaje (o por puntos de match en equipo mixto). */
+  rankBoard() {
+    const dec = this.ev.decimal;
+    const live = this.athletes.filter(a => !a.out).sort((a, b) => {
+      const d = b.total - a.total;
+      if (Math.abs(d) > 1e-9) return d;
+      // Desempate ISSF: mejor último disparo, luego más dieces interiores.
+      const la = a.last ? a.last.decimal : 0, lb = b.last ? b.last.decimal : 0;
+      if (lb !== la) return lb - la;
+      return b.shots.filter(s => s.inner).length - a.shots.filter(s => s.inner).length;
+    });
+    const dead = this.athletes.filter(a => a.out).sort((a, b) => b.elimAt - a.elimAt);
+    this.order = [...live, ...dead];
+    this.order.forEach((a, i) => a.rank = i + 1);
+    return this.order;
+  }
+
+  /**
+   * Presión del momento, 0..1. Alimenta el temblor, el pulso y la música.
+   */
+  pressure() {
+    if (this.format === 'mixed') {
+      const A = this.teams.A.pts, B = this.teams.B.pts;
+      const close = 1 - Math.min(1, Math.abs(A - B) / 8);
+      const late = clamp(Math.max(A, B) / 16, 0, 1);
+      return clamp(.25 + close * .3 + late * .45, 0, 1);
+    }
+    const n = this.shotIndex;
+    const base = clamp((n - 6) / 18, 0, 1) * .5;
+    const elimNext = (n >= 11 && n % 2 === 1) ? .28 : 0;   // el próximo disparo elimina
+    const duel = this.alive().length <= 2 ? .35 : 0;
+    return clamp(.15 + base + elimNext + duel, 0, 1);
+  }
+
+  /* --- Salidas al jugador -------------------------------------------------- */
+
+  /** Escribe una línea en el relato lateral y, si corresponde, la locuta. */
+  say(text, { role = 'caster', speak = true, cls = '' } = {}) {
+    UI.feed(text, cls);
+    if (speak) VOICE.say(text, role);
+  }
+
+  /** Orden del juez de campo: se muestra en grande, suena y se locuta. */
+  async command(key, spoken) {
+    this.cmd = key;
+    UI.command(key);
+    AUDIO.cue(key === 'cmd.start');
+    if (spoken) VOICE.say(spoken, 'judge');
+    // En modo espectador las órdenes se acortan: nadie está esperando para tirar.
+    const pace = ST.cfg.control === 'auto' ? .45 : 1;
+    await wait((key === 'cmd.load' ? 2600 : 1200) * pace);
+  }
+
+  /* --- Ciclo de vida ------------------------------------------------------- */
+
+  async run() {
+    UI.showScreen('match');
+    AUDIO.begin();
+    RENDER.attach(this);
+    RENDER.startLoop();
+
+    await this.intro();
+    if (ST.abort) return;
+
+    if (this.format === 'mixed') await this.runMixed();
+    else await this.runIndividual();
+
+    if (!ST.abort) await this.finish();
+  }
+
+  /** Presentación: recinto, prueba y finalistas. */
+  async intro() {
+    const ev = this.ev, L = ST.lang;
+    $('#bc-ev').textContent = ev.name[L].toUpperCase() +
+      (this.format === 'mixed' ? (L === 'es' ? ' — EQUIPO MIXTO' : ' — MIXED TEAM')
+                               : (L === 'es' ? ' — FINAL' : ' — FINAL'));
+    $('#bc-loc').textContent = this.venue;
+    $('#bc-of').textContent = this.format === 'mixed' ? '' : '/ 24';
+    UI.phase('phase.prep');
+    AUDIO.setTension(.15);
+
+    this.say(L === 'es'
+      ? `Bienvenidos a la final de ${ev.name.es}.`
+      : `Welcome to the ${ev.name.en} final.`, { role: 'caster' });
+    await wait(1800);
+    if (ST.abort) return;
+
+    this.say(L === 'es' ? 'Atletas, a la línea de tiro.'
+                        : 'Athletes, to the firing line.', { role: 'judge' });
+    await wait(2200);
+    if (ST.abort) return;
+
+    const names = this.order.slice(0, 3).map(a => `${a.name} (${a.country})`).join(', ');
+    this.say(L === 'es' ? `En la calle de tiro: ${names} y compañía.`
+                        : `On the line: ${names} and company.`, { speak: false });
+    await wait(700);
+  }
+
+  /* --- Formato individual --------------------------------------------------- */
+
+  async runIndividual() {
+    // Etapa 1: dos series de tres disparos.
+    for (let s = 1; s <= 2 && !ST.abort; s++) {
+      UI.phase('phase.series', s);
+      AUDIO.setTension(.2 + s * .05);
+      await this.command('cmd.load', ST.lang === 'es'
+        ? `Para la serie de competencia número ${s}. Carguen.`
+        : `For competition series number ${s}. Load.`);
+      if (ST.abort) return;
+      await this.command('cmd.start', ST.lang === 'es' ? 'Comiencen.' : 'Start.');
+      if (ST.abort) return;
+      this.shotIndex = s * 3;
+      await this.window({ need: 3, seconds: this.ev.seriesTime, series: true });
+      if (ST.abort) return;
+      await this.command('cmd.stop', ST.lang === 'es' ? 'Alto.' : 'Stop.');
+      await this.reportSeries();
+    }
+
+    // Etapa 2: disparos individuales con eliminación progresiva.
+    for (let n = 7; n <= 24 && !ST.abort; n++) {
+      if (this.alive().length < 2) break;
+      this.shotIndex = n;
+      const duel = this.alive().length === 2;
+      UI.phase(duel ? 'phase.gold' : 'phase.single');
+      AUDIO.setTension(clamp(.25 + (n - 6) / 18 * .55 + (duel ? .2 : 0), 0, 1));
+
+      await this.command('cmd.load', ST.lang === 'es' ? 'Carguen.' : 'Load.');
+      if (ST.abort) return;
+      await this.command('cmd.start', ST.lang === 'es' ? 'Comiencen.' : 'Start.');
+      if (ST.abort) return;
+      await this.window({ need: 1, seconds: this.ev.singleTime });
+      if (ST.abort) return;
+
+      // Eliminación tras el disparo 12 y cada dos disparos.
+      if (n >= 12 && n % 2 === 0 && this.alive().length > 2) {
+        await this.eliminate();
+      }
+    }
+  }
+
+  /** Comentario al cerrar una serie de tres disparos. */
+  async reportSeries() {
+    this.rankBoard();
+    const lead = this.order[0];
+    const L = ST.lang;
+    const shown = fmt(lead.total, this.ev.decimal);
+    this.say(L === 'es' ? `Lidera <b>${lead.name}</b> con ${shown} puntos.`
+                        : `<b>${lead.name}</b> leads with ${shown}.`, { speak: false, cls: 'hot' });
+    VOICE.say(L === 'es'
+      ? `Lidera ${lead.name} con ${VOICE.sayScore(lead.total, this.ev.decimal)} puntos.`
+      : `${lead.name} leads with ${VOICE.sayScore(lead.total, this.ev.decimal)}.`, 'caster');
+    await wait(1600);
+  }
+
+  /** Saca de la final al último clasificado. */
+  async eliminate() {
+    this.rankBoard();
+    const live = this.athletes.filter(a => !a.out);
+    const loser = live[live.length - 1];
+    loser.out = true;
+    loser.elimAt = this.shotNo;
+    loser.finalRank = live.length;          // el que sale queda en ese puesto
+    this.rankBoard();
+
+    UI.phase('phase.elim');
+    AUDIO.sting();
+    AUDIO.crowdReact(.5, true);
+    UI.slate(T('out.elim'), loser.name,
+      `${loser.country} · ${fmt(loser.total, this.ev.decimal)}`);
+    UI.markEliminating(loser);
+
+    const L = ST.lang;
+    this.say(L === 'es'
+      ? `Queda eliminado ${loser.name}, de ${loser.country}. Termina en el puesto ${loser.finalRank}.`
+      : `${loser.name} of ${loser.country} is eliminated, finishing ${loser.finalRank}th.`,
+      { cls: 'out' });
+
+    if (loser === this.player) {
+      UI.toast(T('out.you'));
+      AUDIO.crowdReact(.35, true);
+    }
+    await wait(3000);
+    UI.render();
+  }
+
+  /* --- Formato equipo mixto ------------------------------------------------- */
+
+  async runMixed() {
+    let series = 0;
+    $('#team-score').classList.remove('hidden');
+    $('#tsa-n').textContent = this.teams.A.name;
+    $('#tsb-n').textContent = this.teams.B.name;
+
+    while (this.teams.A.pts < 16 && this.teams.B.pts < 16 && series < 40 && !ST.abort) {
+      series++;
+      this.mixedSeries = series;
+      UI.phase('phase.series', series);
+      const maxp = Math.max(this.teams.A.pts, this.teams.B.pts);
+      AUDIO.setTension(clamp(.25 + maxp / 16 * .7, 0, 1));
+
+      await this.command('cmd.load', ST.lang === 'es'
+        ? `Serie ${series}. Carguen.` : `Series ${series}. Load.`);
+      if (ST.abort) return;
+      await this.command('cmd.start', ST.lang === 'es' ? 'Comiencen.' : 'Start.');
+      if (ST.abort) return;
+      await this.window({ need: 1, seconds: 50 });
+      if (ST.abort) return;
+
+      // Suma de la serie por equipo: el último disparo de cada integrante.
+      const sum = t => this.teams[t].members.reduce((a, m) => a + (m.last ? m.last.score : 0), 0);
+      const a = sum('A'), b = sum('B');
+      let msg;
+      const L = ST.lang;
+      if (Math.abs(a - b) < 1e-9) {
+        this.teams.A.pts++; this.teams.B.pts++;
+        msg = L === 'es' ? `Serie empatada ${fmt(a, this.ev.decimal)} a ${fmt(b, this.ev.decimal)}. Un punto para cada equipo.`
+                         : `Series tied ${fmt(a, this.ev.decimal)} to ${fmt(b, this.ev.decimal)}. One point each.`;
+      } else {
+        const w = a > b ? 'A' : 'B';
+        this.teams[w].pts += 2;
+        msg = L === 'es' ? `Serie para ${this.teams[w].name}, ${fmt(Math.max(a, b), this.ev.decimal)} contra ${fmt(Math.min(a, b), this.ev.decimal)}.`
+                         : `Series to ${this.teams[w].name}, ${fmt(Math.max(a, b), this.ev.decimal)} to ${fmt(Math.min(a, b), this.ev.decimal)}.`;
+        if (w === 'A') AUDIO.crowdReact(.6, false); else AUDIO.crowdReact(.3, true);
+      }
+      this.say(msg, { cls: 'hot' });
+      UI.render();
+      await wait(2200);
+    }
+  }
+
+  /* --- Ventana de tiro ------------------------------------------------------ */
+
+  /**
+   * Abre una ventana en la que todos los tiradores activos deben hacer
+   * `need` disparos antes de que se agote el tiempo.
+   *
+   * El jugador dispara con el botón / la barra espaciadora; la IA tiene
+   * asignados instantes repartidos dentro de la ventana. Si el reloj llega a
+   * cero, los disparos que falten valen cero (regla real: disparo perdido).
+   */
+  window({ need, seconds, series = false }) {
+    return new Promise(resolve => {
+      const shooters = this.alive();
+      const W = {
+        need, seconds, left: seconds, series,
+        resolve, closed: false,
+        playerLeft: this.playerAlive() && ST.cfg.control !== 'auto' ? need : 0,
+        queue: [],           // disparos programados de la IA
+        nextBeep: Math.floor(seconds),
+      };
+
+      // La IA no consume toda la ventana: en una final real casi nadie apura
+      // los últimos segundos. Reparte sus disparos dentro de una fracción
+      // inicial (`spread`) y así la ventana se cierra en cuanto todos
+      // terminaron, sin dejar al jugador mirando un reloj vacío.
+      // En modo espectador la fracción es mucho menor para que la final
+      // se vea a ritmo de transmisión.
+      // Cuánto tarda el plantel en completar sus disparos, en segundos reales.
+      // Se define en absoluto (no como fracción de la ventana) para que una
+      // serie de 150 s no obligue al jugador a mirar el reloj un minuto.
+      const budget = ST.cfg.control === 'auto' ? 6 + need * 3 : 10 + need * 7;
+      const spread = clamp(budget / seconds, .05, .9);
+      shooters.forEach(a => {
+        if (a === this.player && W.playerLeft > 0) return;
+        const jitter = Math.random() * spread * .18;   // desincroniza a los rivales
+        for (let i = 0; i < need; i++) {
+          const frac = clamp(((i + .3 + Math.random() * .55) / need) * spread + jitter, .02, .95);
+          W.queue.push({ athlete: a, at: seconds * (1 - frac) });
+        }
+      });
+      W.queue.sort((p, q) => q.at - p.at);   // se dispara cuando `left` baja hasta `at`
+
+      this.win = W;
+      this.hold.reset();
+      UI.clock(seconds);
+      UI.armFire(W.playerLeft > 0);
+      UI.hint(W.playerLeft > 0
+        ? T(ST.cfg.control === 'hold' ? 'hint.hold' : 'hint.click')
+        : T('hint.wait'));
+    });
+  }
+
+  /** Cierra la ventana activa y resuelve su promesa. */
+  closeWindow() {
+    const W = this.win;
+    if (!W || W.closed) return;
+    W.closed = true;
+    this.win = null;
+    this.aiming = false;
+    this.hold.active = false;
+    UI.armFire(false);
+    UI.clockIdle();          // el reloj queda en espera, no clavado en cero rojo
+    W.resolve();
+  }
+
+  /**
+   * Avance temporal de la ventana. Lo llama el bucle de render con el delta
+   * real, así el reloj es exacto aunque el navegador pierda cuadros.
+   */
+  tickWindow(dt) {
+    const W = this.win;
+    if (!W || W.closed) return;
+
+    W.left = Math.max(0, W.left - dt);
+    UI.clock(W.left);
+
+    // En modo «clic» el sostén arranca solo: el jugador no mantiene nada,
+    // sólo elige el instante. Así la curva de estabilidad sigue teniendo
+    // sentido y la telemetría muestra algo vivo.
+    if (ST.cfg.control === 'click' && W.playerLeft > 0 && !this.aiming) this.aimStart();
+
+    // Bips del cronómetro en la última decena.
+    const whole = Math.ceil(W.left);
+    if (whole !== W.nextBeep && whole <= 10 && whole >= 1) {
+      W.nextBeep = whole;
+      AUDIO.beep(whole <= 3);
+    }
+
+    // Disparos de la IA cuyo instante ya pasó.
+    while (W.queue.length && W.queue[W.queue.length - 1].at >= W.left) {
+      const item = W.queue.pop();
+      if (!item.athlete.out) this.resolveShot(item.athlete, item.athlete.fireAI(this.pressure()));
+    }
+
+    // Fin por tiempo: los disparos pendientes valen cero.
+    if (W.left <= 0) {
+      while (W.queue.length) {
+        const item = W.queue.pop();
+        if (!item.athlete.out) this.resolveShot(item.athlete, this.zeroShot());
+      }
+      while (W.playerLeft > 0) {
+        W.playerLeft--;
+        UI.toast(T('toast.timeout'));
+        this.resolveShot(this.player, this.zeroShot());
+      }
+      this.closeWindow();
+      return;
+    }
+
+    // Fin anticipado: todos completaron sus disparos.
+    if (!W.queue.length && W.playerLeft <= 0) {
+      W.grace = (W.grace || 0) + dt;
+      if (W.grace > (ST.cfg.control === 'auto' ? .5 : 1.1)) this.closeWindow();
+    }
+  }
+
+  /** Disparo perdido (fuera de tiempo). */
+  zeroShot() { return { x: 0, y: 0, d: 999, score: 0, decimal: 0, ring: 0, inner: false, lost: true }; }
+
+  /* --- El disparo del jugador ------------------------------------------------ */
+
+  /** Empieza a apuntar (mantener presionado). */
+  aimStart() {
+    const W = this.win;
+    if (!W || W.closed || W.playerLeft <= 0 || this.aiming) return;
+    this.aiming = true;
+    this.trace = [];
+    this.hold.start();
+    $('#range').classList.add('aiming');
+  }
+
+  /** Suelta el disparador. En modo «clic» se llama justo después de apuntar. */
+  aimRelease() {
+    if (!this.aiming) return;
+    this.aiming = false;
+    $('#range').classList.remove('aiming');
+    this.fire();
+  }
+
+  /** Ejecuta el disparo del jugador con el punto de mira actual. */
+  fire() {
+    const W = this.win;
+    if (!W || W.closed || W.playerLeft <= 0) return;
+    W.playerLeft--;
+
+    const p = this.pressure();
+    const err = this.hold.triggerError(this.player);
+    const off = { x: this.reticle.x + err.x, y: this.reticle.y + err.y };
+    // El sigma residual es pequeño: la mayor parte del error ya está en el
+    // punto de mira y en el tirón del disparador.
+    const sh = BAL.shoot(this.ev, this.player.sigmaNow(p) * .45, this.player.bias, off);
+
+    this.player.shots.push(sh);
+    this.player.tick(sh);
+    this.lastTrace = { trace: this.trace.slice(), shot: sh };
+    // Hay que capturar la estabilidad ANTES de reiniciar el modelo: el
+    // entrenador la necesita para saber si soltaste dentro de la ventana.
+    this.lastStability = this.hold.stability();
+    this.lastHoldTime = this.hold.t;
+    this.hold.reset();
+    this.resolveShot(this.player, sh);
+
+    if (W.playerLeft <= 0) UI.armFire(false);
+  }
+
+  /* --- Registro y reacción a cada disparo -------------------------------------- */
+
+  /** Todo disparo (jugador o IA) pasa por acá: sonido, relato y tablero. */
+  resolveShot(athlete, sh) {
+    this.shotNo++;
+    const ev = this.ev;
+    const lab = BAL.label(ev, sh);
+
+    AUDIO.shot(ev.fireSound);
+    if (!sh.lost) AUDIO.impact(clamp(sh.decimal / 10.9, 0, 1));
+    AUDIO.crowdReact(lab.crowd[0] * (athlete.human ? 1 : .55), lab.crowd[1]);
+
+    if (athlete.human) {
+      UI.pop(fmt(sh.score, ev.decimal), T(lab.key), lab.tone);
+      UI.hr(this.hold.hr);
+    }
+
+    UI.shotStrip(athlete, sh, this.win && this.win.series);
+    this.rankBoard();
+    UI.render();
+    UI.flash(athlete);
+
+    // Relato: siempre el del jugador; el de los rivales sólo si es notable.
+    const L = ST.lang;
+    const shown  = sh.lost ? '—' : fmt(sh.score, ev.decimal);   // lo que se lee en pantalla
+    const spoken = VOICE.sayScore(sh.score, ev.decimal);        // lo que pronuncia el relator
+    if (athlete.human) {
+      this.say(`<b>${shown}</b> — ${athlete.name}`,
+        { speak: false, cls: lab.tone === 'great' ? 'hot' : '' });
+      VOICE.say(`${spoken}, ${athlete.name}`, 'caster');
+      UI.coach(this.coachLine(sh));
+    } else if (sh.decimal >= 10.7 || sh.decimal < 9.0 || Math.random() < .25) {
+      this.say(`${athlete.name}: <b>${shown}</b>`,
+        { speak: false, cls: sh.decimal >= 10.7 ? 'hot' : '' });
+      if (sh.decimal >= 10.7 || sh.decimal < 9) VOICE.say(`${athlete.name}: ${spoken}`, 'caster');
+    }
+    $('#bc-n').textContent = this.format === 'mixed'
+      ? (this.mixedSeries || 0) : this.player.shots.length;
+  }
+
+  /**
+   * Consejo del entrenador: lee el último disparo y el patrón acumulado.
+   * Es intencionalmente concreto — nada de «concentrate más».
+   */
+  coachLine(sh) {
+    const L = ST.lang, ev = this.ev, shots = this.player.shots;
+    if (sh.lost) return L === 'es'
+      ? 'Perdiste el disparo por tiempo. Entrá al blanco antes y aceptá el primer punto bueno.'
+      : 'You lost that shot on time. Get on target earlier and take the first good hold.';
+
+    // ¿Hay un sesgo claro en el grupo? Se avisa a partir de 4 disparos.
+    if (shots.length >= 4) {
+      const mx = shots.reduce((a, s) => a + s.x, 0) / shots.length;
+      const my = shots.reduce((a, s) => a + s.y, 0) / shots.length;
+      const thr = ev.ringStep * .45;
+      if (Math.hypot(mx, my) > thr) {
+        const hor = mx > 0 ? (L === 'es' ? 'derecha' : 'right') : (L === 'es' ? 'izquierda' : 'left');
+        const ver = my > 0 ? (L === 'es' ? 'abajo' : 'low') : (L === 'es' ? 'arriba' : 'high');
+        const dir = Math.abs(mx) > Math.abs(my) ? hor : ver;
+        return L === 'es'
+          ? `Tu grupo está corrido hacia la <b>${dir}</b>. Corregí el reglaje un clic y no persigas el impacto.`
+          : `Your group is sitting <b>${dir}</b>. Move your sights one click and stop chasing the shot.`;
+      }
+    }
+    const s = this.lastStability ?? this.hold.stability();
+    if (sh.decimal >= 10.7) return L === 'es'
+      ? 'Ese es el disparo. <b>Repetí el mismo ritmo</b>: misma respiración, mismo tiempo de sostén.'
+      : 'That is the shot. <b>Repeat the rhythm</b>: same breathing, same hold time.';
+    if (sh.decimal < 9.3) return L === 'es'
+      ? 'Tiro abierto. Bajá el arma, respirá dos veces y volvé a entrar; no fuerces el siguiente.'
+      : 'Loose shot. Lower the gun, breathe twice and start again; do not force the next one.';
+    if (s < .55) return L === 'es'
+      ? `Soltaste <b>fuera de la ventana buena</b> (${(this.lastHoldTime || 0).toFixed(1)} s de sostén). Acortá: bajá el arma y volvé a entrar.`
+      : `You released <b>outside the good window</b> (${(this.lastHoldTime || 0).toFixed(1)} s hold). Shorten it: lower the gun and start again.`;
+    return L === 'es'
+      ? 'Sólido. Mantené la presión constante en el disparador y no mires el resultado hasta el final.'
+      : 'Solid. Keep constant pressure on the trigger and do not watch the score until the end.';
+  }
+
+  /* --- Cierre ---------------------------------------------------------------- */
+
+  async finish() {
+    this.over = true;
+    this.closeWindow();
+    UI.phase('phase.done');
+    UI.command('cmd.stop');
+    UI.hint(T('hint.done'));
+
+    const L = ST.lang;
+    let champion;
+    if (this.format === 'mixed') {
+      const w = this.teams.A.pts >= this.teams.B.pts ? this.teams.A : this.teams.B;
+      const l = w.id === 'A' ? this.teams.B : this.teams.A;
+      // Oro para la pareja ganadora (puestos 1 y 2), plata para la otra.
+      w.members.forEach((m, i) => { m.finalRank = i + 1; });
+      l.members.forEach((m, i) => { m.finalRank = i + 3; });
+      champion = w.name;
+      this.say(L === 'es' ? `¡${w.name} se lleva el oro por ${w.pts} a ${l.pts}!`
+                          : `${w.name} takes gold, ${w.pts} to ${l.pts}!`, { cls: 'hot' });
+    } else {
+      this.rankBoard();
+      const live = this.athletes.filter(a => !a.out).sort((a, b) => b.total - a.total);
+      live.forEach((a, i) => { a.finalRank = i + 1; a.out = true; a.elimAt = 99; });
+      champion = live[0].name;
+      this.say(L === 'es' ? `¡Campeón olímpico: ${live[0].name}, de ${live[0].country}!`
+                          : `Olympic champion: ${live[0].name} of ${live[0].country}!`, { cls: 'hot' });
+    }
+
+    AUDIO.setTension(.35);
+    AUDIO.fanfare();
+    AUDIO.crowdReact(1, false);
+    await wait(3200);
+    if (ST.abort) return;
+    UI.podium(this);
+  }
+
+  /** Clasificación final ordenada por puesto (1 = oro). */
+  standings() {
+    return [...this.athletes].sort((a, b) => (a.finalRank || 99) - (b.finalRank || 99));
+  }
+}
+
+/* ═══ §9 · Render ═══════════════════════════════════════════════════════════
+   Un único bucle de requestAnimationFrame gobierna el reloj de la ventana de
+   tiro, el modelo de pulso y todo el dibujo. Trabajar con el delta real evita
+   que el cronómetro se desfase si el navegador pierde cuadros.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const RENDER = (() => {
+  let M = null;                 // partida activa
+  let raf = 0, last = 0;
+  let cv, cx, ecg, ex;
+  let zoom = 1;                 // 1 = vista completa, <1 = acercado al apuntar
+  let dpr = 1;
+  let ecgBuf = [];              // historial de la curva de pulso
+  let telAcc = 0;               // acumulador para refrescar la telemetría a 10 Hz
+
+  function attach(match) {
+    M = match;
+    cv = $('#target'); cx = cv.getContext('2d');
+    ecg = $('#ecg');  ex = ecg.getContext('2d');
+    ecgBuf = new Array(160).fill(0);
+    zoom = 1;
+    resize();
+    window.removeEventListener('resize', resize);   // evita duplicados al reiniciar
+    window.addEventListener('resize', resize);
+  }
+
+  /** Ajusta los canvas al tamaño real en pantalla (con densidad de píxeles). */
+  function resize() {
+    if (!cv) return;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    const box = $('#range').getBoundingClientRect();
+    const side = Math.max(180, Math.min(box.width - 24, box.height - 24));
+    cv.style.width = side + 'px'; cv.style.height = side + 'px';
+    cv.width = Math.round(side * dpr); cv.height = Math.round(side * dpr);
+    const eb = ecg.getBoundingClientRect();
+    ecg.width = Math.max(120, Math.round(eb.width * dpr)); ecg.height = Math.round(34 * dpr);
+  }
+
+  function startLoop() { last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); }
+  function stopLoop() { cancelAnimationFrame(raf); raf = 0; window.removeEventListener('resize', resize); }
+
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(.05, (now - last) / 1000);   // techo: evita saltos al volver de pestaña
+    last = now;
+    if (!M) return;
+
+    // 1) Reloj de la ventana de tiro.
+    if (M.win) M.tickWindow(dt);
+
+    // 2) Modelo de pulso y punto de mira.
+    const press = M.pressure();
+    if (M.aiming) {
+      const r = M.hold.update(dt, M.player, press);
+      M.reticle = r;
+      M.trace.push({ x: r.x, y: r.y });
+      if (M.trace.length > 260) M.trace.shift();
+      zoom = lerp(zoom, .58, dt * 3.2);
+    } else {
+      M.reticle = { x: 0, y: 0, stability: 0, breath: .5 };
+      zoom = lerp(zoom, 1, dt * 2.4);
+    }
+
+    // 3) Dibujo.
+    drawTarget();
+    drawEcg(dt, press);
+
+    // 4) Telemetría en el DOM, a 10 Hz para no castigar el layout.
+    telAcc += dt;
+    if (telAcc > .1) { telAcc = 0; telemetry(press); }
+  }
+
+  /* --- Blanco -------------------------------------------------------------- */
+
+  function drawTarget() {
+    const ev = M.ev, w = cv.width, h = cv.height;
+    const cxp = w / 2, cyp = h / 2;
+    const view = ev.viewMM * zoom;
+    const k = (Math.min(w, h) / 2 - 6 * dpr) / view;   // píxeles por milímetro
+    const mm = v => v * k;
+
+    cx.clearRect(0, 0, w, h);
+
+    const R = Math.min(w, h) / 2 - 4 * dpr;
+    cx.save();
+    cx.beginPath(); cx.arc(cxp, cyp, R, 0, 7); cx.clip();
+
+    // ── Cara del blanco ──────────────────────────────────────────────────
+    // Se dibuja como el cartón real: papel claro y visual negro mate. Sobre
+    // una interfaz oscura el contraste es enorme y se lee de un vistazo.
+    const paper = cx.createRadialGradient(cxp, cyp - R * .25, R * .1, cxp, cyp, R);
+    paper.addColorStop(0, '#eef3f9');
+    paper.addColorStop(.72, '#ccd8e6');
+    paper.addColorStop(1, '#9fb0c6');
+    cx.fillStyle = paper; cx.fillRect(0, 0, w, h);
+
+    // Visual negro: todos los anillos desde `blackFrom` hacia adentro.
+    const rBlack = mm(BAL.ringRadius(ev, ev.blackFrom));
+    const bull = cx.createRadialGradient(cxp, cyp - rBlack * .2, rBlack * .05, cxp, cyp, rBlack);
+    bull.addColorStop(0, '#12161d'); bull.addColorStop(1, '#04060a');
+    cx.beginPath(); cx.arc(cxp, cyp, rBlack, 0, 7); cx.fillStyle = bull; cx.fill();
+    // Filo luminoso: el guiño futurista sobre una cara por lo demás realista.
+    cx.strokeStyle = 'rgba(53,230,255,.45)'; cx.lineWidth = 1.6 * dpr; cx.stroke();
+    cx.shadowBlur = 18 * dpr; cx.shadowColor = 'rgba(53,230,255,.35)';
+    cx.stroke(); cx.shadowBlur = 0;
+
+    // ── Anillos y numeración ─────────────────────────────────────────────
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    for (let n = 1; n <= 10; n++) {
+      const r = mm(BAL.ringRadius(ev, n));
+      if (r < 1.2 * dpr || r > R * 1.5) continue;
+      const inBlack = n >= ev.blackFrom;
+      cx.beginPath(); cx.arc(cxp, cyp, r, 0, 7);
+      cx.strokeStyle = n === 10 ? 'rgba(90,240,255,.95)'
+                     : inBlack  ? 'rgba(205,230,255,.55)'
+                                : 'rgba(24,40,66,.60)';
+      cx.lineWidth = (n === 10 ? 1.9 : 1.1) * dpr;
+      cx.stroke();
+      // Los números van a izquierda y derecha, como en el blanco oficial.
+      if (n <= 8 && r > 15 * dpr) {
+        cx.font = `${Math.round(10 * dpr)}px 'JetBrains Mono',monospace`;
+        cx.fillStyle = inBlack ? 'rgba(215,235,255,.55)' : 'rgba(28,45,72,.65)';
+        const rr = r - 8 * dpr;
+        cx.fillText(String(n), cxp - rr, cyp);
+        cx.fillText(String(n), cxp + rr, cyp);
+      }
+    }
+
+    // Sub-anillos de décimas dentro del diez: sólo al acercar, y sólo en rifle
+    // (en pistola la puntuación oficial de la final es entera).
+    if (zoom < .85) {
+      for (let d = 1; d <= 9; d++) {
+        const r = mm(ev.ringStep / 10 * d);
+        if (r < 3 * dpr) continue;
+        cx.beginPath(); cx.arc(cxp, cyp, r, 0, 7);
+        cx.strokeStyle = ev.decimal ? 'rgba(53,230,255,.16)' : 'rgba(53,230,255,.07)';
+        cx.lineWidth = .7 * dpr; cx.stroke();
+      }
+    }
+
+    // Cruz de referencia del centro.
+    cx.strokeStyle = 'rgba(53,230,255,.22)'; cx.lineWidth = dpr;
+    const arm = mm(ev.ringStep * 1.6);
+    cx.beginPath();
+    cx.moveTo(cxp - arm, cyp); cx.lineTo(cxp - mm(ev.ringStep * .4), cyp);
+    cx.moveTo(cxp + mm(ev.ringStep * .4), cyp); cx.lineTo(cxp + arm, cyp);
+    cx.moveTo(cxp, cyp - arm); cx.lineTo(cxp, cyp - mm(ev.ringStep * .4));
+    cx.moveTo(cxp, cyp + mm(ev.ringStep * .4)); cx.lineTo(cxp, cyp + arm);
+    cx.stroke();
+
+    // Impactos anteriores del jugador. Los más recientes brillan más.
+    const shots = M.player.shots.filter(s => !s.lost);
+    shots.forEach((s, i) => {
+      const age = (shots.length - i) / Math.max(6, shots.length);
+      const px = cxp + mm(s.x), py = cyp + mm(s.y);
+      const pr = Math.max(2 * dpr, mm(2.25));      // radio real del balín (4,5 mm)
+      // Agujero: negro con un borde de papel levantado, como en el cartón real.
+      cx.beginPath(); cx.arc(px, py, pr, 0, 7);
+      cx.fillStyle = `rgba(4,7,12,${.72 + .22 * (1 - age)})`; cx.fill();
+      cx.strokeStyle = i === shots.length - 1
+        ? 'rgba(255,46,136,.95)' : `rgba(232,240,250,${.35 - age * .18})`;
+      cx.lineWidth = (i === shots.length - 1 ? 2.2 : 1.2) * dpr;
+      cx.stroke();
+      // Los agujeros reales se superponen (el balín mide 4,5 mm y el grupo de
+      // un finalista, 2). Un punto exacto encima deja leer la dispersión.
+      cx.beginPath(); cx.arc(px, py, 2.2 * dpr, 0, 7);
+      cx.fillStyle = s.decimal >= 10.5 ? 'rgba(109,255,158,.95)'
+                   : s.decimal >= 10   ? 'rgba(53,230,255,.95)'
+                                       : 'rgba(255,194,71,.95)';
+      cx.fill();
+      if (i === shots.length - 1) {
+        cx.beginPath(); cx.arc(px, py, pr + 4 * dpr, 0, 7);
+        cx.strokeStyle = 'rgba(255,46,136,.35)'; cx.lineWidth = dpr; cx.stroke();
+      }
+    });
+
+    // Elipse del grupo: media ± un desvío. Da lectura instantánea del patrón.
+    if (shots.length >= 3) {
+      const mx = shots.reduce((a, s) => a + s.x, 0) / shots.length;
+      const my = shots.reduce((a, s) => a + s.y, 0) / shots.length;
+      const sx = Math.sqrt(shots.reduce((a, s) => a + (s.x - mx) ** 2, 0) / shots.length);
+      const sy = Math.sqrt(shots.reduce((a, s) => a + (s.y - my) ** 2, 0) / shots.length);
+      cx.save();
+      cx.setLineDash([4 * dpr, 4 * dpr]);
+      cx.beginPath();
+      cx.ellipse(cxp + mm(mx), cyp + mm(my), Math.max(2, mm(sx * 1.6)), Math.max(2, mm(sy * 1.6)), 0, 0, 7);
+      cx.strokeStyle = 'rgba(0,168,110,.55)'; cx.lineWidth = 1.4 * dpr; cx.stroke();
+      cx.restore();
+    }
+
+    // Punto de mira y su rastro, sólo mientras se apunta.
+    if (M.aiming) {
+      const r = M.reticle;
+      // Rastro: la línea que describe el temblor. Es lo que más «vende» la
+      // sensación de sostener un arma.
+      cx.beginPath();
+      M.trace.forEach((p, i) => {
+        const X = cxp + mm(p.x), Y = cyp + mm(p.y);
+        i ? cx.lineTo(X, Y) : cx.moveTo(X, Y);
+      });
+      cx.strokeStyle = 'rgba(255,140,20,.55)'; cx.lineWidth = 1.4 * dpr; cx.stroke();
+
+      const X = cxp + mm(r.x), Y = cyp + mm(r.y);
+      const stab = r.stability || 0;
+      const col = stab > .8 ? '109,255,158' : stab > .5 ? '255,194,71' : '255,77,94';
+      // Halo de estabilidad: cuanto peor el sostén, más grande el círculo.
+      cx.beginPath(); cx.arc(X, Y, mm(M.player.sigma0 * (3.4 - 2.4 * stab)), 0, 7);
+      cx.strokeStyle = `rgba(${col},.35)`; cx.lineWidth = 1.4 * dpr; cx.stroke();
+      // Retícula.
+      cx.strokeStyle = `rgba(${col},.95)`; cx.lineWidth = 1.6 * dpr;
+      const a = 9 * dpr, b = 3 * dpr;
+      cx.beginPath();
+      cx.moveTo(X - a, Y); cx.lineTo(X - b, Y); cx.moveTo(X + b, Y); cx.lineTo(X + a, Y);
+      cx.moveTo(X, Y - a); cx.lineTo(X, Y - b); cx.moveTo(X, Y + b); cx.lineTo(X, Y + a);
+      cx.stroke();
+      cx.beginPath(); cx.arc(X, Y, 1.6 * dpr, 0, 7); cx.fillStyle = `rgb(${col})`; cx.fill();
+    }
+    cx.restore();
+  }
+
+  /* --- Electrocardiograma --------------------------------------------------- */
+
+  let ecgT = 0;
+  function drawEcg(dt, press) {
+    const hr = M.aiming ? M.hold.hr : 66 + press * 26;
+    ecgT += dt * (hr / 60);
+    // Latido sintético: un pico agudo (QRS) más una onda suave.
+    const p = ecgT % 1;
+    const v = Math.exp(-Math.pow((p - .16) / .022, 2)) * 1
+            - Math.exp(-Math.pow((p - .21) / .03, 2)) * .35
+            + Math.exp(-Math.pow((p - .42) / .09, 2)) * .22;
+    ecgBuf.push(v); if (ecgBuf.length > 170) ecgBuf.shift();
+
+    const w = ecg.width, h = ecg.height;
+    ex.clearRect(0, 0, w, h);
+    ex.beginPath();
+    ecgBuf.forEach((y, i) => {
+      const X = i / (ecgBuf.length - 1) * w;
+      const Y = h * .62 - y * h * .46;
+      i ? ex.lineTo(X, Y) : ex.moveTo(X, Y);
+    });
+    ex.strokeStyle = press > .65 ? 'rgba(255,77,94,.9)' : 'rgba(109,255,158,.85)';
+    ex.lineWidth = 1.6 * dpr;
+    ex.shadowBlur = 8 * dpr;
+    ex.shadowColor = ex.strokeStyle;
+    ex.stroke();
+    ex.shadowBlur = 0;
+  }
+
+  /* --- Telemetría en el DOM ---------------------------------------------- */
+
+  function telemetry(press) {
+    const r = M.reticle;
+    const stab = M.aiming ? (r.stability || 0) : 0;
+    const hr = Math.round(M.aiming ? M.hold.hr : 66 + press * 26);
+
+    $('#hr-v').textContent = hr;
+    $('#hr-ico').style.animationDuration = (60 / hr) + 's';
+    $('#hr-ico').style.color = press > .65 ? 'var(--red)' : 'var(--lime)';
+
+    const pv = press > .75 ? (ST.lang === 'es' ? 'EXTREMA' : 'EXTREME')
+             : press > .5  ? (ST.lang === 'es' ? 'ALTA' : 'HIGH')
+             : press > .28 ? (ST.lang === 'es' ? 'MEDIA' : 'MEDIUM')
+                           : (ST.lang === 'es' ? 'BAJA' : 'LOW');
+    $('#press-v').textContent = pv;
+    $('#press-v').style.color = press > .65 ? 'var(--red)' : press > .4 ? 'var(--amber)' : 'var(--tx)';
+
+    $('#hold-v').textContent = Math.round(stab * 100) + '%';
+    $('#hold-b').style.width = (stab * 100) + '%';
+    $('#hold-b').style.background = stab > .8 ? 'linear-gradient(90deg,var(--lime),var(--cyan))'
+                                  : stab > .5 ? 'linear-gradient(90deg,var(--amber),var(--lime))'
+                                              : 'linear-gradient(90deg,var(--red),var(--amber))';
+
+    const b = M.aiming ? (r.breath ?? .5) : .5;
+    const inPause = M.aiming && Math.abs(b - .5) < .12;
+    $('#breath-b').style.width = (b * 100) + '%';
+    $('#breath-v').textContent = !M.aiming ? '—'
+      : inPause ? (ST.lang === 'es' ? 'PAUSA' : 'PAUSE')
+      : b > .5 ? (ST.lang === 'es' ? 'INSPIRA' : 'IN') : (ST.lang === 'es' ? 'EXPIRA' : 'OUT');
+    $('#breath-v').style.color = inPause ? 'var(--lime)' : 'var(--tx)';
+
+    const fat = M.player.fatigue;
+    $('#fat-v').textContent = Math.round(fat * 100) + '%';
+    $('#fat-b').style.width = (fat * 100) + '%';
+
+    // Etiqueta de fase del sostén, sobre el blanco.
+    const tag = $('#range-tag');
+    if (M.aiming) {
+      const key = inPause ? 'tag.pause' : M.hold.phase();
+      const cls = key === 'tag.stable' || key === 'tag.pause' ? 'g' : key === 'tag.decay' ? 'r' : 'a';
+      tag.innerHTML = `<span class="chip ${cls}">${T(key)}</span>` +
+        `<span class="chip">${M.hold.t.toFixed(1)} s</span>`;
+    } else {
+      tag.innerHTML = '';
+    }
+  }
+
+  /** Repetición en cámara lenta del último disparo del jugador. */
+  function replay() {
+    if (!M || !M.lastTrace || M.aiming) return;
+    const { trace, shot } = M.lastTrace;
+    if (!trace.length) return;
+    let i = 0;
+    const savedAim = M.aiming;
+    const id = setInterval(() => {
+      i += 2;
+      if (i >= trace.length) {
+        clearInterval(id);
+        M.aiming = savedAim;
+        M.trace = [];
+        UI.pop(fmt(shot.score, M.ev.decimal), T(BAL.label(M.ev, shot).key), BAL.label(M.ev, shot).tone);
+        return;
+      }
+      M.aiming = true;
+      M.trace = trace.slice(0, i);
+      M.reticle = { ...trace[i], stability: .8, breath: .5 };
+    }, 40);
+    ST.timers.push(id);
+  }
+
+  return { attach, startLoop, stopLoop, resize, replay };
+})();
+
+/* ═══ §10 · Interfaz ════════════════════════════════════════════════════════
+   Capa fina sobre el DOM: no guarda lógica de juego, sólo traduce el estado
+   de la partida en píxeles y recoge la entrada del jugador.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const UI = (() => {
+  let popTimer = 0, slateTimer = 0;
+
+  /* --- Navegación entre pantallas ---------------------------------------- */
+
+  function showScreen(name) {
+    ST.screen = name;
+    $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
+    if (name === 'match') setTimeout(() => RENDER.resize(), 60);
+  }
+
+  /* --- Barra de transmisión ------------------------------------------------ */
+
+  function phase(key, n) {
+    const el = $('#bc-phase');
+    el.textContent = T(key) + (n ? ` ${n}` : '');
+  }
+
+  function command(key) {
+    const el = $('#cmd-word');
+    el.textContent = T(key);
+    el.className = 'cmd-word ' + (key === 'cmd.load' ? 'load' : key === 'cmd.start' ? 'start'
+                                : key === 'cmd.stop' ? 'stop' : '');
+  }
+
+  function clock(sec) {
+    const el = $('#clock');
+    el.style.opacity = '1';
+    el.textContent = sec >= 10 ? Math.ceil(sec).toFixed(0) : sec.toFixed(1);
+    el.className = 'clock' + (sec <= 5 ? ' crit' : sec <= 12 ? ' warn' : '');
+  }
+
+  /** Reloj en reposo entre ventanas: muestra la duración de la próxima. */
+  function clockIdle() {
+    const M = ST.match;
+    const el = $('#clock');
+    el.className = 'clock';
+    el.style.opacity = '.35';
+    el.textContent = M ? String(M.format === 'mixed' ? 50 : M.ev.singleTime) : '—';
+  }
+
+  function hint(txt) { $('#cmd-hint').textContent = txt; }
+  function armFire(on) {
+    const b = $('#b-fire');
+    b.disabled = !on;
+    b.classList.toggle('armed', on);
+  }
+
+  /* --- Clasificación en vivo (con animación FLIP) --------------------------- */
+
+  function render() {
+    const M = ST.match;
+    if (!M) return;
+    const list = $('#board-list');
+    const ev = M.ev;
+
+    // FLIP paso 1: guardamos dónde está cada fila antes de reordenar.
+    const before = new Map();
+    $$('.ath', list).forEach(el => before.set(el.dataset.id, el.getBoundingClientRect().top));
+
+    const order = M.order || M.rankBoard();
+    const leader = order.find(a => !a.out);
+    const leadTotal = leader ? leader.total : 0;
+
+    order.forEach((a, i) => {
+      const id = a.name;
+      let el = list.querySelector(`[data-id="${CSS.escape(id)}"]`);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'ath';
+        el.dataset.id = id;
+        el.innerHTML = `<div class="ath-rk"></div>
+          <div class="ath-mid"><div class="ath-nm"></div>
+            <div class="ath-sub"><span class="ath-ctry"></span><span class="ath-last"></span></div></div>
+          <div><div class="ath-tot"></div><div class="ath-gap"></div></div>`;
+        list.appendChild(el);
+      }
+      const gap = a.total - leadTotal;
+      $('.ath-rk', el).textContent = a.out && a.finalRank ? a.finalRank : i + 1;
+      $('.ath-nm', el).textContent = a.name + (a.human ? ' ★' : '');
+      $('.ath-ctry', el).textContent = a.country + (M.format === 'mixed' && a.team ? ` · ${a.team}` : '');
+      $('.ath-last', el).textContent = a.last ? (a.last.lost ? '—' : fmt(a.last.score, ev.decimal)) : '';
+      $('.ath-tot', el).textContent = fmt(a.total, ev.decimal);
+      const gapEl = $('.ath-gap', el);
+      gapEl.textContent = a === leader ? 'LÍDER' : (gap >= 0 ? '+' : '') + fmt(gap, ev.decimal);
+      gapEl.className = 'ath-gap' + (a === leader ? ' lead' : '');
+      el.className = 'ath' + (a.human ? ' me' : '') + (a.out ? ' out' : '')
+                   + (i === 0 && !a.out ? ' p1' : i === 1 && !a.out ? ' p2' : i === 2 && !a.out ? ' p3' : '');
+      list.appendChild(el);   // reordena moviendo el nodo al final en secuencia
+    });
+
+    // FLIP paso 2: animamos el desplazamiento de cada fila hasta su lugar nuevo.
+    $$('.ath', list).forEach(el => {
+      const prev = before.get(el.dataset.id);
+      if (prev == null) return;
+      const now = el.getBoundingClientRect().top;
+      const dy = prev - now;
+      if (Math.abs(dy) < 1) return;
+      el.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }],
+                 { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)' });
+    });
+
+    if (M.format === 'mixed') {
+      $('#tsa-p').textContent = M.teams.A.pts;
+      $('#tsb-p').textContent = M.teams.B.pts;
+    }
+  }
+
+  function flash(athlete) {
+    const el = $(`#board-list [data-id="${CSS.escape(athlete.name)}"]`);
+    if (!el) return;
+    el.classList.remove('flash');
+    void el.offsetWidth;              // fuerza el reinicio de la animación
+    el.classList.add('flash');
+  }
+
+  function markEliminating(athlete) {
+    const el = $(`#board-list [data-id="${CSS.escape(athlete.name)}"]`);
+    if (el) { el.classList.add('eliminating'); setTimeout(() => el.classList.remove('eliminating'), 900); }
+  }
+
+  /* --- Tira de disparos del jugador ---------------------------------------- */
+
+  function shotStrip(athlete, sh, series) {
+    if (!athlete.human) return;
+    const strip = $('#strip');
+    const el = document.createElement('div');
+    const dec = ST.match.ev.decimal;
+    // Los umbrales dependen de la prueba: en pistola un 9 es un disparo
+    // correcto, mientras que en rifle un 9,2 ya es un tiro abierto.
+    const hi = dec ? 10.4 : 10.0, lo = dec ? 9.3 : 9.0;
+    el.className = 'sh' + (sh.decimal >= hi ? ' hi' : sh.decimal < lo ? ' lo' : '') + (series ? ' ser' : '');
+    el.innerHTML = `<b>${sh.lost ? '—' : fmt(sh.score, dec)}</b><i>#${athlete.shots.length}</i>`;
+    strip.appendChild(el);
+    strip.scrollLeft = strip.scrollWidth;
+  }
+
+  /* --- Avisos flotantes ---------------------------------------------------- */
+
+  function pop(value, label, tone) {
+    const p = $('#pop'), v = $('#pop-v');
+    v.textContent = value;
+    v.className = 'pop-v ' + (tone || '');
+    $('#pop-t').textContent = label;
+    p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
+    clearTimeout(popTimer);
+    popTimer = setTimeout(() => p.classList.remove('show'), 2200);
+  }
+
+  function toast(msg) {
+    const z = $('#toasts');
+    const el = document.createElement('div');
+    el.className = 'toast'; el.textContent = msg;
+    z.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+  }
+
+  function slate(kicker, name, sub) {
+    $('#slate-k').textContent = kicker;
+    $('#slate-n').textContent = name;
+    $('#slate-s').textContent = sub;
+    const s = $('#slate');
+    s.classList.remove('show'); void s.offsetWidth; s.classList.add('show');
+    clearTimeout(slateTimer);
+    slateTimer = setTimeout(() => s.classList.remove('show'), 2400);
+  }
+
+  function feed(text, cls) {
+    const f = $('#feed');
+    const el = document.createElement('div');
+    el.className = 'feed-i ' + (cls || '');
+    el.innerHTML = text;
+    f.prepend(el);
+    while (f.children.length > 40) f.lastChild.remove();
+  }
+
+  function coach(html) { $('#coach').innerHTML = html; }
+  function hr(v) { $('#hr-v').textContent = Math.round(v); }
+
+  /* --- Podio ---------------------------------------------------------------- */
+
+  function podium(M) {
+    const ev = M.ev, L = ST.lang;
+    RENDER.stopLoop();
+    AUDIO.setTension(.2);
+    $('#pod-ev').textContent = ev.name[L].toUpperCase();
+    const st = M.standings();
+
+    // Escalones. En individual son tres (plata, oro, bronce, en ese orden
+    // visual). En equipo mixto sólo hay dos parejas en juego: oro y plata.
+    if (M.format === 'mixed') {
+      const gold   = M.teams.A.pts >= M.teams.B.pts ? M.teams.A : M.teams.B;
+      const silver = gold.id === 'A' ? M.teams.B : M.teams.A;
+      const card = (team, medal, klass, label) => `<div class="step ${klass}">
+        <div class="step-med">${medal}</div>
+        <div class="step-nm">${team.members.map(m =>
+          `${m.name}${m.human ? ' ★' : ''}`).join('<br>')}
+          <br><span style="color:var(--tx3);font-size:10px">${team.name}</span></div>
+        <div class="step-sc">${team.pts} pts</div>
+        <div class="step-pl">${label}</div></div>`;
+      $('#pod-steps').style.gridTemplateColumns = '1fr 1fr';
+      $('#pod-steps').innerHTML = card(gold, '🥇', 'g', T('pod.gold')) +
+                                  card(silver, '🥈', 's', T('pod.silver'));
+    } else {
+      const medals = ['🥇', '🥈', '🥉'];
+      const cls = ['g', 's', 'b'];
+      const orderVisual = [1, 0, 2];
+      $('#pod-steps').style.gridTemplateColumns = '';
+      $('#pod-steps').innerHTML = orderVisual.map(idx => {
+        const a = st[idx];
+        if (!a) return '';
+        return `<div class="step ${cls[idx]}">
+          <div class="step-med">${medals[idx]}</div>
+          <div class="step-nm">${a.name}<br><span style="color:var(--tx3);font-size:10px">${a.country}</span></div>
+          <div class="step-sc">${fmt(a.total, ev.decimal)}</div>
+          <div class="step-pl">${idx + 1}</div></div>`;
+      }).join('');
+    }
+
+    // Tabla completa.
+    $('#pod-table').innerHTML =
+      `<tr><th>#</th><th>${L === 'es' ? 'Atleta' : 'Athlete'}</th><th>${L === 'es' ? 'País' : 'Country'}</th>
+       <th style="text-align:right">${L === 'es' ? 'Total' : 'Total'}</th>
+       <th style="text-align:right">${L === 'es' ? 'Disparos' : 'Shots'}</th></tr>` +
+      st.map((a, i) => `<tr class="${a.human ? 'me' : ''}">
+        <td class="n" style="text-align:left">${a.finalRank || i + 1}</td>
+        <td>${a.name}${a.human ? ' ★' : ''}</td><td>${a.country}</td>
+        <td class="n">${fmt(a.total, ev.decimal)}</td>
+        <td class="n">${a.shots.length}</td></tr>`).join('');
+
+    // Análisis del jugador.
+    const p = M.player, hits = p.shots.filter(s => !s.lost);
+    const tens = hits.filter(s => s.ring === 10).length;
+    const inner = hits.filter(s => s.inner).length;
+    const best = hits.reduce((m, s) => Math.max(m, s.score), 0);
+    const grp = hits.length >= 2 ? BAL.groupSize(hits) : 0;
+    const stats = [
+      ['stat.rank', p.finalRank || '—'],
+      // En rifle el promedio se muestra en decimales; en pistola, en la
+      // misma escala entera que el total, que es como lo lee un tirador.
+      ['stat.avg', hits.length
+        ? (ev.decimal ? p.avg.toFixed(2)
+                      : (p.shots.reduce((a, x) => a + x.score, 0) / hits.length).toFixed(2))
+        : '—'],
+      ['stat.best', hits.length ? fmt(best, ev.decimal) : '—'],
+      ['stat.tens', `${tens}/${hits.length}`],
+      ['stat.inner', inner],
+      ['stat.group', grp ? grp.toFixed(1) : '—'],
+    ];
+    $('#pod-stats').innerHTML = stats.map(([k, v]) =>
+      `<div><div class="lbl">${T(k)}</div>
+       <div class="num" style="font-size:21px;color:#fff;margin-top:2px">${v}</div></div>`).join('');
+
+    showScreen('podium');
+  }
+
+  return { showScreen, phase, command, clock, clockIdle, hint, armFire, render, flash,
+           markEliminating, shotStrip, pop, toast, slate, feed, coach, hr, podium };
+})();
+
+/* ═══ §11 · Arranque y cableado de la interfaz ══════════════════════════════ */
+
+const APP = (() => {
+
+  /* --- Constructores de las listas de opciones ---------------------------- */
+
+  /**
+   * Dibuja un grupo de opciones excluyentes.
+   * @param sel  selector del contenedor
+   * @param data objeto {id: {icon, name:{es,en}, desc:{es,en}}}
+   * @param key  clave dentro de ST.cfg que guarda la elección
+   */
+  function optionGroup(sel, data, key, onPick) {
+    const box = $(sel);
+    box.innerHTML = '';
+    Object.values(data).forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opt' + (ST.cfg[key] === o.id ? ' on' : '');
+      b.dataset.id = o.id;
+      b.innerHTML = `<span class="opt-ic">${o.icon}</span>
+        <span><span class="opt-t">${o.name[ST.lang]}</span><br>
+        <span class="opt-d">${o.desc[ST.lang]}</span></span>`;
+      b.addEventListener('click', () => {
+        ST.cfg[key] = o.id;
+        $$('.opt', box).forEach(x => x.classList.toggle('on', x.dataset.id === o.id));
+        AUDIO.init(); AUDIO.beep();
+        onPick && onPick(o.id);
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function buildSetup() {
+    optionGroup('#o-event', EVENTS, 'event');
+    optionGroup('#o-format', FORMATS, 'format');
+    optionGroup('#o-level', LEVELS, 'level');
+    optionGroup('#o-control', CONTROLS, 'control');
+    optionGroup('#o-gender', GENDERS, 'gender');
+    $('#i-name').value = ST.cfg.name;
+    $('#i-country').value = ST.cfg.country;
+    $$('.switch').forEach(s => s.classList.toggle('on', !!ST.cfg[s.dataset.sw]));
+  }
+
+  /* --- Reglamento --------------------------------------------------------- */
+
+  function rulesHTML() {
+    const es = ST.lang === 'es';
+    return es ? `
+      <h4>Final individual</h4>
+      <ul>
+        <li>Ocho finalistas. Se parte de cero: lo de la clasificación no se arrastra.</li>
+        <li>Etapa 1: dos series de tres disparos por orden del juez.</li>
+        <li>Etapa 2: disparos individuales de 50 segundos cada uno.</li>
+        <li>Después del disparo 12, y luego cada dos disparos, se elimina al último.</li>
+        <li>Los dos que quedan definen el oro en los disparos 23 y 24.</li>
+      </ul>
+      <h4>Equipo mixto</h4>
+      <ul>
+        <li>Dos equipos de dos tiradores; cada serie tiran los cuatro.</li>
+        <li>Gana la serie el equipo con la suma más alta: 2 puntos. Empate: 1 y 1.</li>
+        <li>Se lleva el match el primer equipo que llega a 16 puntos.</li>
+      </ul>
+      <h4>Puntuación</h4>
+      <ul>
+        <li>Las dos finales se puntúan <b>con decimales</b>, máximo 10,9 por disparo. La puntuación entera se usa en la clasificación, no en la final.</li>
+        <li><b>Rifle</b>: el anillo de diez mide 0,5 mm; cada décima, 0,25 mm.</li>
+        <li><b>Pistola</b>: el anillo de diez mide 11,5 mm; cada décima, 0,8 mm.</li>
+        <li>Se puntúa por el borde del balín (4,5 mm de diámetro): si toca el anillo, vale el anillo.</li>
+      </ul>
+      <h4>Controles</h4>
+      <ul>
+        <li><kbd>Espacio</kbd> o el botón <b>Disparar</b>: mantener para apuntar, soltar para tirar.</li>
+        <li>También podés mantener presionado directamente sobre el blanco.</li>
+        <li><kbd>R</kbd> repetición del último disparo · <kbd>M</kbd> música · <kbd>V</kbd> voz · <kbd>Esc</kbd> abandonar.</li>
+      </ul>
+      <h4>Cómo tirar bien</h4>
+      <ul>
+        <li>El sostén se <b>asienta</b> en unos 1,8 s, aguanta bien hasta los 6 s y después se degrada rápido.</li>
+        <li>Soltá durante la <b>pausa respiratoria</b> (la barra de respiración cerca del centro).</li>
+        <li>Si sostenés de más, el temblor crece y el tirón del disparador castiga más.</li>
+      </ul>`
+    : `
+      <h4>Individual final</h4>
+      <ul>
+        <li>Eight finalists, all starting from zero.</li>
+        <li>Stage 1: two series of three shots on command.</li>
+        <li>Stage 2: single shots, 50 seconds each.</li>
+        <li>After shot 12, and every two shots after that, the last athlete is eliminated.</li>
+        <li>The remaining two contest gold on shots 23 and 24.</li>
+      </ul>
+      <h4>Mixed team</h4>
+      <ul>
+        <li>Two teams of two; all four fire one shot per series.</li>
+        <li>Higher team total wins the series: 2 points. A tie is 1 point each.</li>
+        <li>First team to 16 points wins the match.</li>
+      </ul>
+      <h4>Scoring</h4>
+      <ul>
+        <li>Both finals are scored <b>in decimals</b>, max 10.9 per shot. Integer scoring belongs to qualification, not the final.</li>
+        <li><b>Rifle</b>: the ten ring is 0.5 mm across; each tenth, 0.25 mm.</li>
+        <li><b>Pistol</b>: the ten ring is 11.5 mm across; each tenth, 0.8 mm.</li>
+        <li>Scoring is by pellet edge (4.5 mm calibre): touch the ring, take the ring.</li>
+      </ul>
+      <h4>Controls</h4>
+      <ul>
+        <li><kbd>Space</kbd> or the <b>Fire</b> button: hold to aim, release to shoot.</li>
+        <li>You can also press and hold directly on the target.</li>
+        <li><kbd>R</kbd> replay · <kbd>M</kbd> music · <kbd>V</kbd> voice · <kbd>Esc</kbd> quit.</li>
+      </ul>
+      <h4>How to shoot well</h4>
+      <ul>
+        <li>The hold <b>settles</b> in about 1.8 s, stays good until 6 s, then decays fast.</li>
+        <li>Release during the <b>respiratory pause</b> (breathing bar near the middle).</li>
+        <li>Hold too long and both the wobble and the trigger error grow.</li>
+      </ul>`;
+  }
+
+  function openRules() { $('#modal-body').innerHTML = rulesHTML(); $('#modal').classList.add('on'); }
+  function closeRules() { $('#modal').classList.remove('on'); }
+
+  /* --- Ciclo de la partida ------------------------------------------------ */
+
+  async function startMatch() {
+    ST.abort = false;
+    clearTimers();
+    ST.cfg.name = ($('#i-name').value || 'Tu Nombre').trim().slice(0, 22);
+    ST.cfg.country = (($('#i-country').value || 'ARG').trim().toUpperCase() + 'XXX').slice(0, 3);
+    $('#strip').innerHTML = '';
+    $('#feed').innerHTML = '';
+    $('#board-list').innerHTML = '';
+    $('#team-score').classList.add('hidden');
+    UI.coach(ST.lang === 'es' ? 'Preparados. Respirá hondo.' : 'Ready. Take a deep breath.');
+    ST.match = new Match();
+    UI.render();
+    try { await ST.match.run(); }
+    catch (e) { console.error('[match]', e); }
+  }
+
+  function quitMatch() {
+    ST.abort = true;
+    clearTimers();
+    VOICE.stop();
+    RENDER.stopLoop();
+    AUDIO.fadeOut();
+    ST.match = null;
+    UI.showScreen('setup');
+  }
+
+  /* --- Entrada del jugador ------------------------------------------------- */
+
+  /** ¿El jugador puede accionar el disparador ahora mismo? */
+  function canShoot() {
+    const M = ST.match;
+    return !!(M && M.win && !M.win.closed && M.win.playerLeft > 0 && ST.cfg.control !== 'auto');
+  }
+
+  function pressDown(e) {
+    if (!canShoot()) return;
+    e.preventDefault();
+    const M = ST.match;
+    if (ST.cfg.control === 'hold') M.aimStart();
+    else { M.aimStart(); }        // en modo clic el sostén ya corre; el clic dispara
+  }
+
+  function pressUp(e) {
+    const M = ST.match;
+    if (!M || !M.aiming) return;
+    e && e.preventDefault();
+    M.aimRelease();
+  }
+
+  function bindInput() {
+    const fire = $('#b-fire'), range = $('#target');
+    [fire, range].forEach(el => {
+      el.addEventListener('pointerdown', pressDown);
+      el.addEventListener('pointerup', pressUp);
+      el.addEventListener('pointercancel', pressUp);
+      el.addEventListener('pointerleave', e => { if (ST.cfg.control === 'hold') pressUp(e); });
+    });
+
+    let spaceDown = false;
+    document.addEventListener('keydown', e => {
+      if (e.repeat) return;
+      if (e.code === 'Space' && ST.screen === 'match') {
+        e.preventDefault();
+        if (!spaceDown && canShoot()) { spaceDown = true; ST.match.aimStart(); }
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if (ST.screen === 'match') {
+        if (k === 'r') RENDER.replay();
+        if (k === 'm') toggleSwitch('music');
+        if (k === 'v') toggleSwitch('voice');
+        if (k === 'escape') quitMatch();
+      }
+      if (k === 'escape' && $('#modal').classList.contains('on')) closeRules();
+    });
+    document.addEventListener('keyup', e => {
+      if (e.code === 'Space' && spaceDown) { spaceDown = false; pressUp(e); }
+    });
+  }
+
+  /* --- Interruptores de audio ---------------------------------------------- */
+
+  function toggleSwitch(key) {
+    ST.cfg[key] = !ST.cfg[key];
+    $$(`.switch[data-sw="${key}"]`).forEach(s => s.classList.toggle('on', ST.cfg[key]));
+    $('#t-music').classList.toggle('off', !ST.cfg.music);
+    $('#t-voice').classList.toggle('off', !ST.cfg.voice);
+    if (!ST.cfg.voice) VOICE.stop();
+    AUDIO.refreshMix();
+    UI.toast(`${key.toUpperCase()} ${ST.cfg[key] ? 'ON' : 'OFF'}`);
+  }
+
+  /* --- Idioma --------------------------------------------------------------- */
+
+  function toggleLang() {
+    ST.lang = ST.lang === 'es' ? 'en' : 'es';
+    applyI18n();
+    buildSetup();
+    if ($('#modal').classList.contains('on')) $('#modal-body').innerHTML = rulesHTML();
+    UI.toast(ST.lang === 'es' ? 'Idioma: Español' : 'Language: English');
+  }
+
+  /* --- Inicio --------------------------------------------------------------- */
+
+  function init() {
+    applyI18n();
+    buildSetup();
+    bindInput();
+
+    $('#b-enter').addEventListener('click', () => { AUDIO.init(); AUDIO.cue(); UI.showScreen('setup'); });
+    $('#b-rules').addEventListener('click', openRules);
+    $('#t-help').addEventListener('click', openRules);
+    $('#b-modal-close').addEventListener('click', closeRules);
+    $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeRules(); });
+    $('#b-lang').addEventListener('click', toggleLang);
+    $('#b-back-boot').addEventListener('click', () => UI.showScreen('boot'));
+    $('#b-start').addEventListener('click', startMatch);
+    $('#b-again').addEventListener('click', startMatch);
+    $('#b-setup2').addEventListener('click', () => UI.showScreen('setup'));
+    $('#b-replay').addEventListener('click', () => RENDER.replay());
+    $('#t-quit').addEventListener('click', quitMatch);
+    $('#t-music').addEventListener('click', () => toggleSwitch('music'));
+    $('#t-voice').addEventListener('click', () => toggleSwitch('voice'));
+    $$('.switch').forEach(s => s.addEventListener('click', () => toggleSwitch(s.dataset.sw)));
+
+    // Si el navegador suspende el audio al cambiar de pestaña, lo reanudamos.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && AUDIO.ctx && AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume();
+    });
+
+    console.log('%cISSF FINALS', 'font:700 22px Orbitron,sans-serif;color:#35e6ff',
+                '\nEstado global en `ST`. Partida activa en `ST.match`.');
+  }
+
+  return { init, startMatch, quitMatch, toggleLang };
+})();
+
+document.addEventListener('DOMContentLoaded', APP.init);
+
+</script>
+</body>
+</html>
