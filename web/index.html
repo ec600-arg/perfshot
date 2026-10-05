@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>PerfShot Timer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root {
+  --bg: #0B1C2D;
+  --surface: #122438;
+  --border: #1e3550;
+  --white: #FFFFFF;
+  --muted: rgba(255,255,255,0.55);
+  --dim: rgba(255,255,255,0.3);
+  --green: #1A8F3C;
+  --red: #BF1A1A;
+  --neutral: #0B1C2D;
+  --accent: #F0C040;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; width: 100%; overflow: hidden;
+  background: var(--bg); color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+#app { width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+/* ── HOME ──────────────────────────────────────────────────────────────────── */
+#home {
+  flex: 1; display: flex; flex-direction: column;
+  background: var(--bg);
+  padding: env(safe-area-inset-top, 0px) 20px env(safe-area-inset-bottom, 0px) 20px;
+}
+.home-header {
+  text-align: center;
+  padding-top: max(20px, env(safe-area-inset-top, 20px));
+  padding-bottom: 16px;
+  position: relative;
+}
+.app-name { font-size: clamp(28px, 8vw, 38px); font-weight: 900; letter-spacing: 6px; color: var(--white); }
+.app-sub  { font-size: 13px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+.settings-btn {
+  position: absolute; right: 0; top: max(20px, env(safe-area-inset-top, 20px));
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; padding: 6px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lamp-status {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--muted); letter-spacing: 1px;
+  margin-bottom: 12px; min-height: 20px;
+}
+.lamp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+.lamp-dot.connected    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.lamp-dot.disconnected { background: var(--red); }
+.cards { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-bottom: 16px; min-height: 0; }
+.card {
+  flex: 1; background: var(--surface); border-radius: 16px; border: 1.5px solid;
+  overflow: hidden; display: flex; flex-direction: column;
+  cursor: pointer; transition: opacity 0.15s; -webkit-tap-highlight-color: transparent; min-height: 0;
+}
+.card:active { opacity: 0.8; }
+.card-green { border-color: var(--green); }
+.card-red   { border-color: var(--red); }
+.card-top   { display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; }
+.card-green .card-top { background: rgba(26,143,60,0.13); }
+.card-red   .card-top { background: rgba(191,26,26,0.13); }
+.card-icon  { font-size: 28px; flex-shrink: 0; }
+.card-title    { font-size: 20px; font-weight: 800; letter-spacing: 3px; }
+.card-title-es { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-detail   { font-size: 15px; color: var(--white); font-weight: 600; padding: 12px 16px 0; line-height: 22px; white-space: pre-line; }
+.bullets { flex: 1; padding: 8px 16px; display: flex; flex-direction: column; gap: 4px; }
+.bullet-row  { display: flex; flex-direction: row; gap: 8px; align-items: center; }
+.bullet-dot  { font-size: 16px; flex-shrink: 0; }
+.bullet-text { font-size: 13px; color: var(--muted); }
+.start-btn   { margin: 12px; border-radius: 10px; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; letter-spacing: 2px; color: var(--white); flex-shrink: 0; }
+.card-green .start-btn { background: var(--green); }
+.card-red   .start-btn { background: var(--red); }
+.footer { text-align: center; font-size: 11px; color: var(--dim); letter-spacing: 1px; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
+
+/* ── TRAINING ──────────────────────────────────────────────────────────────── */
+#training { flex: 1; display: none; flex-direction: column; transition: background-color 0.3s; }
+#training.active { display: flex; }
+.top-bar { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: max(12px, env(safe-area-inset-top, 12px)) 20px 8px; flex-shrink: 0; }
+.series-bar { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.75); flex: 1; }
+.close-btn  { padding: 6px; font-size: 18px; color: rgba(255,255,255,0.6); font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; background: none; border: none; }
+.center     { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 0 20px; text-align: center; }
+.phase-label { font-size: clamp(24px, 8vw, 36px); font-weight: 900; letter-spacing: 6px; color: var(--white); }
+.timer-text  { font-size: clamp(80px, 25vw, 140px); font-weight: 900; color: var(--white); font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -2px; min-width: 0; }
+.timer-urgent { color: #FFE066; }
+.sublabel    { font-size: 16px; color: rgba(255,255,255,0.70); margin-top: 4px; letter-spacing: 1px; }
+.idle-mode   { font-size: clamp(28px, 10vw, 48px); font-weight: 900; letter-spacing: 4px; color: var(--white); }
+.idle-sub    { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 24px; margin-top: 8px; }
+.done-check  { font-size: 72px; }
+.done-title  { font-size: clamp(28px, 9vw, 40px); font-weight: 900; color: var(--white); letter-spacing: 4px; line-height: 1.2; }
+.done-sub    { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 12px; letter-spacing: 1px; }
+.controls    { padding: 12px 20px; padding-bottom: max(24px, env(safe-area-inset-bottom, 24px)); display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
+.control-row { display: flex; flex-direction: row; gap: 12px; }
+.btn { border-radius: 14px; padding: 18px; text-align: center; font-size: 16px; font-weight: 800; letter-spacing: 2px; cursor: pointer; border: none; -webkit-tap-highlight-color: transparent; transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; width: 100%; }
+.btn:active  { opacity: 0.75; }
+.btn-half    { flex: 1; width: auto; }
+.btn-primary   { background: var(--accent); color: var(--bg); }
+.btn-secondary { background: rgba(255,255,255,0.18); color: var(--white); }
+.btn-ghost     { border: 1.5px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.75); background: transparent; font-weight: 600; }
+
+/* ── OVERLAYS ──────────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.overlay.hidden { display: none !important; }
+.dialog { background: #1a2e44; border-radius: 18px; padding: 28px 24px 20px; width: 100%; max-width: 360px; }
+.dialog h2 { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--white); margin-bottom: 8px; text-align: center; }
+.dialog p  { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; text-align: center; }
+.dialog-btns { display: flex; gap: 12px; }
+.dialog-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; -webkit-tap-highlight-color: transparent; }
+.dialog-btn.cancel { background: rgba(255,255,255,0.12); color: var(--white); }
+.dialog-btn.danger { background: var(--red); color: var(--white); }
+.dialog-btn.primary { background: var(--accent); color: var(--bg); }
+
+/* Settings form */
+.settings-form { display: flex; flex-direction: column; gap: 16px; }
+.field-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 6px; display: block; }
+.field-input {
+  width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px; padding: 12px 14px; color: var(--white); font-size: 14px;
+  font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+}
+.field-input:focus { outline: none; border-color: rgba(255,255,255,0.35); }
+.field-input::placeholder { color: rgba(255,255,255,0.25); }
+.radio-group { display: flex; gap: 10px; }
+.radio-opt {
+  flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.15);
+  text-align: center; cursor: pointer; font-size: 13px; font-weight: 700;
+  color: var(--muted); -webkit-tap-highlight-color: transparent; transition: all 0.15s;
+  background: none;
+}
+.radio-opt.selected { border-color: var(--accent); color: var(--accent); background: rgba(240,192,64,0.08); }
+.test-btn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 10px; color: var(--muted); font-size: 13px;
+  font-weight: 600; cursor: pointer; letter-spacing: 1px; -webkit-tap-highlight-color: transparent;
+  width: 100%; transition: all 0.15s;
+}
+.test-btn:active { background: rgba(255,255,255,0.18); }
+.test-result { font-size: 12px; text-align: center; min-height: 16px; letter-spacing: 0.5px; }
+.test-ok  { color: #4ade80; }
+.test-err { color: #f87171; }
+.settings-note { font-size: 11px; color: var(--dim); line-height: 1.5; text-align: center; }
+.settings-note a { color: var(--accent); text-decoration: none; }
+
+/* Speech banner */
+.speech-banner {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.85); color: var(--white);
+  font-size: clamp(18px, 6vw, 28px); font-weight: 700;
+  text-align: center; padding: 20px 24px; letter-spacing: 1px; z-index: 200;
+  transition: opacity 0.4s; pointer-events: none; line-height: 1.3;
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div id="home">
+    <div class="home-header">
+      <div class="app-name">PERFSHOT</div>
+      <div class="app-sub">25M Sport Pistol Timer</div>
+      <button class="settings-btn" onclick="openSettings()" title="Lamp settings">⚙</button>
+    </div>
+
+    <div class="lamp-status" id="lampStatus">
+      <div class="lamp-dot" id="lampDot"></div>
+      <span id="lampStatusText">Lamp: not configured</span>
+    </div>
+
+    <div class="cards">
+      <div class="card card-green" onclick="selectMode('precision')">
+        <div class="card-top">
+          <span class="card-icon">🎯</span>
+          <div>
+            <div class="card-title" style="color:var(--green)">PRECISION</div>
+            <div class="card-title-es">Fase de Precisión</div>
+          </div>
+        </div>
+        <div class="card-detail">6 series × 5 shots&#10;4 min per series</div>
+        <div class="bullets">
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">1 min to load</span></div>
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">7s delay after ATTENTION</span></div>
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">240s fire window</span></div>
+        </div>
+        <div class="start-btn">START SESSION</div>
+      </div>
+
+      <div class="card card-red" onclick="selectMode('rapidfire')">
+        <div class="card-top">
+          <span class="card-icon">⚡</span>
+          <div>
+            <div class="card-title" style="color:var(--red)">RAPID-FIRE</div>
+            <div class="card-title-es">Fase de Velocidad</div>
+          </div>
+        </div>
+        <div class="card-detail">6 series × 5 shots&#10;3s per shot</div>
+        <div class="bullets">
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">1 min to load</span></div>
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">7s delay after ATTENTION</span></div>
+          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">3s fire / 7s ready</span></div>
+        </div>
+        <div class="start-btn">START SESSION</div>
+      </div>
+    </div>
+
+    <div class="footer">ISSF 25m Sport Pistol — Official Timing</div>
+  </div>
+
+  <!-- TRAINING -->
+  <div id="training">
+    <div class="top-bar">
+      <div class="series-bar" id="seriesBar">PRECISION MODE</div>
+      <button class="close-btn" onclick="handleStop()">✕</button>
+    </div>
+    <div class="center" id="center"></div>
+    <div class="controls" id="controls"></div>
+  </div>
+</div>
+
+<!-- Stop dialog -->
+<div class="overlay hidden" id="stopOverlay">
+  <div class="dialog">
+    <h2>STOP SESSION?</h2>
+    <p>This will end the current session and return to home.</p>
+    <div class="dialog-btns">
+      <button class="dialog-btn cancel" onclick="closeStopDialog()">CONTINUE</button>
+      <button class="dialog-btn danger" onclick="confirmStop()">STOP</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings dialog -->
+<div class="overlay hidden" id="settingsOverlay">
+  <div class="dialog">
+    <h2>⚙ LAMP SETTINGS</h2>
+    <p>Connect a smart bulb to follow the training sequence.</p>
+    <div class="settings-form">
+      <div>
+        <label class="field-label">BRAND</label>
+        <div class="radio-group">
+          <button class="radio-opt" id="opt-lifx"  onclick="selectBrand('lifx')">LIFX</button>
+          <button class="radio-opt" id="opt-govee" onclick="selectBrand('govee')">Govee</button>
+          <button class="radio-opt" id="opt-none"  onclick="selectBrand('none')">None</button>
+        </div>
+      </div>
+
+      <div id="tokenField">
+        <label class="field-label" id="tokenLabel">API TOKEN</label>
+        <input class="field-input" id="tokenInput" type="text" placeholder="Paste your token here" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="settings-note" style="margin-top:8px" id="tokenNote"></div>
+      </div>
+
+      <button class="test-btn" id="testBtn" onclick="testConnection()">TEST CONNECTION</button>
+      <div class="test-result" id="testResult"></div>
+
+      <div class="dialog-btns">
+        <button class="dialog-btn cancel" onclick="closeSettings()">CANCEL</button>
+        <button class="dialog-btn primary" onclick="saveSettings()">SAVE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="speech-banner hidden" id="speechBanner"></div>
+
+<script>
+// ── Audio ────────────────────────────────────────────────────────────────────
+
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, dur) {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = freq;
+    const t = ctx.currentTime;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.85, t + 0.02);
+    gain.gain.setValueAtTime(0.85, t + dur - 0.08);
+    gain.gain.linearRampToValueAtTime(0, t + dur);
+    osc.start(t); osc.stop(t + dur);
+  } catch(e) {}
+}
+function playSound(name) {
+  if (name === 'start') playTone(880, 0.35);
+  else if (name === 'stop') playTone(392, 1.20);
+  else if (name === 'short') playTone(660, 0.22);
+}
+
+// ── Speech ────────────────────────────────────────────────────────────────────
+
+let ttsOk = 'speechSynthesis' in window, bannerTimer = null;
+function speak(text) {
+  if (!text) return;
+  const el = document.getElementById('speechBanner');
+  el.textContent = text; el.classList.remove('hidden'); el.style.opacity = '1';
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.classList.add('hidden'), 400); }, Math.max(2000, text.length * 60));
+  if (!ttsOk) return;
+  try { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 0.88; window.speechSynthesis.speak(u); } catch(e) { ttsOk = false; }
+}
+function stopSpeech() { if (ttsOk) try { window.speechSynthesis.cancel(); } catch(e) {} }
+
+// ── Wake lock ─────────────────────────────────────────────────────────────────
+
+let wakeLock = null;
+async function acquireWakeLock() { if ('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {} }
+function releaseWakeLock() { if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; } }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && sessionState === 'running') acquireWakeLock(); });
+
+// ── Lamp control ──────────────────────────────────────────────────────────────
+
+let lampConfig = { brand: 'none', token: '' };
+
+function loadLampConfig() {
+  try {
+    const s = localStorage.getItem('perfshot_lamp');
+    if (s) lampConfig = JSON.parse(s);
+  } catch(e) {}
+  updateLampStatusUI();
+}
+
+function saveLampConfig() {
+  try { localStorage.setItem('perfshot_lamp', JSON.stringify(lampConfig)); } catch(e) {}
+}
+
+function updateLampStatusUI() {
+  const dot = document.getElementById('lampDot');
+  const txt = document.getElementById('lampStatusText');
+  if (!lampConfig.token || lampConfig.brand === 'none') {
+    dot.className = 'lamp-dot'; txt.textContent = 'Lamp: not configured';
+  } else {
+    dot.className = 'lamp-dot connected';
+    txt.textContent = `Lamp: ${lampConfig.brand.toUpperCase()} connected`;
+  }
+}
+
+// Phase → lamp color mapping
+const LAMP_COLORS = {
+  green:   { lifx: 'hue:120 saturation:1.0 brightness:1.0', govee: { r:0, g:255, b:0 } },
+  red:     { lifx: 'hue:0 saturation:1.0 brightness:1.0',   govee: { r:255, g:0, b:0 } },
+  neutral: { lifx: 'hue:210 saturation:0.3 brightness:0.1', govee: { r:10, g:20, b:40 } },
+  off:     { lifx: 'brightness:0',                           govee: { r:0, g:0, b:0 } },
+};
+
+async function setLamp(colorKey) {
+  if (!lampConfig.token || lampConfig.brand === 'none') return;
+  const color = LAMP_COLORS[colorKey];
+  if (!color) return;
+
+  if (lampConfig.brand === 'lifx') {
+    try {
+      await fetch('https://api.lifx.com/v1/lights/all/state', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${lampConfig.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color: color.lifx, duration: 0.15, power: colorKey === 'off' ? 'off' : 'on' }),
+      });
+    } catch(e) {}
+
+  } else if (lampConfig.brand === 'govee') {
+    try {
+      const { r, g, b } = color.govee;
+      await fetch('https://developer-api.govee.com/v1/devices/control', {
+        method: 'PUT',
+        headers: { 'Govee-API-Key': lampConfig.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device: lampConfig.goveeDevice || '',
+          model:  lampConfig.goveeModel  || '',
+          cmd: { name: 'color', value: { r, g, b } },
+        }),
+      });
+    } catch(e) {}
+  }
+}
+
+// ── Settings UI ───────────────────────────────────────────────────────────────
+
+let editBrand = 'none', editToken = '';
+
+const NOTES = {
+  lifx:  'Get your token at <a href="https://cloud.lifx.com/settings" target="_blank">cloud.lifx.com/settings</a>',
+  govee: 'Get your API key at <a href="https://developer.govee.com" target="_blank">developer.govee.com</a>',
+  none:  '',
+};
+
+function openSettings() {
+  editBrand = lampConfig.brand || 'none';
+  editToken = lampConfig.token || '';
+  document.getElementById('tokenInput').value = editToken;
+  selectBrand(editBrand);
+  document.getElementById('testResult').textContent = '';
+  document.getElementById('settingsOverlay').classList.remove('hidden');
+}
+
+function closeSettings() { document.getElementById('settingsOverlay').classList.add('hidden'); }
+
+function selectBrand(b) {
+  editBrand = b;
+  ['lifx','govee','none'].forEach(k => {
+    document.getElementById('opt-' + k).className = 'radio-opt' + (k === b ? ' selected' : '');
+  });
+  const showToken = b !== 'none';
+  document.getElementById('tokenField').style.display = showToken ? 'block' : 'none';
+  document.getElementById('testBtn').style.display    = showToken ? 'block' : 'none';
+  document.getElementById('tokenLabel').textContent   = b === 'govee' ? 'API KEY' : 'API TOKEN';
+  document.getElementById('tokenNote').innerHTML = NOTES[b] || '';
+}
+
+async function testConnection() {
+  const token = document.getElementById('tokenInput').value.trim();
+  const res = document.getElementById('testResult');
+  if (!token) { res.className = 'test-result test-err'; res.textContent = 'Enter a token first'; return; }
+  res.className = 'test-result'; res.textContent = 'Testing…';
+
+  if (editBrand === 'lifx') {
+    try {
+      const r = await fetch('https://api.lifx.com/v1/lights/all', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (r.ok) {
+        const data = await r.json();
+        res.className = 'test-result test-ok';
+        res.textContent = `✓ Found ${data.length} bulb${data.length !== 1 ? 's' : ''}`;
+      } else {
+        res.className = 'test-result test-err';
+        res.textContent = `✗ Error ${r.status} — check your token`;
+      }
+    } catch(e) {
+      res.className = 'test-result test-err';
+      res.textContent = '✗ Network error — check connection';
+    }
+
+  } else if (editBrand === 'govee') {
+    try {
+      const r = await fetch('https://developer-api.govee.com/v1/devices', {
+        headers: { 'Govee-API-Key': token }
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const count = data?.data?.devices?.length ?? 0;
+        res.className = 'test-result test-ok';
+        res.textContent = `✓ Found ${count} device${count !== 1 ? 's' : ''}`;
+        if (count > 0) {
+          lampConfig.goveeDevice = data.data.devices[0].device;
+          lampConfig.goveeModel  = data.data.devices[0].model;
+        }
+      } else {
+        res.className = 'test-result test-err';
+        res.textContent = `✗ Error ${r.status} — check your API key`;
+      }
+    } catch(e) {
+      res.className = 'test-result test-err';
+      res.textContent = '✗ Network error — check connection';
+    }
+  }
+}
+
+function saveSettings() {
+  lampConfig.brand = editBrand;
+  lampConfig.token = document.getElementById('tokenInput').value.trim();
+  saveLampConfig();
+  updateLampStatusUI();
+  closeSettings();
+}
+
+// ── Sequences ─────────────────────────────────────────────────────────────────
+
+const T = { PREP:180, LOAD:60, ATT:7, PREC:240, RFG:3, RFR:7, STOP:4, UNL:10, REST:60 };
+const TOTAL = 7;
+function loadCmd(i) { return i===0?'For the sighting series. Load.': i===1?'For the first competition series. Load.':'For the next competition series. Load.'; }
+function sLabel(i) { return i===0?'SIGHTING SERIES':`SERIES ${i} / 6`; }
+
+function buildPrecision() {
+  const s = [];
+  s.push({ phase:'PREP', color:'neutral', label:'PREPARATION', sublabel:'3 minutes — get ready', duration:T.PREP, command:'Preparation time. Three minutes.', sound:null });
+  for (let i=0;i<TOTAL;i++) {
+    const sl = sLabel(i);
+    s.push({ phase:'LOAD',  color:'neutral', seriesLabel:sl, label:'LOAD',      sublabel:sl,                           duration:T.LOAD, command:loadCmd(i),   sound:null });
+    s.push({ phase:'ATT',   color:'red',     seriesLabel:sl, label:'ATTENTION', sublabel:'Targets turning — get ready', duration:T.ATT,  command:'Attention.', sound:null });
+    s.push({ phase:'FIRE',  color:'green',   seriesLabel:sl, label:'FIRE',      sublabel:'5 shots — 4 minutes',         duration:T.PREC, command:null,         sound:'start' });
+    s.push({ phase:'STOP',  color:'red',     seriesLabel:sl, label:'STOP',      sublabel:'Time up',                    duration:T.STOP, command:'Stop.',       sound:'stop' });
+    s.push({ phase:'UNLOAD',color:'red',     seriesLabel:sl, label:'UNLOAD',    sublabel:'Show clear firearm',          duration:T.UNL,  command:'Unload.',     sound:null });
+    if (i<TOTAL-1) s.push({ phase:'REST', color:'neutral', seriesLabel:sl, label:'REST', sublabel:`Next: ${sLabel(i+1)}`, duration:T.REST, command:null, sound:null });
+  }
+  s.push({ phase:'DONE', color:'neutral', label:'DONE', sublabel:'', duration:0, command:'Training complete. Well done.', sound:null });
+  return s;
+}
+
+function buildRapidFire() {
+  const s = [];
+  s.push({ phase:'PREP', color:'neutral', label:'PREPARATION', sublabel:'3 minutes — get ready', duration:T.PREP, command:'Preparation time. Three minutes.', sound:null });
+  for (let i=0;i<TOTAL;i++) {
+    const sl = sLabel(i);
+    s.push({ phase:'LOAD', color:'neutral', seriesLabel:sl, label:'LOAD',      sublabel:sl,                                  duration:T.LOAD, command:loadCmd(i),             sound:null });
+    s.push({ phase:'ATT',  color:'red',     seriesLabel:sl, label:'ATTENTION', sublabel:'Arm down — ready position (≤ 45°)', duration:T.ATT,  command:'Attention. Ready position.', sound:null });
+    for (let sh=1;sh<=5;sh++) {
+      s.push({ phase:'FIRE',  color:'green', seriesLabel:sl, label:`SHOT ${sh}`, sublabel:'FIRE NOW',        duration:T.RFG, command:null, sound:'start' });
+      if (sh<5) s.push({ phase:'READY', color:'red', seriesLabel:sl, label:'READY', sublabel:'Lower arm — ≤ 45°', duration:T.RFR, command:null, sound:'short' });
+    }
+    s.push({ phase:'STOP',   color:'red', seriesLabel:sl, label:'STOP',   sublabel:'Series complete',   duration:T.STOP, command:'Stop.',   sound:'stop' });
+    s.push({ phase:'UNLOAD', color:'red', seriesLabel:sl, label:'UNLOAD', sublabel:'Show clear firearm', duration:T.UNL,  command:'Unload.', sound:null });
+    if (i<TOTAL-1) s.push({ phase:'REST', color:'neutral', seriesLabel:sl, label:'REST', sublabel:`Next: ${sLabel(i+1)}`, duration:T.REST, command:null, sound:null });
+  }
+  s.push({ phase:'DONE', color:'neutral', label:'DONE', sublabel:'', duration:0, command:'Training complete. Well done.', sound:null });
+  return s;
+}
+
+// ── Timer state ───────────────────────────────────────────────────────────────
+
+let sequence=[], stepIdx=0, sessionState='idle', remainMs=0, timerInterval=null, currentMode='precision';
+const BG = { neutral:'#0B1C2D', green:'#1A8F3C', red:'#BF1A1A' };
+
+function formatMs(ms) {
+  if (ms<=0) return '0';
+  if (ms<10000) return (ms/1000).toFixed(1);
+  const s=Math.ceil(ms/1000), m=Math.floor(s/60);
+  return m>0?`${m}:${(s%60).toString().padStart(2,'0')}`:String(s);
+}
+
+function renderTimer(ms) {
+  const el = document.getElementById('timerDisplay');
+  if (!el) return;
+  const step = sequence[stepIdx];
+  el.textContent = formatMs(ms);
+  el.className = 'timer-text' + (ms<4000 && step?.color==='green' ? ' timer-urgent' : '');
+}
+
+function startCountdown(durMs, onComplete) {
+  if (timerInterval) clearInterval(timerInterval);
+  remainMs = durMs;
+  const end = Date.now() + durMs;
+  renderTimer(durMs);
+  timerInterval = setInterval(() => {
+    const r = end - Date.now();
+    if (r<=0) { clearInterval(timerInterval); timerInterval=null; remainMs=0; renderTimer(0); onComplete(); }
+    else { remainMs=r; renderTimer(r); }
+  }, 100);
+}
+
+function runStep(idx) {
+  if (idx>=sequence.length) return;
+  const step = sequence[idx];
+  stepIdx = idx;
+  if (step.command) speak(step.command);
+  if (step.sound)   playSound(step.sound);
+  document.getElementById('training').style.backgroundColor = BG[step.color] || BG.neutral;
+  document.getElementById('seriesBar').textContent = step.seriesLabel || (currentMode==='precision'?'PRECISION MODE':'RAPID-FIRE MODE');
+  setLamp(step.color);
+  if (step.phase==='DONE') { sessionState='done'; releaseWakeLock(); setLamp('off'); renderDone(); return; }
+  if (step.duration===0)   { setTimeout(()=>runStep(idx+1), 60); return; }
+  renderRunning(step);
+  startCountdown(step.duration*1000, ()=>runStep(idx+1));
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function renderIdle() {
+  const label = currentMode==='precision'?'PRECISION':'RAPID-FIRE';
+  const sub   = currentMode==='precision'?'6 competition series\n5 shots × 4 minutes':'6 competition series\n5 shots × 3 seconds each';
+  document.getElementById('center').innerHTML = `<div class="idle-mode">${label}</div><div class="idle-sub" style="white-space:pre-line">${sub}</div>`;
+  document.getElementById('controls').innerHTML = `<button class="btn btn-primary" onclick="handleStart()">▶  START SESSION</button>`;
+}
+
+function renderRunning(step) {
+  document.getElementById('center').innerHTML = `
+    <div class="phase-label">${step.label}</div>
+    ${step.duration>0?`<div class="timer-text" id="timerDisplay">${formatMs(step.duration*1000)}</div>`:''}
+    <div class="sublabel">${step.sublabel}</div>`;
+  renderRunningControls();
+}
+
+function renderRunningControls() {
+  const paused = sessionState==='paused';
+  document.getElementById('controls').innerHTML = `
+    <div class="control-row">
+      <button class="btn btn-secondary btn-half" onclick="${paused?'handleResume()':'handlePause()'}">
+        ${paused?'▶  RESUME':'⏸  PAUSE'}
+      </button>
+      <button class="btn btn-ghost btn-half" onclick="handleSkip()">SKIP ▶▶</button>
+    </div>`;
+}
+
+function renderDone() {
+  document.getElementById('center').innerHTML = `<div class="done-check">✓</div><div class="done-title">TRAINING<br>COMPLETE</div><div class="done-sub">6 competition series</div>`;
+  document.getElementById('controls').innerHTML = `<button class="btn btn-primary" onclick="handleBack()">← HOME</button>`;
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+
+function handleStart() {
+  sessionState='running'; acquireWakeLock();
+  try { getCtx(); } catch(e) {}
+  runStep(0);
+}
+
+function handlePause() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval=null; }
+  stopSpeech(); sessionState='paused'; releaseWakeLock(); renderRunningControls();
+}
+
+function handleResume() {
+  sessionState='running'; acquireWakeLock();
+  const end = Date.now()+remainMs;
+  timerInterval = setInterval(()=>{
+    const r=end-Date.now();
+    if(r<=0){clearInterval(timerInterval);timerInterval=null;remainMs=0;renderTimer(0);runStep(stepIdx+1);}
+    else{remainMs=r;renderTimer(r);}
+  },100);
+  renderRunningControls();
+}
+
+function handleSkip() {
+  if (timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  stopSpeech();
+  if (sessionState==='paused') sessionState='running';
+  runStep(stepIdx+1);
+}
+
+function handleStop() {
+  if (sessionState==='idle'||sessionState==='done'){handleBack();return;}
+  if (timerInterval&&sessionState==='running'){clearInterval(timerInterval);timerInterval=null;stopSpeech();sessionState='paused';renderRunningControls();}
+  document.getElementById('stopOverlay').classList.remove('hidden');
+}
+
+function closeStopDialog() { document.getElementById('stopOverlay').classList.add('hidden'); }
+
+function confirmStop() {
+  document.getElementById('stopOverlay').classList.add('hidden');
+  if (timerInterval) clearInterval(timerInterval);
+  stopSpeech(); releaseWakeLock(); setLamp('off');
+  handleBack();
+}
+
+function handleBack() {
+  if (timerInterval) clearInterval(timerInterval);
+  stopSpeech(); releaseWakeLock(); setLamp('off');
+  sessionState='idle';
+  document.getElementById('training').classList.remove('active');
+  document.getElementById('home').style.display='flex';
+  document.getElementById('training').style.backgroundColor=BG.neutral;
+}
+
+// ── Entry ─────────────────────────────────────────────────────────────────────
+
+function selectMode(mode) {
+  currentMode=mode;
+  sequence=mode==='precision'?buildPrecision():buildRapidFire();
+  stepIdx=0;sessionState='idle';remainMs=0;
+  document.getElementById('home').style.display='none';
+  document.getElementById('training').classList.add('active');
+  document.getElementById('seriesBar').textContent=mode==='precision'?'PRECISION MODE':'RAPID-FIRE MODE';
+  document.getElementById('training').style.backgroundColor=BG.neutral;
+  renderIdle();
+}
+
+loadLampConfig();
+</script>
+</body>
+</html>
