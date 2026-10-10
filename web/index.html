@@ -1,679 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>PerfShot Timer</title>
+<title>PerfShot — 25m Sport Pistol Timer</title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Professional ISSF 25m Sport Pistol training timer. Precision and Rapid-Fire modes, voice commands, automatic lamp control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap">
 <style>
 :root {
-  --bg: #0B1C2D;
-  --surface: #122438;
+  --bg: #080f18;
+  --surface: #0e1e30;
+  --card: #122234;
   --border: #1e3550;
-  --white: #FFFFFF;
+  --white: #ffffff;
   --muted: rgba(255,255,255,0.55);
-  --dim: rgba(255,255,255,0.3);
+  --dim: rgba(255,255,255,0.28);
   --green: #1A8F3C;
   --red: #BF1A1A;
-  --neutral: #0B1C2D;
   --accent: #F0C040;
+  --accent2: #e0a800;
   color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  height: 100%; width: 100%; overflow: hidden;
+html { scroll-behavior: smooth; }
+body {
   background: var(--bg); color: var(--white);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  touch-action: manipulation;
+  overflow-x: hidden;
 }
-#app { width: 100%; height: 100%; display: flex; flex-direction: column; }
+a { color: inherit; text-decoration: none; }
 
-/* ── HOME ──────────────────────────────────────────────────────────────────── */
-#home {
-  flex: 1; display: flex; flex-direction: column;
-  background: var(--bg);
-  padding: env(safe-area-inset-top, 0px) 20px env(safe-area-inset-bottom, 0px) 20px;
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(8,15,24,0.88); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px clamp(20px, 5vw, 60px);
 }
-.home-header {
+.nav-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; color: var(--white); }
+.nav-cta {
+  background: var(--accent); color: #0a0a0a;
+  font-weight: 800; font-size: 13px; letter-spacing: 1.5px;
+  padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+  transition: background 0.15s;
+}
+.nav-cta:hover { background: var(--accent2); }
+
+/* ── HERO ─────────────────────────────────────────────────────────────────── */
+.hero {
   text-align: center;
-  padding-top: max(20px, env(safe-area-inset-top, 20px));
-  padding-bottom: 16px;
-  position: relative;
+  padding: 80px clamp(20px, 6vw, 80px) 60px;
+  max-width: 780px; margin: 0 auto;
 }
-.app-name { font-size: clamp(28px, 8vw, 38px); font-weight: 900; letter-spacing: 6px; color: var(--white); }
-.app-sub  { font-size: 13px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
-.settings-btn {
-  position: absolute; right: 0; top: max(20px, env(safe-area-inset-top, 20px));
-  background: none; border: none; color: var(--muted);
-  font-size: 20px; padding: 6px; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+.hero-badge {
+  display: inline-block; background: rgba(240,192,64,0.12);
+  border: 1px solid rgba(240,192,64,0.3); border-radius: 100px;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  color: var(--accent); padding: 6px 16px; margin-bottom: 28px;
 }
-.lamp-status {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 12px; color: var(--muted); letter-spacing: 1px;
-  margin-bottom: 12px; min-height: 20px;
+.hero h1 {
+  font-size: clamp(36px, 8vw, 72px); font-weight: 900;
+  letter-spacing: -1px; line-height: 1.05;
+  color: var(--white); margin-bottom: 20px;
+  text-wrap: balance;
 }
-.lamp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
-.lamp-dot.connected    { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.lamp-dot.disconnected { background: var(--red); }
-.cards { flex: 1; display: flex; flex-direction: column; gap: 16px; padding-bottom: 16px; min-height: 0; }
-.card {
-  flex: 1; background: var(--surface); border-radius: 16px; border: 1.5px solid;
-  overflow: hidden; display: flex; flex-direction: column;
-  cursor: pointer; transition: opacity 0.15s; -webkit-tap-highlight-color: transparent; min-height: 0;
+.hero h1 span { color: var(--accent); }
+.hero-sub {
+  font-size: clamp(16px, 2.5vw, 20px); color: var(--muted);
+  line-height: 1.65; margin-bottom: 40px; text-wrap: balance;
 }
-.card:active { opacity: 0.8; }
-.card-green { border-color: var(--green); }
-.card-red   { border-color: var(--red); }
-.card-top   { display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 12px 16px; }
-.card-green .card-top { background: rgba(26,143,60,0.13); }
-.card-red   .card-top { background: rgba(191,26,26,0.13); }
-.card-icon  { font-size: 28px; flex-shrink: 0; }
-.card-title    { font-size: 20px; font-weight: 800; letter-spacing: 3px; }
-.card-title-es { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.card-detail   { font-size: 15px; color: var(--white); font-weight: 600; padding: 12px 16px 0; line-height: 22px; white-space: pre-line; }
-.bullets { flex: 1; padding: 8px 16px; display: flex; flex-direction: column; gap: 4px; }
-.bullet-row  { display: flex; flex-direction: row; gap: 8px; align-items: center; }
-.bullet-dot  { font-size: 16px; flex-shrink: 0; }
-.bullet-text { font-size: 13px; color: var(--muted); }
-.start-btn   { margin: 12px; border-radius: 10px; padding: 14px; text-align: center; font-size: 15px; font-weight: 800; letter-spacing: 2px; color: var(--white); flex-shrink: 0; }
-.card-green .start-btn { background: var(--green); }
-.card-red   .start-btn { background: var(--red); }
-.footer { text-align: center; font-size: 11px; color: var(--dim); letter-spacing: 1px; padding: 10px 0; padding-bottom: max(10px, env(safe-area-inset-bottom, 10px)); }
+.hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-hero-primary {
+  background: var(--accent); color: #0a0a0a;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px;
+  padding: 16px 32px; border-radius: 12px; border: none; cursor: pointer;
+  transition: background 0.15s; display: inline-block;
+}
+.btn-hero-primary:hover { background: var(--accent2); }
+.btn-hero-ghost {
+  background: transparent; color: var(--muted);
+  font-size: 15px; font-weight: 600; letter-spacing: 1px;
+  padding: 16px 32px; border-radius: 12px;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s; display: inline-block;
+}
+.btn-hero-ghost:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
 
-/* ── TRAINING ──────────────────────────────────────────────────────────────── */
-#training { flex: 1; display: none; flex-direction: column; transition: background-color 0.3s; }
-#training.active { display: flex; }
-.top-bar { display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: max(12px, env(safe-area-inset-top, 12px)) 20px 8px; flex-shrink: 0; }
-.series-bar { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,0.75); flex: 1; }
-.close-btn  { padding: 6px; font-size: 18px; color: rgba(255,255,255,0.6); font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; background: none; border: none; }
-.center     { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 0 20px; text-align: center; }
-.phase-label { font-size: clamp(24px, 8vw, 36px); font-weight: 900; letter-spacing: 6px; color: var(--white); }
-.timer-text  { font-size: clamp(80px, 25vw, 140px); font-weight: 900; color: var(--white); font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -2px; min-width: 0; }
-.timer-urgent { color: #FFE066; }
-.sublabel    { font-size: 16px; color: rgba(255,255,255,0.70); margin-top: 4px; letter-spacing: 1px; }
-.idle-mode   { font-size: clamp(28px, 10vw, 48px); font-weight: 900; letter-spacing: 4px; color: var(--white); }
-.idle-sub    { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 24px; margin-top: 8px; }
-.done-check  { font-size: 72px; }
-.done-title  { font-size: clamp(28px, 9vw, 40px); font-weight: 900; color: var(--white); letter-spacing: 4px; line-height: 1.2; }
-.done-sub    { font-size: 15px; color: rgba(255,255,255,0.6); margin-top: 12px; letter-spacing: 1px; }
-.controls    { padding: 12px 20px; padding-bottom: max(24px, env(safe-area-inset-bottom, 24px)); display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
-.control-row { display: flex; flex-direction: row; gap: 12px; }
-.btn { border-radius: 14px; padding: 18px; text-align: center; font-size: 16px; font-weight: 800; letter-spacing: 2px; cursor: pointer; border: none; -webkit-tap-highlight-color: transparent; transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; width: 100%; }
-.btn:active  { opacity: 0.75; }
-.btn-half    { flex: 1; width: auto; }
-.btn-primary   { background: var(--accent); color: var(--bg); }
-.btn-secondary { background: rgba(255,255,255,0.18); color: var(--white); }
-.btn-ghost     { border: 1.5px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.75); background: transparent; font-weight: 600; }
+/* ── MOCKUP ──────────────────────────────────────────────────────────────── */
+.mockup-wrap {
+  display: flex; justify-content: center; gap: 16px;
+  padding: 0 20px 80px; flex-wrap: wrap;
+}
+.phone {
+  width: 200px; border-radius: 32px;
+  border: 2px solid var(--border);
+  overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.phone-green { background: #1A8F3C; }
+.phone-red   { background: #BF1A1A; }
+.phone-dark  { background: #0B1C2D; }
+.phone-inner {
+  padding: 28px 16px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-height: 360px; justify-content: center;
+}
+.phone-label {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  color: rgba(255,255,255,0.7); text-align: center;
+}
+.phone-timer {
+  font-size: 72px; font-weight: 900; color: white;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.phone-sub { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; }
+.phone-phase {
+  font-size: 24px; font-weight: 900; letter-spacing: 4px; color: white; text-align: center;
+}
 
-/* ── OVERLAYS ──────────────────────────────────────────────────────────────── */
-.overlay {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(0,0,0,0.75);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
+/* ── SECTIONS ────────────────────────────────────────────────────────────── */
+section { padding: 80px clamp(20px, 5vw, 60px); max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 16px;
+  text-align: center;
 }
-.overlay.hidden { display: none !important; }
-.dialog { background: #1a2e44; border-radius: 18px; padding: 28px 24px 20px; width: 100%; max-width: 360px; }
-.dialog h2 { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--white); margin-bottom: 8px; text-align: center; }
-.dialog p  { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; text-align: center; }
-.dialog-btns { display: flex; gap: 12px; }
-.dialog-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; -webkit-tap-highlight-color: transparent; }
-.dialog-btn.cancel { background: rgba(255,255,255,0.12); color: var(--white); }
-.dialog-btn.danger { background: var(--red); color: var(--white); }
-.dialog-btn.primary { background: var(--accent); color: var(--bg); }
+.section-title {
+  font-size: clamp(28px, 5vw, 44px); font-weight: 900;
+  color: var(--white); text-align: center;
+  text-wrap: balance; margin-bottom: 12px;
+}
+.section-sub {
+  font-size: 17px; color: var(--muted); text-align: center;
+  line-height: 1.65; max-width: 560px; margin: 0 auto 56px;
+}
+.divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
-/* Settings form */
-.settings-form { display: flex; flex-direction: column; gap: 16px; }
-.field-label { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 6px; display: block; }
-.field-input {
-  width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 10px; padding: 12px 14px; color: var(--white); font-size: 14px;
-  font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+/* ── FEATURES ────────────────────────────────────────────────────────────── */
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.feat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 24px;
 }
-.field-input:focus { outline: none; border-color: rgba(255,255,255,0.35); }
-.field-input::placeholder { color: rgba(255,255,255,0.25); }
-.radio-group { display: flex; gap: 10px; }
-.radio-opt {
-  flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,0.15);
-  text-align: center; cursor: pointer; font-size: 13px; font-weight: 700;
-  color: var(--muted); -webkit-tap-highlight-color: transparent; transition: all 0.15s;
-  background: none;
-}
-.radio-opt.selected { border-color: var(--accent); color: var(--accent); background: rgba(240,192,64,0.08); }
-.test-btn {
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 10px; padding: 10px; color: var(--muted); font-size: 13px;
-  font-weight: 600; cursor: pointer; letter-spacing: 1px; -webkit-tap-highlight-color: transparent;
-  width: 100%; transition: all 0.15s;
-}
-.test-btn:active { background: rgba(255,255,255,0.18); }
-.test-result { font-size: 12px; text-align: center; min-height: 16px; letter-spacing: 0.5px; }
-.test-ok  { color: #4ade80; }
-.test-err { color: #f87171; }
-.settings-note { font-size: 11px; color: var(--dim); line-height: 1.5; text-align: center; }
-.settings-note a { color: var(--accent); text-decoration: none; }
+.feat-icon { font-size: 32px; margin-bottom: 14px; }
+.feat-title { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: var(--white); margin-bottom: 8px; }
+.feat-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
 
-/* Speech banner */
-.speech-banner {
-  position: fixed; top: 0; left: 0; right: 0;
-  background: rgba(0,0,0,0.85); color: var(--white);
-  font-size: clamp(18px, 6vw, 28px); font-weight: 700;
-  text-align: center; padding: 20px 24px; letter-spacing: 1px; z-index: 200;
-  transition: opacity 0.4s; pointer-events: none; line-height: 1.3;
+/* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+.step { text-align: center; }
+.step-num {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(240,192,64,0.12); border: 1.5px solid rgba(240,192,64,0.4);
+  color: var(--accent); font-weight: 900; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
 }
-.hidden { display: none !important; }
+.step-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+.step-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ── PRICING ─────────────────────────────────────────────────────────────── */
+.pricing { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.price-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 36px 32px;
+  width: 100%; max-width: 320px; position: relative;
+}
+.price-card.featured { border-color: var(--accent); }
+.price-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #0a0a0a;
+  font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+  padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+}
+.price-period { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; }
+.price-amount { font-size: 52px; font-weight: 900; color: var(--white); line-height: 1; }
+.price-amount sup { font-size: 22px; vertical-align: super; font-weight: 700; }
+.price-amount span { font-size: 16px; color: var(--muted); font-weight: 500; }
+.price-save { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 6px; min-height: 20px; }
+.price-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.price-features li { font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.price-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.price-btn {
+  width: 100%; padding: 16px; border-radius: 12px; border: none;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px; cursor: pointer;
+  display: block; text-align: center; transition: opacity 0.15s;
+}
+.price-btn:hover { opacity: 0.88; }
+.price-btn.primary { background: var(--accent); color: #0a0a0a; }
+.price-btn.ghost    { background: rgba(255,255,255,0.08); color: var(--white); border: 1px solid var(--border); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faq { display: flex; flex-direction: column; gap: 12px; max-width: 680px; margin: 0 auto; }
+details {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px; cursor: pointer;
+}
+details[open] { border-color: rgba(255,255,255,0.2); }
+summary {
+  font-size: 15px; font-weight: 700; color: var(--white);
+  list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+summary::after { content: '+'; font-size: 20px; color: var(--accent); flex-shrink: 0; }
+details[open] summary::after { content: '−'; }
+.faq-body { font-size: 14px; color: var(--muted); line-height: 1.7; margin-top: 14px; }
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px clamp(20px, 5vw, 60px);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-logo { font-size: 16px; font-weight: 900; letter-spacing: 3px; color: var(--white); }
+.footer-sub  { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+.footer-link { font-size: 13px; color: var(--muted); }
+.footer-link:hover { color: var(--white); }
+
+/* ── ALREADY SUBSCRIBED ──────────────────────────────────────────────────── */
+.already-sub {
+  text-align: center; padding: 16px 20px;
+  font-size: 13px; color: var(--muted);
+}
+.already-sub a { color: var(--accent); font-weight: 600; }
 </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- HOME -->
-  <div id="home">
-    <div class="home-header">
-      <div class="app-name">PERFSHOT</div>
-      <div class="app-sub">25M Sport Pistol Timer</div>
-      <button class="settings-btn" onclick="openSettings()" title="Lamp settings">⚙</button>
-    </div>
+<nav>
+  <div class="nav-logo">PERFSHOT</div>
+  <a class="nav-cta btn-hero-primary" href="#pricing">GET STARTED</a>
+</nav>
 
-    <div class="lamp-status" id="lampStatus">
-      <div class="lamp-dot" id="lampDot"></div>
-      <span id="lampStatusText">Lamp: not configured</span>
-    </div>
-
-    <div class="cards">
-      <div class="card card-green" onclick="selectMode('precision')">
-        <div class="card-top">
-          <span class="card-icon">🎯</span>
-          <div>
-            <div class="card-title" style="color:var(--green)">PRECISION</div>
-            <div class="card-title-es">Fase de Precisión</div>
-          </div>
-        </div>
-        <div class="card-detail">6 series × 5 shots&#10;4 min per series</div>
-        <div class="bullets">
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">1 min to load</span></div>
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">7s delay after ATTENTION</span></div>
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--green)">•</span><span class="bullet-text">240s fire window</span></div>
-        </div>
-        <div class="start-btn">START SESSION</div>
-      </div>
-
-      <div class="card card-red" onclick="selectMode('rapidfire')">
-        <div class="card-top">
-          <span class="card-icon">⚡</span>
-          <div>
-            <div class="card-title" style="color:var(--red)">RAPID-FIRE</div>
-            <div class="card-title-es">Fase de Velocidad</div>
-          </div>
-        </div>
-        <div class="card-detail">6 series × 5 shots&#10;3s per shot</div>
-        <div class="bullets">
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">1 min to load</span></div>
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">7s delay after ATTENTION</span></div>
-          <div class="bullet-row"><span class="bullet-dot" style="color:var(--red)">•</span><span class="bullet-text">3s fire / 7s ready</span></div>
-        </div>
-        <div class="start-btn">START SESSION</div>
-      </div>
-    </div>
-
-    <div class="footer">ISSF 25m Sport Pistol — Official Timing</div>
-  </div>
-
-  <!-- TRAINING -->
-  <div id="training">
-    <div class="top-bar">
-      <div class="series-bar" id="seriesBar">PRECISION MODE</div>
-      <button class="close-btn" onclick="handleStop()">✕</button>
-    </div>
-    <div class="center" id="center"></div>
-    <div class="controls" id="controls"></div>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">ISSF 25M SPORT PISTOL</div>
+  <h1>Train like it's<br><span>competition day</span></h1>
+  <p class="hero-sub">
+    Professional timing app for ISSF 25m Sport Pistol training.<br>
+    Precision and Rapid-Fire modes with voice commands, audio signals,
+    and optional smart lamp control.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-hero-primary" href="#pricing">Start training — from $4.99/mo</a>
+    <a class="btn-hero-ghost"   href="app.html">Try the app →</a>
   </div>
 </div>
 
-<!-- Stop dialog -->
-<div class="overlay hidden" id="stopOverlay">
-  <div class="dialog">
-    <h2>STOP SESSION?</h2>
-    <p>This will end the current session and return to home.</p>
-    <div class="dialog-btns">
-      <button class="dialog-btn cancel" onclick="closeStopDialog()">CONTINUE</button>
-      <button class="dialog-btn danger" onclick="confirmStop()">STOP</button>
+<!-- PHONE MOCKUPS -->
+<div class="mockup-wrap">
+  <div class="phone phone-dark">
+    <div class="phone-inner">
+      <div class="phone-label">PRECISION MODE</div>
+      <div style="display:flex;gap:8px;margin:8px 0">
+        <div style="background:rgba(26,143,60,0.2);border:1.5px solid #1A8F3C;border-radius:10px;padding:10px 14px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#1A8F3C;font-weight:800;letter-spacing:2px">PRECISION</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">6 × 5 shots</div>
+        </div>
+        <div style="background:rgba(191,26,26,0.2);border:1.5px solid #BF1A1A;border-radius:10px;padding:10px 14px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#BF1A1A;font-weight:800;letter-spacing:2px">RAPID-FIRE</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">6 × 5 shots</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:8px">ISSF 25m Sport Pistol</div>
+    </div>
+  </div>
+  <div class="phone phone-green">
+    <div class="phone-inner">
+      <div class="phone-label">SERIES 2 / 6</div>
+      <div class="phone-phase">FIRE</div>
+      <div class="phone-timer">3:47</div>
+      <div class="phone-sub">5 shots — 4 minutes</div>
+    </div>
+  </div>
+  <div class="phone phone-red">
+    <div class="phone-inner">
+      <div class="phone-label">SERIES 2 / 6</div>
+      <div class="phone-phase">ATTENTION</div>
+      <div class="phone-timer">7</div>
+      <div class="phone-sub">Targets turning</div>
     </div>
   </div>
 </div>
 
-<!-- Settings dialog -->
-<div class="overlay hidden" id="settingsOverlay">
-  <div class="dialog">
-    <h2>⚙ LAMP SETTINGS</h2>
-    <p>Connect a smart bulb to follow the training sequence.</p>
-    <div class="settings-form">
-      <div>
-        <label class="field-label">BRAND</label>
-        <div class="radio-group">
-          <button class="radio-opt" id="opt-lifx"  onclick="selectBrand('lifx')">LIFX</button>
-          <button class="radio-opt" id="opt-govee" onclick="selectBrand('govee')">Govee</button>
-          <button class="radio-opt" id="opt-none"  onclick="selectBrand('none')">None</button>
-        </div>
-      </div>
+<hr class="divider">
 
-      <div id="tokenField">
-        <label class="field-label" id="tokenLabel">API TOKEN</label>
-        <input class="field-input" id="tokenInput" type="text" placeholder="Paste your token here" autocomplete="off" autocorrect="off" spellcheck="false">
-        <div class="settings-note" style="margin-top:8px" id="tokenNote"></div>
-      </div>
-
-      <button class="test-btn" id="testBtn" onclick="testConnection()">TEST CONNECTION</button>
-      <div class="test-result" id="testResult"></div>
-
-      <div class="dialog-btns">
-        <button class="dialog-btn cancel" onclick="closeSettings()">CANCEL</button>
-        <button class="dialog-btn primary" onclick="saveSettings()">SAVE</button>
-      </div>
+<!-- FEATURES -->
+<section>
+  <div class="section-label">FEATURES</div>
+  <h2 class="section-title">Everything you need to train right</h2>
+  <p class="section-sub">Built to ISSF specifications. Works on any phone, no installation required.</p>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">🎯</div>
+      <div class="feat-title">OFFICIAL TIMING</div>
+      <div class="feat-text">Precision (4 min fire window) and Rapid-Fire (3s/7s) modes with exact ISSF timing. Sighting series + 6 competition series.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔊</div>
+      <div class="feat-title">VOICE COMMANDS</div>
+      <div class="feat-text">English audio commands: "Attention", "Load", "Stop", "Unload". Beep tones for FIRE/STOP signals. Runs on any phone speaker.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🟢</div>
+      <div class="feat-title">FULL-SCREEN SIGNALS</div>
+      <div class="feat-text">Screen goes full green on FIRE, full red on ATTENTION and STOP. Visible from across the range.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💡</div>
+      <div class="feat-title">SMART LAMP CONTROL</div>
+      <div class="feat-text">Connect a LIFX or Govee WiFi bulb. The lamp changes color automatically with each phase — green, red, or off.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📱</div>
+      <div class="feat-title">INSTALLABLE APP</div>
+      <div class="feat-text">Works on iOS and Android as a Progressive Web App. Add to home screen for a native app experience with no App Store needed.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title">OFFLINE READY</div>
+      <div class="feat-text">Once loaded, works without internet. Screen stays awake during the full session automatically.</div>
     </div>
   </div>
-</div>
+</section>
 
-<div class="speech-banner hidden" id="speechBanner"></div>
+<hr class="divider">
 
-<script>
-// ── Audio ────────────────────────────────────────────────────────────────────
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-label">HOW IT WORKS</div>
+  <h2 class="section-title">Ready to train in 30 seconds</h2>
+  <p class="section-sub">Open the app, choose your mode, and hit Start. That's it.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Subscribe</div>
+      <div class="step-text">Choose monthly or yearly. You'll get a confirmation email with access.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Open the app</div>
+      <div class="step-text">Open on any phone browser. Enter your email to unlock. Add to home screen for quick access.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Choose a mode</div>
+      <div class="step-text">Precision or Rapid-Fire. The app walks you through the complete competition sequence.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-title">Train</div>
+      <div class="step-text">Voice commands, beeps and visual signals guide each series. Pause or skip anytime.</div>
+    </div>
+  </div>
+</section>
 
-let audioCtx = null;
-function getCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function playTone(freq, dur) {
-  try {
-    const ctx = getCtx();
-    const osc = ctx.createOscillator(), gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine'; osc.frequency.value = freq;
-    const t = ctx.currentTime;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.85, t + 0.02);
-    gain.gain.setValueAtTime(0.85, t + dur - 0.08);
-    gain.gain.linearRampToValueAtTime(0, t + dur);
-    osc.start(t); osc.stop(t + dur);
-  } catch(e) {}
-}
-function playSound(name) {
-  if (name === 'start') playTone(880, 0.35);
-  else if (name === 'stop') playTone(392, 1.20);
-  else if (name === 'short') playTone(660, 0.22);
-}
+<hr class="divider">
 
-// ── Speech ────────────────────────────────────────────────────────────────────
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">PRICING</div>
+  <h2 class="section-title">Simple, affordable access</h2>
+  <p class="section-sub">Cancel anytime. Same features on every plan.</p>
 
-let ttsOk = 'speechSynthesis' in window, bannerTimer = null;
-function speak(text) {
-  if (!text) return;
-  const el = document.getElementById('speechBanner');
-  el.textContent = text; el.classList.remove('hidden'); el.style.opacity = '1';
-  clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.classList.add('hidden'), 400); }, Math.max(2000, text.length * 60));
-  if (!ttsOk) return;
-  try { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 0.88; window.speechSynthesis.speak(u); } catch(e) { ttsOk = false; }
-}
-function stopSpeech() { if (ttsOk) try { window.speechSynthesis.cancel(); } catch(e) {} }
+  <div class="pricing">
+    <div class="price-card">
+      <div class="price-period">MONTHLY</div>
+      <div class="price-amount"><sup>$</sup>4<span style="font-size:32px;font-weight:900">.99</span><span>/mo</span></div>
+      <div class="price-save">&nbsp;</div>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li>Precision + Rapid-Fire modes</li>
+        <li>Voice commands &amp; audio signals</li>
+        <li>Smart lamp integration</li>
+        <li>Works on any device</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a class="price-btn ghost" href="MONTHLY_CHECKOUT_URL" target="_blank">Subscribe Monthly</a>
+    </div>
 
-// ── Wake lock ─────────────────────────────────────────────────────────────────
+    <div class="price-card featured">
+      <div class="price-badge">BEST VALUE</div>
+      <div class="price-period">YEARLY</div>
+      <div class="price-amount"><sup>$</sup>39<span style="font-size:32px;font-weight:900">.99</span><span>/yr</span></div>
+      <div class="price-save">Save 33% — 2 months free</div>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li>Everything in Monthly</li>
+        <li>Priority support</li>
+        <li>New features first</li>
+        <li>Best value for serious training</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a class="price-btn primary" href="YEARLY_CHECKOUT_URL" target="_blank">Subscribe Yearly</a>
+    </div>
+  </div>
 
-let wakeLock = null;
-async function acquireWakeLock() { if ('wakeLock' in navigator) try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {} }
-function releaseWakeLock() { if (wakeLock) { try { wakeLock.release(); } catch(e) {} wakeLock = null; } }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && sessionState === 'running') acquireWakeLock(); });
+  <div class="already-sub">
+    Already subscribed? <a href="app.html">Open the app →</a>
+  </div>
+</section>
 
-// ── Lamp control ──────────────────────────────────────────────────────────────
+<hr class="divider">
 
-let lampConfig = { brand: 'none', token: '' };
+<!-- FAQ -->
+<section>
+  <div class="section-label">FAQ</div>
+  <h2 class="section-title">Common questions</h2>
+  <div class="faq">
+    <details>
+      <summary>What devices does it work on?</summary>
+      <div class="faq-body">Any modern smartphone or tablet with a browser — iOS Safari, Android Chrome, or any other browser. No app store download needed. You can add it to your home screen for a native app experience.</div>
+    </details>
+    <details>
+      <summary>Do I need internet during training?</summary>
+      <div class="faq-body">Only to verify your subscription (once per 24 hours). After that the app works completely offline, which is important on ranges without good signal.</div>
+    </details>
+    <details>
+      <summary>Which smart bulbs are supported?</summary>
+      <div class="faq-body">LIFX bulbs (direct WiFi, no hub needed) and Govee RGB bulbs. The lamp feature is optional — the app works perfectly without one.</div>
+    </details>
+    <details>
+      <summary>Can I use it on multiple devices?</summary>
+      <div class="faq-body">Yes. Your subscription is tied to your email. You can open the app on any device and enter your email to access it.</div>
+    </details>
+    <details>
+      <summary>Is it compliant with ISSF rules?</summary>
+      <div class="faq-body">The timing follows ISSF 25m Sport Pistol specifications: 4-minute fire window for Precision, 3s target exposure / 7s interval for Rapid-Fire, 7-second attention delay, 1-minute loading time per series.</div>
+    </details>
+  </div>
+</section>
 
-function loadLampConfig() {
-  try {
-    const s = localStorage.getItem('perfshot_lamp');
-    if (s) lampConfig = JSON.parse(s);
-  } catch(e) {}
-  updateLampStatusUI();
-}
+<footer>
+  <div>
+    <div class="footer-logo">PERFSHOT</div>
+    <div class="footer-sub">ISSF 25m Sport Pistol Timer</div>
+  </div>
+  <a class="footer-link" href="app.html">Open App</a>
+</footer>
 
-function saveLampConfig() {
-  try { localStorage.setItem('perfshot_lamp', JSON.stringify(lampConfig)); } catch(e) {}
-}
-
-function updateLampStatusUI() {
-  const dot = document.getElementById('lampDot');
-  const txt = document.getElementById('lampStatusText');
-  if (!lampConfig.token || lampConfig.brand === 'none') {
-    dot.className = 'lamp-dot'; txt.textContent = 'Lamp: not configured';
-  } else {
-    dot.className = 'lamp-dot connected';
-    txt.textContent = `Lamp: ${lampConfig.brand.toUpperCase()} connected`;
-  }
-}
-
-// Phase → lamp color mapping
-const LAMP_COLORS = {
-  green:   { lifx: 'hue:120 saturation:1.0 brightness:1.0', govee: { r:0, g:255, b:0 } },
-  red:     { lifx: 'hue:0 saturation:1.0 brightness:1.0',   govee: { r:255, g:0, b:0 } },
-  neutral: { lifx: 'hue:210 saturation:0.3 brightness:0.1', govee: { r:10, g:20, b:40 } },
-  off:     { lifx: 'brightness:0',                           govee: { r:0, g:0, b:0 } },
-};
-
-async function setLamp(colorKey) {
-  if (!lampConfig.token || lampConfig.brand === 'none') return;
-  const color = LAMP_COLORS[colorKey];
-  if (!color) return;
-
-  if (lampConfig.brand === 'lifx') {
-    try {
-      await fetch('https://api.lifx.com/v1/lights/all/state', {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${lampConfig.token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ color: color.lifx, duration: 0.15, power: colorKey === 'off' ? 'off' : 'on' }),
-      });
-    } catch(e) {}
-
-  } else if (lampConfig.brand === 'govee') {
-    try {
-      const { r, g, b } = color.govee;
-      await fetch('https://developer-api.govee.com/v1/devices/control', {
-        method: 'PUT',
-        headers: { 'Govee-API-Key': lampConfig.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          device: lampConfig.goveeDevice || '',
-          model:  lampConfig.goveeModel  || '',
-          cmd: { name: 'color', value: { r, g, b } },
-        }),
-      });
-    } catch(e) {}
-  }
-}
-
-// ── Settings UI ───────────────────────────────────────────────────────────────
-
-let editBrand = 'none', editToken = '';
-
-const NOTES = {
-  lifx:  'Get your token at <a href="https://cloud.lifx.com/settings" target="_blank">cloud.lifx.com/settings</a>',
-  govee: 'Get your API key at <a href="https://developer.govee.com" target="_blank">developer.govee.com</a>',
-  none:  '',
-};
-
-function openSettings() {
-  editBrand = lampConfig.brand || 'none';
-  editToken = lampConfig.token || '';
-  document.getElementById('tokenInput').value = editToken;
-  selectBrand(editBrand);
-  document.getElementById('testResult').textContent = '';
-  document.getElementById('settingsOverlay').classList.remove('hidden');
-}
-
-function closeSettings() { document.getElementById('settingsOverlay').classList.add('hidden'); }
-
-function selectBrand(b) {
-  editBrand = b;
-  ['lifx','govee','none'].forEach(k => {
-    document.getElementById('opt-' + k).className = 'radio-opt' + (k === b ? ' selected' : '');
-  });
-  const showToken = b !== 'none';
-  document.getElementById('tokenField').style.display = showToken ? 'block' : 'none';
-  document.getElementById('testBtn').style.display    = showToken ? 'block' : 'none';
-  document.getElementById('tokenLabel').textContent   = b === 'govee' ? 'API KEY' : 'API TOKEN';
-  document.getElementById('tokenNote').innerHTML = NOTES[b] || '';
-}
-
-async function testConnection() {
-  const token = document.getElementById('tokenInput').value.trim();
-  const res = document.getElementById('testResult');
-  if (!token) { res.className = 'test-result test-err'; res.textContent = 'Enter a token first'; return; }
-  res.className = 'test-result'; res.textContent = 'Testing…';
-
-  if (editBrand === 'lifx') {
-    try {
-      const r = await fetch('https://api.lifx.com/v1/lights/all', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (r.ok) {
-        const data = await r.json();
-        res.className = 'test-result test-ok';
-        res.textContent = `✓ Found ${data.length} bulb${data.length !== 1 ? 's' : ''}`;
-      } else {
-        res.className = 'test-result test-err';
-        res.textContent = `✗ Error ${r.status} — check your token`;
-      }
-    } catch(e) {
-      res.className = 'test-result test-err';
-      res.textContent = '✗ Network error — check connection';
-    }
-
-  } else if (editBrand === 'govee') {
-    try {
-      const r = await fetch('https://developer-api.govee.com/v1/devices', {
-        headers: { 'Govee-API-Key': token }
-      });
-      if (r.ok) {
-        const data = await r.json();
-        const count = data?.data?.devices?.length ?? 0;
-        res.className = 'test-result test-ok';
-        res.textContent = `✓ Found ${count} device${count !== 1 ? 's' : ''}`;
-        if (count > 0) {
-          lampConfig.goveeDevice = data.data.devices[0].device;
-          lampConfig.goveeModel  = data.data.devices[0].model;
-        }
-      } else {
-        res.className = 'test-result test-err';
-        res.textContent = `✗ Error ${r.status} — check your API key`;
-      }
-    } catch(e) {
-      res.className = 'test-result test-err';
-      res.textContent = '✗ Network error — check connection';
-    }
-  }
-}
-
-function saveSettings() {
-  lampConfig.brand = editBrand;
-  lampConfig.token = document.getElementById('tokenInput').value.trim();
-  saveLampConfig();
-  updateLampStatusUI();
-  closeSettings();
-}
-
-// ── Sequences ─────────────────────────────────────────────────────────────────
-
-const T = { PREP:180, LOAD:60, ATT:7, PREC:240, RFG:3, RFR:7, STOP:4, UNL:10, REST:60 };
-const TOTAL = 7;
-function loadCmd(i) { return i===0?'For the sighting series. Load.': i===1?'For the first competition series. Load.':'For the next competition series. Load.'; }
-function sLabel(i) { return i===0?'SIGHTING SERIES':`SERIES ${i} / 6`; }
-
-function buildPrecision() {
-  const s = [];
-  s.push({ phase:'PREP', color:'neutral', label:'PREPARATION', sublabel:'3 minutes — get ready', duration:T.PREP, command:'Preparation time. Three minutes.', sound:null });
-  for (let i=0;i<TOTAL;i++) {
-    const sl = sLabel(i);
-    s.push({ phase:'LOAD',  color:'neutral', seriesLabel:sl, label:'LOAD',      sublabel:sl,                           duration:T.LOAD, command:loadCmd(i),   sound:null });
-    s.push({ phase:'ATT',   color:'red',     seriesLabel:sl, label:'ATTENTION', sublabel:'Targets turning — get ready', duration:T.ATT,  command:'Attention.', sound:null });
-    s.push({ phase:'FIRE',  color:'green',   seriesLabel:sl, label:'FIRE',      sublabel:'5 shots — 4 minutes',         duration:T.PREC, command:null,         sound:'start' });
-    s.push({ phase:'STOP',  color:'red',     seriesLabel:sl, label:'STOP',      sublabel:'Time up',                    duration:T.STOP, command:'Stop.',       sound:'stop' });
-    s.push({ phase:'UNLOAD',color:'red',     seriesLabel:sl, label:'UNLOAD',    sublabel:'Show clear firearm',          duration:T.UNL,  command:'Unload.',     sound:null });
-    if (i<TOTAL-1) s.push({ phase:'REST', color:'neutral', seriesLabel:sl, label:'REST', sublabel:`Next: ${sLabel(i+1)}`, duration:T.REST, command:null, sound:null });
-  }
-  s.push({ phase:'DONE', color:'neutral', label:'DONE', sublabel:'', duration:0, command:'Training complete. Well done.', sound:null });
-  return s;
-}
-
-function buildRapidFire() {
-  const s = [];
-  s.push({ phase:'PREP', color:'neutral', label:'PREPARATION', sublabel:'3 minutes — get ready', duration:T.PREP, command:'Preparation time. Three minutes.', sound:null });
-  for (let i=0;i<TOTAL;i++) {
-    const sl = sLabel(i);
-    s.push({ phase:'LOAD', color:'neutral', seriesLabel:sl, label:'LOAD',      sublabel:sl,                                  duration:T.LOAD, command:loadCmd(i),             sound:null });
-    s.push({ phase:'ATT',  color:'red',     seriesLabel:sl, label:'ATTENTION', sublabel:'Arm down — ready position (≤ 45°)', duration:T.ATT,  command:'Attention. Ready position.', sound:null });
-    for (let sh=1;sh<=5;sh++) {
-      s.push({ phase:'FIRE',  color:'green', seriesLabel:sl, label:`SHOT ${sh}`, sublabel:'FIRE NOW',        duration:T.RFG, command:null, sound:'start' });
-      if (sh<5) s.push({ phase:'READY', color:'red', seriesLabel:sl, label:'READY', sublabel:'Lower arm — ≤ 45°', duration:T.RFR, command:null, sound:'short' });
-    }
-    s.push({ phase:'STOP',   color:'red', seriesLabel:sl, label:'STOP',   sublabel:'Series complete',   duration:T.STOP, command:'Stop.',   sound:'stop' });
-    s.push({ phase:'UNLOAD', color:'red', seriesLabel:sl, label:'UNLOAD', sublabel:'Show clear firearm', duration:T.UNL,  command:'Unload.', sound:null });
-    if (i<TOTAL-1) s.push({ phase:'REST', color:'neutral', seriesLabel:sl, label:'REST', sublabel:`Next: ${sLabel(i+1)}`, duration:T.REST, command:null, sound:null });
-  }
-  s.push({ phase:'DONE', color:'neutral', label:'DONE', sublabel:'', duration:0, command:'Training complete. Well done.', sound:null });
-  return s;
-}
-
-// ── Timer state ───────────────────────────────────────────────────────────────
-
-let sequence=[], stepIdx=0, sessionState='idle', remainMs=0, timerInterval=null, currentMode='precision';
-const BG = { neutral:'#0B1C2D', green:'#1A8F3C', red:'#BF1A1A' };
-
-function formatMs(ms) {
-  if (ms<=0) return '0';
-  if (ms<10000) return (ms/1000).toFixed(1);
-  const s=Math.ceil(ms/1000), m=Math.floor(s/60);
-  return m>0?`${m}:${(s%60).toString().padStart(2,'0')}`:String(s);
-}
-
-function renderTimer(ms) {
-  const el = document.getElementById('timerDisplay');
-  if (!el) return;
-  const step = sequence[stepIdx];
-  el.textContent = formatMs(ms);
-  el.className = 'timer-text' + (ms<4000 && step?.color==='green' ? ' timer-urgent' : '');
-}
-
-function startCountdown(durMs, onComplete) {
-  if (timerInterval) clearInterval(timerInterval);
-  remainMs = durMs;
-  const end = Date.now() + durMs;
-  renderTimer(durMs);
-  timerInterval = setInterval(() => {
-    const r = end - Date.now();
-    if (r<=0) { clearInterval(timerInterval); timerInterval=null; remainMs=0; renderTimer(0); onComplete(); }
-    else { remainMs=r; renderTimer(r); }
-  }, 100);
-}
-
-function runStep(idx) {
-  if (idx>=sequence.length) return;
-  const step = sequence[idx];
-  stepIdx = idx;
-  if (step.command) speak(step.command);
-  if (step.sound)   playSound(step.sound);
-  document.getElementById('training').style.backgroundColor = BG[step.color] || BG.neutral;
-  document.getElementById('seriesBar').textContent = step.seriesLabel || (currentMode==='precision'?'PRECISION MODE':'RAPID-FIRE MODE');
-  setLamp(step.color);
-  if (step.phase==='DONE') { sessionState='done'; releaseWakeLock(); setLamp('off'); renderDone(); return; }
-  if (step.duration===0)   { setTimeout(()=>runStep(idx+1), 60); return; }
-  renderRunning(step);
-  startCountdown(step.duration*1000, ()=>runStep(idx+1));
-}
-
-// ── Render ────────────────────────────────────────────────────────────────────
-
-function renderIdle() {
-  const label = currentMode==='precision'?'PRECISION':'RAPID-FIRE';
-  const sub   = currentMode==='precision'?'6 competition series\n5 shots × 4 minutes':'6 competition series\n5 shots × 3 seconds each';
-  document.getElementById('center').innerHTML = `<div class="idle-mode">${label}</div><div class="idle-sub" style="white-space:pre-line">${sub}</div>`;
-  document.getElementById('controls').innerHTML = `<button class="btn btn-primary" onclick="handleStart()">▶  START SESSION</button>`;
-}
-
-function renderRunning(step) {
-  document.getElementById('center').innerHTML = `
-    <div class="phase-label">${step.label}</div>
-    ${step.duration>0?`<div class="timer-text" id="timerDisplay">${formatMs(step.duration*1000)}</div>`:''}
-    <div class="sublabel">${step.sublabel}</div>`;
-  renderRunningControls();
-}
-
-function renderRunningControls() {
-  const paused = sessionState==='paused';
-  document.getElementById('controls').innerHTML = `
-    <div class="control-row">
-      <button class="btn btn-secondary btn-half" onclick="${paused?'handleResume()':'handlePause()'}">
-        ${paused?'▶  RESUME':'⏸  PAUSE'}
-      </button>
-      <button class="btn btn-ghost btn-half" onclick="handleSkip()">SKIP ▶▶</button>
-    </div>`;
-}
-
-function renderDone() {
-  document.getElementById('center').innerHTML = `<div class="done-check">✓</div><div class="done-title">TRAINING<br>COMPLETE</div><div class="done-sub">6 competition series</div>`;
-  document.getElementById('controls').innerHTML = `<button class="btn btn-primary" onclick="handleBack()">← HOME</button>`;
-}
-
-// ── Controls ──────────────────────────────────────────────────────────────────
-
-function handleStart() {
-  sessionState='running'; acquireWakeLock();
-  try { getCtx(); } catch(e) {}
-  runStep(0);
-}
-
-function handlePause() {
-  if (timerInterval) { clearInterval(timerInterval); timerInterval=null; }
-  stopSpeech(); sessionState='paused'; releaseWakeLock(); renderRunningControls();
-}
-
-function handleResume() {
-  sessionState='running'; acquireWakeLock();
-  const end = Date.now()+remainMs;
-  timerInterval = setInterval(()=>{
-    const r=end-Date.now();
-    if(r<=0){clearInterval(timerInterval);timerInterval=null;remainMs=0;renderTimer(0);runStep(stepIdx+1);}
-    else{remainMs=r;renderTimer(r);}
-  },100);
-  renderRunningControls();
-}
-
-function handleSkip() {
-  if (timerInterval){clearInterval(timerInterval);timerInterval=null;}
-  stopSpeech();
-  if (sessionState==='paused') sessionState='running';
-  runStep(stepIdx+1);
-}
-
-function handleStop() {
-  if (sessionState==='idle'||sessionState==='done'){handleBack();return;}
-  if (timerInterval&&sessionState==='running'){clearInterval(timerInterval);timerInterval=null;stopSpeech();sessionState='paused';renderRunningControls();}
-  document.getElementById('stopOverlay').classList.remove('hidden');
-}
-
-function closeStopDialog() { document.getElementById('stopOverlay').classList.add('hidden'); }
-
-function confirmStop() {
-  document.getElementById('stopOverlay').classList.add('hidden');
-  if (timerInterval) clearInterval(timerInterval);
-  stopSpeech(); releaseWakeLock(); setLamp('off');
-  handleBack();
-}
-
-function handleBack() {
-  if (timerInterval) clearInterval(timerInterval);
-  stopSpeech(); releaseWakeLock(); setLamp('off');
-  sessionState='idle';
-  document.getElementById('training').classList.remove('active');
-  document.getElementById('home').style.display='flex';
-  document.getElementById('training').style.backgroundColor=BG.neutral;
-}
-
-// ── Entry ─────────────────────────────────────────────────────────────────────
-
-function selectMode(mode) {
-  currentMode=mode;
-  sequence=mode==='precision'?buildPrecision():buildRapidFire();
-  stepIdx=0;sessionState='idle';remainMs=0;
-  document.getElementById('home').style.display='none';
-  document.getElementById('training').classList.add('active');
-  document.getElementById('seriesBar').textContent=mode==='precision'?'PRECISION MODE':'RAPID-FIRE MODE';
-  document.getElementById('training').style.backgroundColor=BG.neutral;
-  renderIdle();
-}
-
-loadLampConfig();
-</script>
 </body>
 </html>

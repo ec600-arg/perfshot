@@ -1,0 +1,18 @@
+{
+  "name": "PerfShot — Sport Pistol Timer",
+  "short_name": "PerfShot",
+  "description": "ISSF 25m Sport Pistol training timer",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "background_color": "#0B1C2D",
+  "theme_color": "#0B1C2D",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%230B1C2D'/><text y='130' x='50%' text-anchor='middle' font-size='110' font-family='system-ui' fill='%23F0C040'>🎯</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
