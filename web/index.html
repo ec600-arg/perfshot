@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>PerfShot — 25m Sport Pistol Timer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Professional ISSF 25m Sport Pistol training timer. Precision and Rapid-Fire modes, voice commands, automatic lamp control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap">
+<style>
+:root {
+  --bg: #080f18;
+  --surface: #0e1e30;
+  --card: #122234;
+  --border: #1e3550;
+  --white: #ffffff;
+  --muted: rgba(255,255,255,0.55);
+  --dim: rgba(255,255,255,0.28);
+  --green: #1A8F3C;
+  --red: #BF1A1A;
+  --accent: #F0C040;
+  --accent2: #e0a800;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(8,15,24,0.88); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px clamp(20px, 5vw, 60px);
+}
+.nav-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; color: var(--white); }
+.nav-cta {
+  background: var(--accent); color: #0a0a0a;
+  font-weight: 800; font-size: 13px; letter-spacing: 1.5px;
+  padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;
+  transition: background 0.15s;
+}
+.nav-cta:hover { background: var(--accent2); }
+
+/* ── HERO ─────────────────────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 80px clamp(20px, 6vw, 80px) 60px;
+  max-width: 780px; margin: 0 auto;
+}
+.hero-badge {
+  display: inline-block; background: rgba(240,192,64,0.12);
+  border: 1px solid rgba(240,192,64,0.3); border-radius: 100px;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  color: var(--accent); padding: 6px 16px; margin-bottom: 28px;
+}
+.hero h1 {
+  font-size: clamp(36px, 8vw, 72px); font-weight: 900;
+  letter-spacing: -1px; line-height: 1.05;
+  color: var(--white); margin-bottom: 20px;
+  text-wrap: balance;
+}
+.hero h1 span { color: var(--accent); }
+.hero-sub {
+  font-size: clamp(16px, 2.5vw, 20px); color: var(--muted);
+  line-height: 1.65; margin-bottom: 40px; text-wrap: balance;
+}
+.hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-hero-primary {
+  background: var(--accent); color: #0a0a0a;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px;
+  padding: 16px 32px; border-radius: 12px; border: none; cursor: pointer;
+  transition: background 0.15s; display: inline-block;
+}
+.btn-hero-primary:hover { background: var(--accent2); }
+.btn-hero-ghost {
+  background: transparent; color: var(--muted);
+  font-size: 15px; font-weight: 600; letter-spacing: 1px;
+  padding: 16px 32px; border-radius: 12px;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: border-color 0.15s, color 0.15s; display: inline-block;
+}
+.btn-hero-ghost:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+
+/* ── MOCKUP ──────────────────────────────────────────────────────────────── */
+.mockup-wrap {
+  display: flex; justify-content: center; gap: 16px;
+  padding: 0 20px 80px; flex-wrap: wrap;
+}
+.phone {
+  width: 200px; border-radius: 32px;
+  border: 2px solid var(--border);
+  overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.phone-green { background: #1A8F3C; }
+.phone-red   { background: #BF1A1A; }
+.phone-dark  { background: #0B1C2D; }
+.phone-inner {
+  padding: 28px 16px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-height: 360px; justify-content: center;
+}
+.phone-label {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px;
+  color: rgba(255,255,255,0.7); text-align: center;
+}
+.phone-timer {
+  font-size: 72px; font-weight: 900; color: white;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.phone-sub { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; }
+.phone-phase {
+  font-size: 24px; font-weight: 900; letter-spacing: 4px; color: white; text-align: center;
+}
+
+/* ── SECTIONS ────────────────────────────────────────────────────────────── */
+section { padding: 80px clamp(20px, 5vw, 60px); max-width: 1100px; margin: 0 auto; }
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 16px;
+  text-align: center;
+}
+.section-title {
+  font-size: clamp(28px, 5vw, 44px); font-weight: 900;
+  color: var(--white); text-align: center;
+  text-wrap: balance; margin-bottom: 12px;
+}
+.section-sub {
+  font-size: 17px; color: var(--muted); text-align: center;
+  line-height: 1.65; max-width: 560px; margin: 0 auto 56px;
+}
+.divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+/* ── FEATURES ────────────────────────────────────────────────────────────── */
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.feat {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 24px;
+}
+.feat-icon { font-size: 32px; margin-bottom: 14px; }
+.feat-title { font-size: 16px; font-weight: 800; letter-spacing: 1px; color: var(--white); margin-bottom: 8px; }
+.feat-text { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+/* ── HOW IT WORKS ────────────────────────────────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+.step { text-align: center; }
+.step-num {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(240,192,64,0.12); border: 1.5px solid rgba(240,192,64,0.4);
+  color: var(--accent); font-weight: 900; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.step-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+.step-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ── PRICING ─────────────────────────────────────────────────────────────── */
+.pricing { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.price-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 36px 32px;
+  width: 100%; max-width: 320px; position: relative;
+}
+.price-card.featured { border-color: var(--accent); }
+.price-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--accent); color: #0a0a0a;
+  font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+  padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+}
+.price-period { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; }
+.price-amount { font-size: 52px; font-weight: 900; color: var(--white); line-height: 1; }
+.price-amount sup { font-size: 22px; vertical-align: super; font-weight: 700; }
+.price-amount span { font-size: 16px; color: var(--muted); font-weight: 500; }
+.price-save { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 6px; min-height: 20px; }
+.price-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.price-features li { font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.price-features li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.price-btn {
+  width: 100%; padding: 16px; border-radius: 12px; border: none;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px; cursor: pointer;
+  display: block; text-align: center; transition: opacity 0.15s;
+}
+.price-btn:hover { opacity: 0.88; }
+.price-btn.primary { background: var(--accent); color: #0a0a0a; }
+.price-btn.ghost    { background: rgba(255,255,255,0.08); color: var(--white); border: 1px solid var(--border); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────────── */
+.faq { display: flex; flex-direction: column; gap: 12px; max-width: 680px; margin: 0 auto; }
+details {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px; cursor: pointer;
+}
+details[open] { border-color: rgba(255,255,255,0.2); }
+summary {
+  font-size: 15px; font-weight: 700; color: var(--white);
+  list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+summary::after { content: '+'; font-size: 20px; color: var(--accent); flex-shrink: 0; }
+details[open] summary::after { content: '−'; }
+.faq-body { font-size: 14px; color: var(--muted); line-height: 1.7; margin-top: 14px; }
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px clamp(20px, 5vw, 60px);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-logo { font-size: 16px; font-weight: 900; letter-spacing: 3px; color: var(--white); }
+.footer-sub  { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+.footer-link { font-size: 13px; color: var(--muted); }
+.footer-link:hover { color: var(--white); }
+
+/* ── ALREADY SUBSCRIBED ──────────────────────────────────────────────────── */
+.already-sub {
+  text-align: center; padding: 16px 20px;
+  font-size: 13px; color: var(--muted);
+}
+.already-sub a { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">PERFSHOT</div>
+  <a class="nav-cta btn-hero-primary" href="#pricing">GET STARTED</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">ISSF 25M SPORT PISTOL</div>
+  <h1>Train like it's<br><span>competition day</span></h1>
+  <p class="hero-sub">
+    Professional timing app for ISSF 25m Sport Pistol training.<br>
+    Precision and Rapid-Fire modes with voice commands, audio signals,
+    and optional smart lamp control.
+  </p>
+  <div class="hero-btns">
+    <a class="btn-hero-primary" href="#pricing">Start training — from $4.99/mo</a>
+    <a class="btn-hero-ghost"   href="app.html">Try the app →</a>
+  </div>
+</div>
+
+<!-- PHONE MOCKUPS -->
+<div class="mockup-wrap">
+  <div class="phone phone-dark">
+    <div class="phone-inner">
+      <div class="phone-label">PRECISION MODE</div>
+      <div style="display:flex;gap:8px;margin:8px 0">
+        <div style="background:rgba(26,143,60,0.2);border:1.5px solid #1A8F3C;border-radius:10px;padding:10px 14px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#1A8F3C;font-weight:800;letter-spacing:2px">PRECISION</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">6 × 5 shots</div>
+        </div>
+        <div style="background:rgba(191,26,26,0.2);border:1.5px solid #BF1A1A;border-radius:10px;padding:10px 14px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#BF1A1A;font-weight:800;letter-spacing:2px">RAPID-FIRE</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">6 × 5 shots</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:1px;margin-top:8px">ISSF 25m Sport Pistol</div>
+    </div>
+  </div>
+  <div class="phone phone-green">
+    <div class="phone-inner">
+      <div class="phone-label">SERIES 2 / 6</div>
+      <div class="phone-phase">FIRE</div>
+      <div class="phone-timer">3:47</div>
+      <div class="phone-sub">5 shots — 4 minutes</div>
+    </div>
+  </div>
+  <div class="phone phone-red">
+    <div class="phone-inner">
+      <div class="phone-label">SERIES 2 / 6</div>
+      <div class="phone-phase">ATTENTION</div>
+      <div class="phone-timer">7</div>
+      <div class="phone-sub">Targets turning</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- FEATURES -->
+<section>
+  <div class="section-label">FEATURES</div>
+  <h2 class="section-title">Everything you need to train right</h2>
+  <p class="section-sub">Built to ISSF specifications. Works on any phone, no installation required.</p>
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">🎯</div>
+      <div class="feat-title">OFFICIAL TIMING</div>
+      <div class="feat-text">Precision (4 min fire window) and Rapid-Fire (3s/7s) modes with exact ISSF timing. Sighting series + 6 competition series.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔊</div>
+      <div class="feat-title">VOICE COMMANDS</div>
+      <div class="feat-text">English audio commands: "Attention", "Load", "Stop", "Unload". Beep tones for FIRE/STOP signals. Runs on any phone speaker.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🟢</div>
+      <div class="feat-title">FULL-SCREEN SIGNALS</div>
+      <div class="feat-text">Screen goes full green on FIRE, full red on ATTENTION and STOP. Visible from across the range.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💡</div>
+      <div class="feat-title">SMART LAMP CONTROL</div>
+      <div class="feat-text">Connect a LIFX or Govee WiFi bulb. The lamp changes color automatically with each phase — green, red, or off.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📱</div>
+      <div class="feat-title">INSTALLABLE APP</div>
+      <div class="feat-text">Works on iOS and Android as a Progressive Web App. Add to home screen for a native app experience with no App Store needed.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title">OFFLINE READY</div>
+      <div class="feat-text">Once loaded, works without internet. Screen stays awake during the full session automatically.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="section-label">HOW IT WORKS</div>
+  <h2 class="section-title">Ready to train in 30 seconds</h2>
+  <p class="section-sub">Open the app, choose your mode, and hit Start. That's it.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Subscribe</div>
+      <div class="step-text">Choose monthly or yearly. You'll get a confirmation email with access.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Open the app</div>
+      <div class="step-text">Open on any phone browser. Enter your email to unlock. Add to home screen for quick access.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Choose a mode</div>
+      <div class="step-text">Precision or Rapid-Fire. The app walks you through the complete competition sequence.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-title">Train</div>
+      <div class="step-text">Voice commands, beeps and visual signals guide each series. Pause or skip anytime.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">PRICING</div>
+  <h2 class="section-title">Simple, affordable access</h2>
+  <p class="section-sub">Cancel anytime. Same features on every plan.</p>
+
+  <div class="pricing">
+    <div class="price-card">
+      <div class="price-period">MONTHLY</div>
+      <div class="price-amount"><sup>$</sup>4<span style="font-size:32px;font-weight:900">.99</span><span>/mo</span></div>
+      <div class="price-save">&nbsp;</div>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li>Precision + Rapid-Fire modes</li>
+        <li>Voice commands &amp; audio signals</li>
+        <li>Smart lamp integration</li>
+        <li>Works on any device</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a class="price-btn ghost" href="MONTHLY_CHECKOUT_URL" target="_blank">Subscribe Monthly</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">BEST VALUE</div>
+      <div class="price-period">YEARLY</div>
+      <div class="price-amount"><sup>$</sup>39<span style="font-size:32px;font-weight:900">.99</span><span>/yr</span></div>
+      <div class="price-save">Save 33% — 2 months free</div>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li>Everything in Monthly</li>
+        <li>Priority support</li>
+        <li>New features first</li>
+        <li>Best value for serious training</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a class="price-btn primary" href="YEARLY_CHECKOUT_URL" target="_blank">Subscribe Yearly</a>
+    </div>
+  </div>
+
+  <div class="already-sub">
+    Already subscribed? <a href="app.html">Open the app →</a>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FAQ -->
+<section>
+  <div class="section-label">FAQ</div>
+  <h2 class="section-title">Common questions</h2>
+  <div class="faq">
+    <details>
+      <summary>What devices does it work on?</summary>
+      <div class="faq-body">Any modern smartphone or tablet with a browser — iOS Safari, Android Chrome, or any other browser. No app store download needed. You can add it to your home screen for a native app experience.</div>
+    </details>
+    <details>
+      <summary>Do I need internet during training?</summary>
+      <div class="faq-body">Only to verify your subscription (once per 24 hours). After that the app works completely offline, which is important on ranges without good signal.</div>
+    </details>
+    <details>
+      <summary>Which smart bulbs are supported?</summary>
+      <div class="faq-body">LIFX bulbs (direct WiFi, no hub needed) and Govee RGB bulbs. The lamp feature is optional — the app works perfectly without one.</div>
+    </details>
+    <details>
+      <summary>Can I use it on multiple devices?</summary>
+      <div class="faq-body">Yes. Your subscription is tied to your email. You can open the app on any device and enter your email to access it.</div>
+    </details>
+    <details>
+      <summary>Is it compliant with ISSF rules?</summary>
+      <div class="faq-body">The timing follows ISSF 25m Sport Pistol specifications: 4-minute fire window for Precision, 3s target exposure / 7s interval for Rapid-Fire, 7-second attention delay, 1-minute loading time per series.</div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="footer-logo">PERFSHOT</div>
+    <div class="footer-sub">ISSF 25m Sport Pistol Timer</div>
+  </div>
+  <a class="footer-link" href="app.html">Open App</a>
+</footer>
+
+</body>
+</html>
