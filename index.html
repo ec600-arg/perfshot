@@ -356,18 +356,30 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .tmr-nb-on{background:var(--green)!important;border-color:var(--green)!important;color:#060C17!important;font-weight:700}
 .tmr-go{margin-bottom:14px;font-family:var(--disp);font-size:14px;font-weight:600;letter-spacing:.02em;height:50px}
 .tmr-hint{font-size:12px;color:var(--t3);text-align:center;line-height:1.6}
-/* Timer fullscreen overlay */
-.tmr-ov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:background .35s ease;padding:24px 20px}
+/* Timer fullscreen overlay — redesigned */
+.tmr-ov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:stretch;transition:background .4s ease}
 .tmr-hidden{display:none!important}
-.tmr-ov-phase{font-family:var(--disp);font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85)}
-.tmr-ov-clock{font-family:var(--mono);font-size:clamp(80px,20vw,128px);font-weight:500;line-height:1;letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums}
-.tmr-ov-series{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.5);letter-spacing:.05em;margin-top:4px}
-.tmr-ov-btns{display:flex;gap:12px;margin-top:36px}
-.tmr-ov-btn{padding:13px 28px;border-radius:var(--r);border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font-family:var(--disp);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;backdrop-filter:blur(8px)}
-.tmr-ov-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45)}
-.tmr-ov-btn.tmr-danger{border-color:rgba(255,77,106,.4);background:rgba(255,77,106,.08)}
+/* Top bar */
+.tmr-ov-top{display:flex;align-items:center;justify-content:space-between;padding:env(safe-area-inset-top,0px) 24px 0;min-height:64px;background:rgba(0,0,0,.12);flex-shrink:0}
+.tmr-ov-prog{display:flex;gap:7px;align-items:center}
+.tmr-ov-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);transition:all .3s}
+.tmr-ov-dot.tmr-dot-done{background:rgba(255,255,255,.55)}
+.tmr-ov-dot.tmr-dot-active{background:#fff;width:22px;border-radius:5px}
+.tmr-ov-slbl{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.08em;text-transform:uppercase}
+/* Center */
+.tmr-ov-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;gap:6px}
+.tmr-ov-phase{font-family:var(--disp);font-size:clamp(16px,4vw,28px);font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px}
+.tmr-ov-clock{font-family:var(--mono);font-size:clamp(96px,22vw,160px);font-weight:400;line-height:1;letter-spacing:-.04em;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 2px 40px rgba(0,0,0,.25)}
+.tmr-ov-sub{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.4);letter-spacing:.04em;text-align:center;margin-top:8px;min-height:20px}
+/* Bottom controls */
+.tmr-ov-btns{display:flex;gap:10px;padding:24px 24px env(safe-area-inset-bottom,24px);flex-shrink:0}
+.tmr-ov-btn{flex:1;padding:15px 12px;border-radius:var(--r);border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:rgba(255,255,255,.9);font-family:var(--disp);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;backdrop-filter:blur(10px);letter-spacing:.02em}
+.tmr-ov-btn:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.45)}
+.tmr-ov-btn.tmr-skip{border-color:rgba(255,255,255,.3)}
+.tmr-ov-btn.tmr-danger{flex:0 0 56px;border-color:rgba(255,77,106,.35);background:rgba(255,77,106,.07);font-size:18px}
 .tmr-ov-btn.tmr-danger:hover{background:rgba(255,77,106,.22);border-color:rgba(255,77,106,.6)}
-.tmr-confirm-box{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(6,12,23,.96);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:22px 28px;text-align:center;backdrop-filter:blur(20px);min-width:280px}
+/* Stop confirm */
+.tmr-confirm-box{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(6,12,23,.97);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:22px 28px;text-align:center;backdrop-filter:blur(20px);min-width:280px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 .tmr-confirm-box p{color:var(--t);font-size:14px;margin-bottom:16px;font-family:var(--disp);font-weight:600}
 .tmr-confirm-box .tmr-cfm-btns{display:flex;gap:10px;justify-content:center}
 /* Timer tabs (Prueba / Final) */
@@ -419,18 +431,25 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </svg>
 <div id="app"></div>
 <div id="tmr-ov" class="tmr-ov tmr-hidden">
-  <div class="tmr-ov-phase" id="tmr-phase">PREPARARSE</div>
-  <div class="tmr-ov-clock" id="tmr-clock">5</div>
-  <div class="tmr-ov-series" id="tmr-series-info"></div>
+  <div class="tmr-ov-top">
+    <div class="tmr-ov-prog" id="tmr-ov-prog"></div>
+    <div class="tmr-ov-slbl" id="tmr-ov-slbl"></div>
+  </div>
+  <div class="tmr-ov-center">
+    <div class="tmr-ov-phase" id="tmr-phase">LOAD</div>
+    <div class="tmr-ov-clock" id="tmr-clock">60</div>
+    <div class="tmr-ov-sub" id="tmr-sub"></div>
+  </div>
   <div class="tmr-ov-btns">
-    <button class="tmr-ov-btn" id="tmr-pause-btn">Pausar</button>
-    <button class="tmr-ov-btn tmr-danger" id="tmr-stop-req">Detener</button>
+    <button class="tmr-ov-btn" id="tmr-pause-btn">⏸  PAUSE</button>
+    <button class="tmr-ov-btn tmr-skip" id="tmr-skip-btn">SKIP  ▶▶</button>
+    <button class="tmr-ov-btn tmr-danger" id="tmr-stop-req">✕</button>
   </div>
   <div class="tmr-confirm-box tmr-hidden" id="tmr-confirm">
-    <p>¿Detener el entrenamiento?</p>
+    <p>Stop this training session?</p>
     <div class="tmr-cfm-btns">
-      <button class="btn" id="tmr-cancel-stop">Continuar</button>
-      <button class="btn btn-p" id="tmr-ok-stop">Detener</button>
+      <button class="btn" id="tmr-cancel-stop">Continue</button>
+      <button class="btn btn-p" id="tmr-ok-stop">Stop</button>
     </div>
   </div>
 </div>
@@ -567,24 +586,23 @@ function _tmrBeep(freq=880,dur=0.22,vol=0.45){
 }
 function _tmrSpeak(txt){
   if(!txt||!window.speechSynthesis)return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang=LANG==='en'?'en-US':'es-AR';u.rate=0.9;u.pitch=1;u.volume=1;speechSynthesis.speak(u);}catch(e){}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='en-US';u.rate=0.9;u.pitch=1;u.volume=1;speechSynthesis.speak(u);}catch(e){}
 }
 async function _tmrLock(){try{if(navigator.wakeLock)_tmrWL=await navigator.wakeLock.request('screen');}catch(e){}}
 function _tmrUnlock(){try{_tmrWL?.release();}catch(e){}_tmrWL=null;}
 
 function _tmrBuildSteps(){
-  const L=LANG==='en';
-  const V={load:L?'Load':'Cargar',att:L?'Attention':'Atención',fire:L?'Fire':'Fuego',
-    unload:L?'Stop, unload':'Alto, descargar',rest:L?'Rest':'Descanso',
-    ready:L?'Ready':'Listos',stop:L?'Stop':'Alto',
-    s8:L?'Eight second series':'Serie de ocho segundos',
-    s6:L?'Six second series':'Serie de seis segundos',
-    s4:L?'Four second series':'Serie de cuatro segundos',
+  const V={load:'Load.',att:'Attention.',fire:'Fire!',
+    unload:'Stop. Unload.',rest:'Rest.',
+    ready:'Ready.',stop:'Stop.',
+    s8:'Eight second series.',
+    s6:'Six second series.',
+    s4:'Four second series.',
   };
-  const TL={load:'CARGAR',att:'ATENCIÓN',fire:'FUEGO',unload:'DESCARGAR',rest:'DESCANSO',ready:'LISTOS',stop:'ALTO',
-    s8:'SERIE 8s',s6:'SERIE 6s',s4:'SERIE 4s',
+  const TL={load:'LOAD',att:'ATTENTION',fire:'FIRE',unload:'UNLOAD',rest:'REST',ready:'READY',stop:'STOP',
+    s8:'8s SERIES',s6:'6s SERIES',s4:'4s SERIES',
   };
-  const D='#060C17',R='#7A0000',G='#0B4D26';
+  const D='#0B1C2D',R='#BF1A1A',G='#1A8F3C';
   const steps=[];
 
   if(_tmrDisc==='sport'){
@@ -592,26 +610,21 @@ function _tmrBuildSteps(){
     for(let i=0;i<st;i++){
       const sn=i+1;
       if(_tmrPhase==='qual'){
-        // LOAD: 1 minute (ISSF regulation)
-        steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:660,sn,st,info:'Cargá 5 cartuchos'});
-        // ATTENTION + 7s delay (red / 45° position)
-        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+        steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:660,sn,st,info:'Load 5 rounds'});
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Arm at 45° — ready position'});
         if(_tmrMode==='precision'){
-          // FIRE: 240s single exposure
-          steps.push({dur:240,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · 240s'});
+          steps.push({dur:240,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 shots · 4 minutes'});
         } else {
-          // RAPID FIRE: ATT(7s initial already done) + 5×[FIRE(3s)→ATT(7s)] - last ATT omitted
           for(let j=0;j<5;j++){
             steps.push({dur:3,bg:G,label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
-            if(j<4)steps.push({dur:7,bg:R,label:TL.att,voice:'',beepF:0,sn,st,shot:j+1,shots:5,info:'Listo'});
+            if(j<4)steps.push({dur:7,bg:R,label:TL.att,voice:'',beepF:0,sn,st,shot:j+1,shots:5,info:'Lower arm — ready'});
           }
         }
         steps.push({dur:10,bg:D,label:TL.unload,voice:V.unload,beepF:280,sn,st});
-        if(i<st-1)steps.push({dur:30,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Próxima serie en 30s'});
+        if(i<st-1)steps.push({dur:30,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Next series in 30s'});
       } else {
-        // FINAL: READY(20s) → ATT(7s) → 5×[FIRE(3s)→ATT(7s)] omit last ATT → STOP
-        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Serie '+sn+'/'+st});
-        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Series '+sn+' of '+st});
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Arm at 45° — ready position'});
         for(let j=0;j<5;j++){
           steps.push({dur:3,bg:G,label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
           if(j<4)steps.push({dur:7,bg:R,label:TL.att,voice:'',beepF:0,sn,st,shot:j+1,shots:5});
@@ -622,7 +635,6 @@ function _tmrBuildSteps(){
   } else {
     // RAPID FIRE PISTOL 25m
     if(_tmrPhase==='qual'){
-      // Build plan: full course (2×8+2×6+2×4) or custom
       const plan=_tmrMode==='full'
         ?[{n:2,t:8,tl:TL.s8,vl:V.s8},{n:2,t:6,tl:TL.s6,vl:V.s6},{n:2,t:4,tl:TL.s4,vl:V.s4}]
         :[{n:_tmrSCount,t:_tmrRFPTime,
@@ -632,24 +644,22 @@ function _tmrBuildSteps(){
       for(const p of plan){
         for(let i=0;i<p.n;i++){
           idx++;const sn=idx,st=totalS;
-          // Announce time, then LOAD(60s), ATTENTION(7s), FIRE(Ns), UNLOAD, REST
-          steps.push({dur:5,bg:D,label:p.tl,voice:p.vl,beepF:660,sn,st,info:p.t+'s · 5 disparos'});
-          steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:0,sn,st,info:'Cargar y posicionarse'});
-          steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
-          steps.push({dur:p.t,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · '+p.t+'s'});
+          steps.push({dur:5,bg:D,label:p.tl,voice:p.vl,beepF:660,sn,st,info:p.t+'s · 5 shots'});
+          steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:0,sn,st,info:'Load and take position'});
+          steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Arm at 45° — ready position'});
+          steps.push({dur:p.t,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 shots · '+p.t+'s'});
           steps.push({dur:10,bg:D,label:TL.unload,voice:V.unload,beepF:280,sn,st});
-          if(idx<totalS)steps.push({dur:60,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Mínimo 1 min descanso'});
+          if(idx<totalS)steps.push({dur:60,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Minimum 1 min rest'});
         }
       }
     } else {
-      // FINAL: 4s series. READY(20s) → ATT(7s) → FIRE(4s) → target reset(14s)
       const st=_tmrSCount;
       for(let i=0;i<st;i++){
         const sn=i+1;
-        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Serie '+sn+'/'+st});
-        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
-        steps.push({dur:4,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · 4s'});
-        steps.push({dur:14,bg:D,label:TL.stop,voice:V.stop,beepF:280,sn,st,info:'Reciclaje blanco'});
+        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Series '+sn+' of '+st});
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Arm at 45° — ready position'});
+        steps.push({dur:4,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 shots · 4s'});
+        steps.push({dur:14,bg:D,label:TL.stop,voice:V.stop,beepF:280,sn,st,info:'Target reset'});
       }
     }
   }
@@ -661,16 +671,36 @@ function _tmrDraw(){
   const s=_tmrSteps[_tmrStep];if(!s)return;
   const ov=document.getElementById('tmr-ov');if(!ov)return;
   ov.style.background=s.bg;
-  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent=s.label+(_tmrPaused?' ⏸':'');
-  const cl=document.getElementById('tmr-clock');if(cl)cl.textContent=_tmrFmt(_tmrTime);
-  const si=document.getElementById('tmr-series-info');
-  if(si){
-    let info='Serie '+s.sn+'/'+s.st;
-    if(s.shot)info+=' · Disp. '+s.shot+'/'+s.shots;
-    if(s.info)info+=' · '+s.info;
-    si.textContent=info;
+  // Phase label
+  const ph=document.getElementById('tmr-phase');
+  if(ph)ph.textContent=s.label;
+  // Clock
+  const cl=document.getElementById('tmr-clock');
+  if(cl)cl.textContent=_tmrPaused?'⏸':_tmrFmt(_tmrTime);
+  // Sub info
+  const sub=document.getElementById('tmr-sub');
+  if(sub){
+    let info=s.info||'';
+    if(s.shot)info='SHOT '+s.shot+' / '+s.shots+(s.info?' · '+s.info:'');
+    sub.textContent=info;
   }
-  const pb=document.getElementById('tmr-pause-btn');if(pb)pb.textContent=_tmrPaused?'Reanudar':'Pausar';
+  // Top-bar series label
+  const slbl=document.getElementById('tmr-ov-slbl');
+  if(slbl)slbl.textContent='SERIES '+s.sn+' / '+s.st;
+  // Progress dots
+  const prog=document.getElementById('tmr-ov-prog');
+  if(prog&&s.st>0){
+    prog.innerHTML='';
+    const total=Math.min(s.st,10);
+    for(let i=0;i<total;i++){
+      const d=document.createElement('div');
+      d.className='tmr-ov-dot'+(i<s.sn-1?' tmr-dot-done':i===s.sn-1?' tmr-dot-active':'');
+      prog.appendChild(d);
+    }
+  }
+  // Pause button
+  const pb=document.getElementById('tmr-pause-btn');
+  if(pb)pb.textContent=_tmrPaused?'▶  RESUME':'⏸  PAUSE';
 }
 function _tmrEnter(idx){
   const s=_tmrSteps[idx];if(!s){_tmrDone();return;}
@@ -683,12 +713,14 @@ function _tmrDone(){
   clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
   _tmrBeep(880,0.25,0.6);setTimeout(()=>_tmrBeep(1047,0.25,0.6),320);setTimeout(()=>_tmrBeep(1319,0.4,0.7),640);
   const ov=document.getElementById('tmr-ov');if(!ov)return;
-  ov.style.background='#060C17';
-  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent='COMPLETADO ✓';
-  const cl=document.getElementById('tmr-clock');if(cl)cl.textContent='';
-  const si=document.getElementById('tmr-series-info');if(si)si.textContent='';
-  _tmrSpeak('Entrenamiento completo');
-  setTimeout(()=>ov.classList.add('tmr-hidden'),3500);
+  ov.style.background='#0B1C2D';
+  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent='DONE';
+  const cl=document.getElementById('tmr-clock');if(cl)cl.textContent='✓';
+  const sub=document.getElementById('tmr-sub');if(sub)sub.textContent='Training complete. Well done.';
+  const slbl=document.getElementById('tmr-ov-slbl');if(slbl)slbl.textContent='';
+  const prog=document.getElementById('tmr-ov-prog');if(prog)prog.innerHTML='';
+  _tmrSpeak('Training complete. Well done.');
+  setTimeout(()=>ov.classList.add('tmr-hidden'),4000);
 }
 function _tmrTicker(){if(_tmrPaused)return;_tmrTime--;_tmrDraw();if(_tmrTime<=0)_tmrEnter(_tmrStep+1);}
 function tmrStart(){
@@ -709,18 +741,18 @@ function tmrStop(){
 function _tmrSeqRows(){
   if(_tmrDisc==='sport'){
     if(_tmrPhase==='qual'&&_tmrMode==='precision')
-      return`<tr><td>Cargar</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">240s</td></tr><tr><td>Descargar</td><td class="tmr-tc">10s</td></tr>`;
+      return`<tr><td>Load</td><td class="tmr-tc">60s</td></tr><tr><td>Attention · red</td><td class="tmr-tc">7s</td></tr><tr><td>Fire · green</td><td class="tmr-tc">240s</td></tr><tr><td>Unload</td><td class="tmr-tc">10s</td></tr>`;
     if(_tmrPhase==='qual'&&_tmrMode==='rapid')
-      return`<tr><td>Cargar</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Verde 3s → Rojo 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Descargar</td><td class="tmr-tc">10s</td></tr>`;
+      return`<tr><td>Load</td><td class="tmr-tc">60s</td></tr><tr><td>Attention · red</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Green 3s → Red 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Unload</td><td class="tmr-tc">10s</td></tr>`;
     if(_tmrPhase==='final')
-      return`<tr><td>Listos</td><td class="tmr-tc">20s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Verde 3s → Rojo 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Alto</td><td class="tmr-tc">5s</td></tr>`;
+      return`<tr><td>Ready</td><td class="tmr-tc">20s</td></tr><tr><td>Attention · red</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Green 3s → Red 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Stop</td><td class="tmr-tc">5s</td></tr>`;
   } else {
     if(_tmrPhase==='qual'&&_tmrMode==='full')
-      return`<tr><td>2 series × 8s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>2 series × 6s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>2 series × 4s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>Descanso entre series</td><td class="tmr-tc">60s</td></tr>`;
+      return`<tr><td>2 series × 8s</td><td class="tmr-tc">+7s red</td></tr><tr><td>2 series × 6s</td><td class="tmr-tc">+7s red</td></tr><tr><td>2 series × 4s</td><td class="tmr-tc">+7s red</td></tr><tr><td>Rest between series</td><td class="tmr-tc">60s</td></tr>`;
     if(_tmrPhase==='qual'&&_tmrMode==='custom')
-      return`<tr><td>Anuncio serie</td><td class="tmr-tc">5s</td></tr><tr><td>Cargar · posicionarse</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">${_tmrRFPTime}s</td></tr><tr><td>Descanso</td><td class="tmr-tc">60s</td></tr>`;
+      return`<tr><td>Series announce</td><td class="tmr-tc">5s</td></tr><tr><td>Load · take position</td><td class="tmr-tc">60s</td></tr><tr><td>Attention · red</td><td class="tmr-tc">7s</td></tr><tr><td>Fire · green</td><td class="tmr-tc">${_tmrRFPTime}s</td></tr><tr><td>Rest</td><td class="tmr-tc">60s</td></tr>`;
     if(_tmrPhase==='final')
-      return`<tr><td>Listos</td><td class="tmr-tc">20s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">4s</td></tr><tr><td>Reciclaje blanco</td><td class="tmr-tc">14s</td></tr>`;
+      return`<tr><td>Ready</td><td class="tmr-tc">20s</td></tr><tr><td>Attention · red</td><td class="tmr-tc">7s</td></tr><tr><td>Fire · green</td><td class="tmr-tc">4s</td></tr><tr><td>Target reset</td><td class="tmr-tc">14s</td></tr>`;
   }
   return'';
 }
@@ -729,34 +761,34 @@ function timerHTML(){
   // Config depends on disc+phase combination
   let cfgHTML='';
   if(_tmrDisc==='sport'&&_tmrPhase==='qual'){
-    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Etapa</div>
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Stage</div>
       <div class="tmr-modes">
         <button class="tmr-card${_tmrMode==='precision'?' tmr-card-on':''}" id="tmr-sel-prec">
-          <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Precisión</div><div class="tmr-card-detail">240s · 5 disp.</div>
+          <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Precision</div><div class="tmr-card-detail">240s · 5 shots</div>
         </button>
         <button class="tmr-card${_tmrMode==='rapid'?' tmr-card-on':''}" id="tmr-sel-rapid">
-          <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Tiro Rápido</div><div class="tmr-card-detail">3s+7s · 5 disp.</div>
+          <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Rapid Fire</div><div class="tmr-card-detail">3s+7s · 5 shots</div>
         </button>
       </div></div>
-    <div class="tmr-cfg"><div class="tmr-cfg-label">Series (máx 6 por etapa)</div>
+    <div class="tmr-cfg"><div class="tmr-cfg-label">Series (max 6 per stage)</div>
       <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
     </div>`;
   } else if(_tmrDisc==='sport'&&_tmrPhase==='final'){
-    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">Tiro Rápido · 3s · Hit / Miss (≥10.2)</div>
-    <div class="tmr-cfg-label" style="margin-top:14px">Series (10 oficiales)</div>
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">Rapid Fire · 3s · Hit / Miss (≥10.2)</div>
+    <div class="tmr-cfg-label" style="margin-top:14px">Series (10 official)</div>
       <div class="tmr-series-btns">${[1,2,4,6,8,10].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
     </div>`;
   } else if(_tmrDisc==='rfp'&&_tmrPhase==='qual'){
-    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Modo</div>
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Mode</div>
       <div class="tmr-modes">
         <button class="tmr-card${_tmrMode==='full'?' tmr-card-on':''}" id="tmr-sel-full">
-          <div class="tmr-card-icon">📋</div><div class="tmr-card-name">Completo</div><div class="tmr-card-detail">2×8s · 2×6s · 2×4s</div>
+          <div class="tmr-card-icon">📋</div><div class="tmr-card-name">Full Course</div><div class="tmr-card-detail">2×8s · 2×6s · 2×4s</div>
         </button>
         <button class="tmr-card${_tmrMode==='custom'?' tmr-card-on':''}" id="tmr-sel-custom">
-          <div class="tmr-card-icon">⚙️</div><div class="tmr-card-name">Personalizado</div><div class="tmr-card-detail">Elegí tiempo y series</div>
+          <div class="tmr-card-icon">⚙️</div><div class="tmr-card-name">Custom</div><div class="tmr-card-detail">Choose time & series</div>
         </button>
       </div></div>
-    ${_tmrMode==='custom'?`<div class="tmr-cfg"><div class="tmr-cfg-label">Tiempo de exposición</div>
+    ${_tmrMode==='custom'?`<div class="tmr-cfg"><div class="tmr-cfg-label">Exposure time</div>
       <div class="tmr-series-btns">
         <button class="tmr-nb tmr-nb-w${_tmrRFPTime===8?' tmr-nb-on':''}" data-tmrt="8">8s</button>
         <button class="tmr-nb tmr-nb-w${_tmrRFPTime===6?' tmr-nb-on':''}" data-tmrt="6">6s</button>
@@ -766,29 +798,29 @@ function timerHTML(){
       <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
     </div>`:''}`;
   } else {
-    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">4 segundos · Hit / Miss (≥9.7) · 8 series oficiales</div>
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">4 seconds · Hit / Miss (≥9.7) · 8 official series</div>
     <div class="tmr-cfg-label" style="margin-top:14px">Series</div>
       <div class="tmr-series-btns">${[1,2,4,6,8].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
     </div>`;
   }
 
   return`<div class="tmr-wrap">
-  <div class="tmr-head"><div class="tmr-title">Timer Pistola 25m</div><div class="tmr-sub">ISSF · Official Timings</div></div>
+  <div class="tmr-head"><div class="tmr-title">25m Pistol Timer</div><div class="tmr-sub">ISSF · Official Timings</div></div>
 
-  <div class="tmr-cfg"><div class="tmr-cfg-label">Disciplina</div>
+  <div class="tmr-cfg"><div class="tmr-cfg-label">Discipline</div>
     <div class="tmr-modes">
       <button class="tmr-card${_tmrDisc==='sport'?' tmr-card-on':''}" id="tmr-d-sport">
-        <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Pistola Deportiva</div><div class="tmr-card-detail">25m · Women</div>
+        <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Sport Pistol</div><div class="tmr-card-detail">25m · Women</div>
       </button>
       <button class="tmr-card${_tmrDisc==='rfp'?' tmr-card-on':''}" id="tmr-d-rfp">
-        <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Tiro Rápido</div><div class="tmr-card-detail">25m · Men</div>
+        <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Rapid Fire</div><div class="tmr-card-detail">25m · Men</div>
       </button>
     </div>
   </div>
 
-  <div class="tmr-cfg"><div class="tmr-cfg-label">Fase</div>
+  <div class="tmr-cfg"><div class="tmr-cfg-label">Phase</div>
     <div class="tmr-tabs">
-      <button class="tmr-tab${_tmrPhase==='qual'?' tmr-tab-on':''}" id="tmr-p-qual">Prueba</button>
+      <button class="tmr-tab${_tmrPhase==='qual'?' tmr-tab-on':''}" id="tmr-p-qual">Qualification</button>
       <button class="tmr-tab${_tmrPhase==='final'?' tmr-tab-on':''}" id="tmr-p-final">Final</button>
     </div>
   </div>
@@ -796,12 +828,12 @@ function timerHTML(){
   ${cfgHTML}
 
   <div class="tmr-seq-box">
-    <div class="tmr-cfg-label" style="margin-bottom:10px">Secuencia por serie</div>
+    <div class="tmr-cfg-label" style="margin-bottom:10px">Sequence per series</div>
     <table class="tmr-seq-tbl"><tbody>${_tmrSeqRows()}</tbody></table>
   </div>
 
-  <button class="btn btn-p wf tmr-go" id="tmr-go">▶  Comenzar entrenamiento</button>
-  <div class="tmr-hint">Comandos de voz y señales sonoras guiarán cada serie. Mantené el volumen alto.</div>
+  <button class="btn btn-p wf tmr-go" id="tmr-go">▶  Start Training</button>
+  <div class="tmr-hint">Voice commands and audio cues will guide each series. Keep your volume up.</div>
 </div>`;
 }
 function render(){document.getElementById('app').innerHTML=html();bind();countUp()}
@@ -1452,9 +1484,10 @@ function bind(){
   // RF time + series count
   document.querySelectorAll('[data-tmrt]').forEach(el=>el.addEventListener('click',()=>{_tmrRFPTime=parseInt(el.dataset.tmrt);renderContent();}));
   document.querySelectorAll('[data-tmrs]').forEach(el=>el.addEventListener('click',()=>{_tmrSCount=parseInt(el.dataset.tmrs);renderContent();}));
-  // Start / pause / stop
+  // Start / pause / skip / stop
   $('tmr-go')?.addEventListener('click',()=>tmrStart());
   $('tmr-pause-btn')?.addEventListener('click',()=>{_tmrPaused=!_tmrPaused;_tmrDraw();});
+  $('tmr-skip-btn')?.addEventListener('click',()=>{speechSynthesis?.cancel();_tmrPaused=false;_tmrEnter(_tmrStep+1);});
   $('tmr-stop-req')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.toggle('tmr-hidden'));
   $('tmr-cancel-stop')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.add('tmr-hidden'));
   $('tmr-ok-stop')?.addEventListener('click',()=>tmrStop());
