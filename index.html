@@ -336,6 +336,40 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 /* Score numbers get a subtle tabular alignment */
 .s-score,.big-score,.mv,.cs-v,.ss-v{font-variant-numeric:tabular-nums}
 @media(max-width:768px){.sb{display:none}.main{margin-left:0}.m5,.m4,.m3,.btm,.g2,.g3,.fg2,.fg3,.sess-stats,.disc-cards,.wind-cards,.ob-options.c2,.ob-options.c3,.coach-module,.pricing-grid{grid-template-columns:1fr}.content>*{animation-delay:0s!important}}
+/* ── TIMER MODULE ─────────────────────────────────────────────────── */
+.tmr-wrap{max-width:480px;margin:0 auto;padding:8px 0 32px}
+.tmr-head{text-align:center;margin-bottom:28px;padding-top:8px}
+.tmr-title{font-family:var(--disp);font-size:22px;font-weight:700;color:var(--t);letter-spacing:-.01em}
+.tmr-sub{font-family:var(--mono);font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.tmr-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.tmr-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:20px 14px;cursor:pointer;transition:all .18s;text-align:center}
+.tmr-card:hover{border-color:var(--border2);background:var(--glass2)}
+.tmr-card-on{border-color:var(--green)!important;background:var(--greend)!important;box-shadow:var(--sh-glow)}
+.tmr-card-icon{font-size:26px;margin-bottom:9px}
+.tmr-card-name{font-family:var(--disp);font-size:14px;font-weight:600;color:var(--t);margin-bottom:4px}
+.tmr-card-detail{font-family:var(--mono);font-size:11px;color:var(--t3)}
+.tmr-cfg{margin-bottom:22px}
+.tmr-cfg-label{font-family:var(--mono);font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.tmr-series-btns{display:flex;gap:8px;flex-wrap:wrap}
+.tmr-nb{width:44px;height:44px;border-radius:var(--rs);background:var(--glass);border:1px solid var(--border);color:var(--t2);font-family:var(--mono);font-size:16px;font-weight:500;cursor:pointer;transition:all .15s}
+.tmr-nb:hover{border-color:var(--border2);color:var(--t)}
+.tmr-nb-on{background:var(--green)!important;border-color:var(--green)!important;color:#060C17!important;font-weight:700}
+.tmr-go{margin-bottom:14px;font-family:var(--disp);font-size:14px;font-weight:600;letter-spacing:.02em;height:50px}
+.tmr-hint{font-size:12px;color:var(--t3);text-align:center;line-height:1.6}
+/* Timer fullscreen overlay */
+.tmr-ov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:background .35s ease;padding:24px 20px}
+.tmr-hidden{display:none!important}
+.tmr-ov-phase{font-family:var(--disp);font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.85)}
+.tmr-ov-clock{font-family:var(--mono);font-size:clamp(80px,20vw,128px);font-weight:500;line-height:1;letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums}
+.tmr-ov-series{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.5);letter-spacing:.05em;margin-top:4px}
+.tmr-ov-btns{display:flex;gap:12px;margin-top:36px}
+.tmr-ov-btn{padding:13px 28px;border-radius:var(--r);border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#fff;font-family:var(--disp);font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;backdrop-filter:blur(8px)}
+.tmr-ov-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45)}
+.tmr-ov-btn.tmr-danger{border-color:rgba(255,77,106,.4);background:rgba(255,77,106,.08)}
+.tmr-ov-btn.tmr-danger:hover{background:rgba(255,77,106,.22);border-color:rgba(255,77,106,.6)}
+.tmr-confirm-box{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(6,12,23,.96);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:22px 28px;text-align:center;backdrop-filter:blur(20px);min-width:280px}
+.tmr-confirm-box p{color:var(--t);font-size:14px;margin-bottom:16px;font-family:var(--disp);font-weight:600}
+.tmr-confirm-box .tmr-cfm-btns{display:flex;gap:10px;justify-content:center}
 </style>
 </head>
 <body>
@@ -366,8 +400,25 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <symbol id="ic-send" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></g></symbol>
 <symbol id="ic-pdf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></g></symbol>
 <symbol id="ic-weekly" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><polyline points="8 2 8 6"/><polyline points="16 2 16 6"/><polyline points="9 14 11 16 15 12"/></g></symbol>
+<symbol id="ic-timer" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 3"/><path d="M9 2h6"/><path d="M19.07 4.93l-1.41 1.41"/></g></symbol>
 </svg>
 <div id="app"></div>
+<div id="tmr-ov" class="tmr-ov tmr-hidden">
+  <div class="tmr-ov-phase" id="tmr-phase">PREPARARSE</div>
+  <div class="tmr-ov-clock" id="tmr-clock">5</div>
+  <div class="tmr-ov-series" id="tmr-series-info"></div>
+  <div class="tmr-ov-btns">
+    <button class="tmr-ov-btn" id="tmr-pause-btn">Pausar</button>
+    <button class="tmr-ov-btn tmr-danger" id="tmr-stop-req">Detener</button>
+  </div>
+  <div class="tmr-confirm-box tmr-hidden" id="tmr-confirm">
+    <p>¿Detener el entrenamiento?</p>
+    <div class="tmr-cfm-btns">
+      <button class="btn" id="tmr-cancel-stop">Continuar</button>
+      <button class="btn btn-p" id="tmr-ok-stop">Detener</button>
+    </div>
+  </div>
+</div>
 <script>
 const SURL='https://gdqpdqbkqxxmynbnanym.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkcXBkcWJrcXh4bXluYm5hbnltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTk4MjEsImV4cCI6MjA5MDg3NTgyMX0.auOXAocvt5jSgBRIi_l4oaFDFIFg-HxRgPdrdw_iPg4';
@@ -417,6 +468,7 @@ const T={
     wDiscipline:'Disciplina',wDayPlan:'Plan del día',wConditions:'Condiciones y archivos',saveAnalyze:'Guardar y analizar',
     stepOf:'Paso',obGen:'Generar plan',obNext:'Continuar →',obBack:'← Atrás',obDashboard:'Ir al dashboard →',
     today:'hoy',yesterday:'ayer',days:'días',invitationPending:'invitación de entrenador pendiente',view:'Ver',
+    secTrain:'Entrenamiento',nTimer:'Timer 25m',tTimerPage:'Timer 25m',
   },
   en:{
     save:'Save',cancel:'Cancel',back:'Back',next:'Next',cont:'Continue',add:'Add',new:'New',seeAll:'See all',seeAllM:'See all',generate:'Generate',retry:'Retry',update:'Update',send:'Send',
@@ -436,6 +488,7 @@ const T={
     wDiscipline:'Discipline',wDayPlan:'Day plan',wConditions:'Conditions & files',saveAnalyze:'Save & analyze',
     stepOf:'Step',obGen:'Generate plan',obNext:'Continue →',obBack:'← Back',obDashboard:'Go to dashboard →',
     today:'today',yesterday:'yesterday',days:'days',invitationPending:'pending coach invitation',view:'View',
+    secTrain:'Training',nTimer:'Timer 25m',tTimerPage:'Timer 25m',
   },
 };
 const t=k=>(T[LANG]&&T[LANG][k])||T.es[k]||k;
@@ -483,8 +536,117 @@ const I={
   msg:_svg('msg'),send:_svg('send'),weekly:_svg('weekly'),
   plus:_svg('plus',13),x:_svg('x',13),edit:_svg('edit',13),
   trash:_svg('trash',13),spark:_svg('spark',13),pdf:_svg('pdf',13),
-  chev:_svg('chev',12),
+  chev:_svg('chev',12),timer:_svg('timer',14),
 };
+// ── TIMER MODULE ──────────────────────────────────────────────────────
+let _tmrCtx=null,_tmrWL=null,_tmrTick=null;
+let _tmrMode='precision',_tmrSCount=3,_tmrPaused=false;
+let _tmrStep=0,_tmrTime=0,_tmrSteps=[];
+function _tmrAC(){if(!_tmrCtx)_tmrCtx=new(window.AudioContext||window.webkitAudioContext)();if(_tmrCtx.state==='suspended')_tmrCtx.resume();return _tmrCtx;}
+function _tmrBeep(freq=880,dur=0.22,vol=0.45){
+  try{const ac=_tmrAC(),o=ac.createOscillator(),g=ac.createGain();
+  o.connect(g);g.connect(ac.destination);o.frequency.value=freq;o.type='sine';
+  const t=ac.currentTime;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.014);g.gain.linearRampToValueAtTime(0,t+dur);
+  o.start(t);o.stop(t+dur+0.05);}catch(e){}
+}
+function _tmrSpeak(txt){
+  if(!txt||!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang=LANG==='en'?'en-US':'es-AR';u.rate=0.9;u.pitch=1;u.volume=1;speechSynthesis.speak(u);}catch(e){}
+}
+async function _tmrLock(){try{if(navigator.wakeLock)_tmrWL=await navigator.wakeLock.request('screen');}catch(e){}}
+function _tmrUnlock(){try{_tmrWL?.release();}catch(e){}_tmrWL=null;}
+function _tmrMkSteps(mode,series){
+  const L=LANG==='en';
+  const TL={prep:L?'GET READY':'PREPARARSE',load:L?'LOAD':'CARGAR',att:L?'ATTENTION':'ATENCIÓN',fire:L?'FIRE':'FUEGO',stop:L?'STOP':'ALTO'};
+  const VL={prep:L?'Get ready':'Prepararse',load:L?'Load':'Cargar',att:L?'Attention':'Atención',fire:L?'Fire':'Fuego',stop:L?'Stop':'Alto'};
+  const steps=[];
+  for(let i=0;i<series;i++){
+    const sn=i+1,st=series;
+    if(mode==='precision'){
+      steps.push({phase:'prep',dur:5,bg:'#060C17',label:TL.prep,voice:VL.prep,beepF:0,sn,st});
+      steps.push({phase:'load',dur:3,bg:'#060C17',label:TL.load,voice:VL.load,beepF:660,sn,st});
+      steps.push({phase:'att',dur:7,bg:'#7A0000',label:TL.att,voice:VL.att,beepF:440,sn,st});
+      steps.push({phase:'fire',dur:240,bg:'#0B4D26',label:TL.fire,voice:VL.fire,beepF:1047,sn,st});
+      steps.push({phase:'stop',dur:4,bg:'#060C17',label:TL.stop,voice:VL.stop,beepF:280,sn,st});
+    }else{
+      steps.push({phase:'prep',dur:5,bg:'#060C17',label:TL.prep,voice:VL.prep,beepF:0,sn,st});
+      steps.push({phase:'load',dur:3,bg:'#060C17',label:TL.load,voice:VL.load,beepF:660,sn,st});
+      for(let j=0;j<5;j++){
+        steps.push({phase:'att',dur:7,bg:'#7A0000',label:TL.att,voice:j===0?VL.att:'',beepF:j===0?440:0,sn,st,shot:j+1,shots:5});
+        steps.push({phase:'fire',dur:3,bg:'#0B4D26',label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
+      }
+      steps.push({phase:'stop',dur:3,bg:'#060C17',label:TL.stop,voice:VL.stop,beepF:280,sn,st});
+    }
+  }
+  return steps;
+}
+function _tmrFmt(s){const m=Math.floor(s/60),r=s%60;return s>=60?m+':'+(r<10?'0':'')+r:String(s);}
+function _tmrDraw(){
+  const s=_tmrSteps[_tmrStep];if(!s)return;
+  const ov=document.getElementById('tmr-ov');if(!ov)return;
+  ov.style.background=s.bg;
+  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent=s.label+(_tmrPaused?' ⏸':'');
+  const cl=document.getElementById('tmr-clock');if(cl)cl.textContent=_tmrFmt(_tmrTime);
+  const si=document.getElementById('tmr-series-info');
+  if(si){let info=(LANG==='en'?'Series':'Serie')+' '+s.sn+'/'+s.st;if(s.shot)info+=' · '+(LANG==='en'?'Shot':'Disparo')+' '+s.shot+'/'+s.shots;si.textContent=info;}
+  const pb=document.getElementById('tmr-pause-btn');if(pb)pb.textContent=_tmrPaused?(LANG==='en'?'Resume':'Reanudar'):(LANG==='en'?'Pause':'Pausar');
+}
+function _tmrEnter(idx){
+  const s=_tmrSteps[idx];if(!s){_tmrDone();return;}
+  _tmrStep=idx;_tmrTime=s.dur;
+  if(s.voice)_tmrSpeak(s.voice);
+  if(s.beepF)_tmrBeep(s.beepF,0.22,0.5);
+  _tmrDraw();
+}
+function _tmrDone(){
+  clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
+  _tmrBeep(880,0.25,0.6);setTimeout(()=>_tmrBeep(1047,0.25,0.6),320);setTimeout(()=>_tmrBeep(1319,0.4,0.7),640);
+  const ov=document.getElementById('tmr-ov');if(!ov)return;
+  ov.style.background='#060C17';
+  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent=LANG==='en'?'COMPLETE ✓':'COMPLETADO ✓';
+  const cl=document.getElementById('tmr-clock');if(cl)cl.textContent='';
+  const si=document.getElementById('tmr-series-info');if(si)si.textContent='';
+  _tmrSpeak(LANG==='en'?'Training complete':'Entrenamiento completo');
+  setTimeout(()=>ov.classList.add('tmr-hidden'),3500);
+}
+function _tmrTicker(){if(_tmrPaused)return;_tmrTime--;_tmrDraw();if(_tmrTime<=0)_tmrEnter(_tmrStep+1);}
+function tmrStart(mode,series){
+  _tmrMode=mode;_tmrSCount=series;_tmrPaused=false;
+  _tmrSteps=_tmrMkSteps(mode,series);
+  const ov=document.getElementById('tmr-ov');if(!ov)return;
+  ov.classList.remove('tmr-hidden');
+  document.getElementById('tmr-confirm')?.classList.add('tmr-hidden');
+  if(_tmrTick)clearInterval(_tmrTick);
+  _tmrTick=setInterval(_tmrTicker,1000);
+  _tmrLock();_tmrEnter(0);
+}
+function tmrStop(){
+  clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
+  document.getElementById('tmr-ov')?.classList.add('tmr-hidden');_tmrPaused=false;
+}
+function timerHTML(){
+  const L=LANG==='en';
+  return`<div class="tmr-wrap">
+  <div class="tmr-head"><div class="tmr-title">${'Timer Pistola 25m'}</div><div class="tmr-sub">ISSF Sport Pistol · 25m</div></div>
+  <div class="tmr-modes">
+    <button class="tmr-card${_tmrMode==='precision'?' tmr-card-on':''}" id="tmr-sel-prec">
+      <div class="tmr-card-icon">🎯</div>
+      <div class="tmr-card-name">${L?'Precision':'Precisión'}</div>
+      <div class="tmr-card-detail">240s · ${L?'5 shots/series':'5 disp./serie'}</div>
+    </button>
+    <button class="tmr-card${_tmrMode==='rapid'?' tmr-card-on':''}" id="tmr-sel-rapid">
+      <div class="tmr-card-icon">⚡</div>
+      <div class="tmr-card-name">${L?'Rapid Fire':'Tiro Rápido'}</div>
+      <div class="tmr-card-detail">3s+7s · ${L?'5 shots/series':'5 disp./serie'}</div>
+    </button>
+  </div>
+  <div class="tmr-cfg"><div class="tmr-cfg-label">${L?'Number of series':'Cantidad de series'}</div>
+    <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+  </div>
+  <button class="btn btn-p wf tmr-go" id="tmr-go">${L?'▶  Start training':'▶  Comenzar entrenamiento'}</button>
+  <div class="tmr-hint">${L?'Voice commands and audio cues will guide each series. Keep your device volume up.':'Comandos de voz y señales sonoras guiarán cada serie. Mantené el volumen del dispositivo alto.'}</div>
+</div>`;
+}
 function render(){document.getElementById('app').innerHTML=html();bind();countUp()}
 function renderContent(){const el=document.querySelector('.content');if(el&&ST.user&&ST.profile?.onboarding_completed){el.innerHTML=pageHTML();bind();countUp();}else render();}
 // Interactive count-up: metric numbers animate from 0 to their value on render
@@ -689,13 +851,14 @@ function appHTML(){
   const p=ST.profile;const name=p?.full_name||ST.user.email;const isCoach=(p?.role||'athlete')==='coach';
   const nav=[
     {id:'home',l:t('nHome'),i:'home'},{id:'new-session',l:t('nRegister'),i:'target'},{id:'sessions-list',l:t('nHistory'),i:'chart'},
+    {sec:t('secTrain')},{id:'timer',l:t('nTimer'),i:'timer'},
     {sec:t('secComp')},{id:'competitions',l:t('nMyComp'),i:'trophy'},{id:'issf',l:t('nIssf'),i:'issf'},
     {sec:t('secIntel')},{id:'analysis',l:t('nAi'),i:'brain',badge:'AI'},
     {sec:t('secEquip')},{id:'weapons',l:t('nWeapons'),i:'gun'},{id:'ammo',l:t('nAmmo'),i:'bullet'},
     {sec:t('secPlan')},{id:'calendar',l:t('nCalendar'),i:'cal'},{id:'coach',l:isCoach?t('nMyTeam'):t('nMyCoach'),i:'users'},
     {sec:t('secAccount')},{id:'notifications',l:t('nNotif'),i:'bell',notif:ST.notifCount},{id:'planes',l:t('nPlans'),i:'star'},{id:'profile',l:t('nProfile'),i:'user'},
   ];
-  const titles={home:t('tDashboard'),'new-session':t('nRegister'),'sessions-list':t('nHistory'),competitions:t('nMyComp'),issf:t('nIssf'),analysis:t('tAiAdv'),weapons:t('secEquip'),ammo:t('tAmmo'),calendar:t('nCalendar'),coach:isCoach?t('nMyTeam'):t('nMyCoach'),notifications:t('nNotif'),planes:t('nPlans'),profile:t('nProfile'),'session-detail':t('tSessDetail')};
+  const titles={home:t('tDashboard'),'new-session':t('nRegister'),'sessions-list':t('nHistory'),competitions:t('nMyComp'),issf:t('nIssf'),analysis:t('tAiAdv'),weapons:t('secEquip'),ammo:t('tAmmo'),calendar:t('nCalendar'),coach:isCoach?t('nMyTeam'):t('nMyCoach'),notifications:t('nNotif'),planes:t('nPlans'),profile:t('nProfile'),timer:t('tTimerPage'),'session-detail':t('tSessDetail')};
   return`<div class="app">
   <aside class="sb">
     <div class="sb-logo"><div class="sb-wm">PERF<span>SHOT</span></div><div class="sb-sub">Shooting Performance</div></div>
@@ -723,6 +886,7 @@ function pageHTML(){
       if(!ST.compData&&!ST.compLoading){setTimeout(()=>loadCompData(),80);return skel('dash');}
       if(ST.compLoading)return skel('dash');
       return compHTML();
+    case'timer':return timerHTML();
     case'issf':
       if(ST.profile?.issf_id&&!ST.issfData&&!ST.issfLoading&&!ST.issfImporting){setTimeout(()=>loadIssfResults(),80);return`<div class="coming"><div class="spinner"></div><div class="tsm tmuted mt9">Cargando historial ISSF...</div></div>`;}
       return issfHTML();
@@ -1116,6 +1280,15 @@ function bind(){
     const issfId=$('p-issf-id')?.value?.trim();if(issfId)form.issf_id=issfId;
     await updateProfile(form);
   });
+  // ── TIMER ──────────────────────────────────────────────────────────
+  $('tmr-sel-prec')?.addEventListener('click',()=>{_tmrMode='precision';renderContent();});
+  $('tmr-sel-rapid')?.addEventListener('click',()=>{_tmrMode='rapid';renderContent();});
+  document.querySelectorAll('[data-tmrs]').forEach(el=>el.addEventListener('click',()=>{_tmrSCount=parseInt(el.dataset.tmrs);renderContent();}));
+  $('tmr-go')?.addEventListener('click',()=>tmrStart(_tmrMode,_tmrSCount));
+  $('tmr-pause-btn')?.addEventListener('click',()=>{_tmrPaused=!_tmrPaused;_tmrDraw();});
+  $('tmr-stop-req')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.toggle('tmr-hidden'));
+  $('tmr-cancel-stop')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.add('tmr-hidden'));
+  $('tmr-ok-stop')?.addEventListener('click',()=>tmrStop());
 }
 init();
 </script>
