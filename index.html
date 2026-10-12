@@ -370,6 +370,21 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .tmr-confirm-box{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(6,12,23,.96);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:22px 28px;text-align:center;backdrop-filter:blur(20px);min-width:280px}
 .tmr-confirm-box p{color:var(--t);font-size:14px;margin-bottom:16px;font-family:var(--disp);font-weight:600}
 .tmr-confirm-box .tmr-cfm-btns{display:flex;gap:10px;justify-content:center}
+/* Timer tabs (Prueba / Final) */
+.tmr-tabs{display:flex;gap:4px;background:var(--glass2);border:1px solid var(--border);border-radius:var(--rs);padding:3px}
+.tmr-tab{flex:1;padding:8px 0;border:none;background:none;color:var(--t3);font-family:var(--disp);font-size:13px;font-weight:600;border-radius:calc(var(--rs) - 2px);cursor:pointer;transition:all .16s}
+.tmr-tab:hover{color:var(--t)}
+.tmr-tab-on{background:var(--green);color:#060C17!important}
+/* Sequence preview table */
+.tmr-seq-box{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+.tmr-seq-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tmr-seq-tbl td{padding:5px 0;color:var(--t2);border-bottom:1px solid var(--border)}
+.tmr-seq-tbl tr:last-child td{border-bottom:none}
+.tmr-tc{text-align:right;font-family:var(--mono);color:var(--green);font-weight:500}
+/* Config note */
+.tmr-cfg-note{font-family:var(--mono);font-size:11px;color:var(--t3);padding:6px 10px;background:var(--glass);border-radius:var(--rs);border:1px solid var(--border)}
+/* Wide series buttons (8s/6s/4s) */
+.tmr-nb-w{width:54px!important}
 </style>
 </head>
 <body>
@@ -540,7 +555,8 @@ const I={
 };
 // ── TIMER MODULE ──────────────────────────────────────────────────────
 let _tmrCtx=null,_tmrWL=null,_tmrTick=null;
-let _tmrMode='precision',_tmrSCount=3,_tmrPaused=false;
+// disc: 'sport'|'rfp'  phase: 'qual'|'final'  mode: 'precision'|'rapid'|'full'|'custom'
+let _tmrDisc='sport',_tmrPhase='qual',_tmrMode='precision',_tmrSCount=6,_tmrRFPTime=8,_tmrPaused=false;
 let _tmrStep=0,_tmrTime=0,_tmrSteps=[];
 function _tmrAC(){if(!_tmrCtx)_tmrCtx=new(window.AudioContext||window.webkitAudioContext)();if(_tmrCtx.state==='suspended')_tmrCtx.resume();return _tmrCtx;}
 function _tmrBeep(freq=880,dur=0.22,vol=0.45){
@@ -555,31 +571,91 @@ function _tmrSpeak(txt){
 }
 async function _tmrLock(){try{if(navigator.wakeLock)_tmrWL=await navigator.wakeLock.request('screen');}catch(e){}}
 function _tmrUnlock(){try{_tmrWL?.release();}catch(e){}_tmrWL=null;}
-function _tmrMkSteps(mode,series){
+
+function _tmrBuildSteps(){
   const L=LANG==='en';
-  const TL={prep:L?'GET READY':'PREPARARSE',load:L?'LOAD':'CARGAR',att:L?'ATTENTION':'ATENCIÓN',fire:L?'FIRE':'FUEGO',stop:L?'STOP':'ALTO'};
-  const VL={prep:L?'Get ready':'Prepararse',load:L?'Load':'Cargar',att:L?'Attention':'Atención',fire:L?'Fire':'Fuego',stop:L?'Stop':'Alto'};
+  const V={load:L?'Load':'Cargar',att:L?'Attention':'Atención',fire:L?'Fire':'Fuego',
+    unload:L?'Stop, unload':'Alto, descargar',rest:L?'Rest':'Descanso',
+    ready:L?'Ready':'Listos',stop:L?'Stop':'Alto',
+    s8:L?'Eight second series':'Serie de ocho segundos',
+    s6:L?'Six second series':'Serie de seis segundos',
+    s4:L?'Four second series':'Serie de cuatro segundos',
+  };
+  const TL={load:'CARGAR',att:'ATENCIÓN',fire:'FUEGO',unload:'DESCARGAR',rest:'DESCANSO',ready:'LISTOS',stop:'ALTO',
+    s8:'SERIE 8s',s6:'SERIE 6s',s4:'SERIE 4s',
+  };
+  const D='#060C17',R='#7A0000',G='#0B4D26';
   const steps=[];
-  for(let i=0;i<series;i++){
-    const sn=i+1,st=series;
-    if(mode==='precision'){
-      steps.push({phase:'prep',dur:5,bg:'#060C17',label:TL.prep,voice:VL.prep,beepF:0,sn,st});
-      steps.push({phase:'load',dur:3,bg:'#060C17',label:TL.load,voice:VL.load,beepF:660,sn,st});
-      steps.push({phase:'att',dur:7,bg:'#7A0000',label:TL.att,voice:VL.att,beepF:440,sn,st});
-      steps.push({phase:'fire',dur:240,bg:'#0B4D26',label:TL.fire,voice:VL.fire,beepF:1047,sn,st});
-      steps.push({phase:'stop',dur:4,bg:'#060C17',label:TL.stop,voice:VL.stop,beepF:280,sn,st});
-    }else{
-      steps.push({phase:'prep',dur:5,bg:'#060C17',label:TL.prep,voice:VL.prep,beepF:0,sn,st});
-      steps.push({phase:'load',dur:3,bg:'#060C17',label:TL.load,voice:VL.load,beepF:660,sn,st});
-      for(let j=0;j<5;j++){
-        steps.push({phase:'att',dur:7,bg:'#7A0000',label:TL.att,voice:j===0?VL.att:'',beepF:j===0?440:0,sn,st,shot:j+1,shots:5});
-        steps.push({phase:'fire',dur:3,bg:'#0B4D26',label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
+
+  if(_tmrDisc==='sport'){
+    const st=_tmrSCount;
+    for(let i=0;i<st;i++){
+      const sn=i+1;
+      if(_tmrPhase==='qual'){
+        // LOAD: 1 minute (ISSF regulation)
+        steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:660,sn,st,info:'Cargá 5 cartuchos'});
+        // ATTENTION + 7s delay (red / 45° position)
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+        if(_tmrMode==='precision'){
+          // FIRE: 240s single exposure
+          steps.push({dur:240,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · 240s'});
+        } else {
+          // RAPID FIRE: ATT(7s initial already done) + 5×[FIRE(3s)→ATT(7s)] - last ATT omitted
+          for(let j=0;j<5;j++){
+            steps.push({dur:3,bg:G,label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
+            if(j<4)steps.push({dur:7,bg:R,label:TL.att,voice:'',beepF:0,sn,st,shot:j+1,shots:5,info:'Listo'});
+          }
+        }
+        steps.push({dur:10,bg:D,label:TL.unload,voice:V.unload,beepF:280,sn,st});
+        if(i<st-1)steps.push({dur:30,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Próxima serie en 30s'});
+      } else {
+        // FINAL: READY(20s) → ATT(7s) → 5×[FIRE(3s)→ATT(7s)] omit last ATT → STOP
+        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Serie '+sn+'/'+st});
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+        for(let j=0;j<5;j++){
+          steps.push({dur:3,bg:G,label:TL.fire,voice:'',beepF:1047,sn,st,shot:j+1,shots:5});
+          if(j<4)steps.push({dur:7,bg:R,label:TL.att,voice:'',beepF:0,sn,st,shot:j+1,shots:5});
+        }
+        steps.push({dur:5,bg:D,label:TL.stop,voice:V.stop,beepF:280,sn,st});
       }
-      steps.push({phase:'stop',dur:3,bg:'#060C17',label:TL.stop,voice:VL.stop,beepF:280,sn,st});
+    }
+  } else {
+    // RAPID FIRE PISTOL 25m
+    if(_tmrPhase==='qual'){
+      // Build plan: full course (2×8+2×6+2×4) or custom
+      const plan=_tmrMode==='full'
+        ?[{n:2,t:8,tl:TL.s8,vl:V.s8},{n:2,t:6,tl:TL.s6,vl:V.s6},{n:2,t:4,tl:TL.s4,vl:V.s4}]
+        :[{n:_tmrSCount,t:_tmrRFPTime,
+           tl:_tmrRFPTime===8?TL.s8:_tmrRFPTime===6?TL.s6:TL.s4,
+           vl:_tmrRFPTime===8?V.s8:_tmrRFPTime===6?V.s6:V.s4}];
+      let idx=0;const totalS=plan.reduce((a,p)=>a+p.n,0);
+      for(const p of plan){
+        for(let i=0;i<p.n;i++){
+          idx++;const sn=idx,st=totalS;
+          // Announce time, then LOAD(60s), ATTENTION(7s), FIRE(Ns), UNLOAD, REST
+          steps.push({dur:5,bg:D,label:p.tl,voice:p.vl,beepF:660,sn,st,info:p.t+'s · 5 disparos'});
+          steps.push({dur:60,bg:D,label:TL.load,voice:V.load,beepF:0,sn,st,info:'Cargar y posicionarse'});
+          steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+          steps.push({dur:p.t,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · '+p.t+'s'});
+          steps.push({dur:10,bg:D,label:TL.unload,voice:V.unload,beepF:280,sn,st});
+          if(idx<totalS)steps.push({dur:60,bg:D,label:TL.rest,voice:'',beepF:0,sn,st,info:'Mínimo 1 min descanso'});
+        }
+      }
+    } else {
+      // FINAL: 4s series. READY(20s) → ATT(7s) → FIRE(4s) → target reset(14s)
+      const st=_tmrSCount;
+      for(let i=0;i<st;i++){
+        const sn=i+1;
+        steps.push({dur:20,bg:D,label:TL.ready,voice:V.ready,beepF:0,sn,st,info:'Serie '+sn+'/'+st});
+        steps.push({dur:7,bg:R,label:TL.att,voice:V.att,beepF:440,sn,st,info:'Posición a 45°'});
+        steps.push({dur:4,bg:G,label:TL.fire,voice:V.fire,beepF:1047,sn,st,info:'5 disparos · 4s'});
+        steps.push({dur:14,bg:D,label:TL.stop,voice:V.stop,beepF:280,sn,st,info:'Reciclaje blanco'});
+      }
     }
   }
   return steps;
 }
+
 function _tmrFmt(s){const m=Math.floor(s/60),r=s%60;return s>=60?m+':'+(r<10?'0':'')+r:String(s);}
 function _tmrDraw(){
   const s=_tmrSteps[_tmrStep];if(!s)return;
@@ -588,8 +664,13 @@ function _tmrDraw(){
   const ph=document.getElementById('tmr-phase');if(ph)ph.textContent=s.label+(_tmrPaused?' ⏸':'');
   const cl=document.getElementById('tmr-clock');if(cl)cl.textContent=_tmrFmt(_tmrTime);
   const si=document.getElementById('tmr-series-info');
-  if(si){let info=(LANG==='en'?'Series':'Serie')+' '+s.sn+'/'+s.st;if(s.shot)info+=' · '+(LANG==='en'?'Shot':'Disparo')+' '+s.shot+'/'+s.shots;si.textContent=info;}
-  const pb=document.getElementById('tmr-pause-btn');if(pb)pb.textContent=_tmrPaused?(LANG==='en'?'Resume':'Reanudar'):(LANG==='en'?'Pause':'Pausar');
+  if(si){
+    let info='Serie '+s.sn+'/'+s.st;
+    if(s.shot)info+=' · Disp. '+s.shot+'/'+s.shots;
+    if(s.info)info+=' · '+s.info;
+    si.textContent=info;
+  }
+  const pb=document.getElementById('tmr-pause-btn');if(pb)pb.textContent=_tmrPaused?'Reanudar':'Pausar';
 }
 function _tmrEnter(idx){
   const s=_tmrSteps[idx];if(!s){_tmrDone();return;}
@@ -603,16 +684,15 @@ function _tmrDone(){
   _tmrBeep(880,0.25,0.6);setTimeout(()=>_tmrBeep(1047,0.25,0.6),320);setTimeout(()=>_tmrBeep(1319,0.4,0.7),640);
   const ov=document.getElementById('tmr-ov');if(!ov)return;
   ov.style.background='#060C17';
-  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent=LANG==='en'?'COMPLETE ✓':'COMPLETADO ✓';
+  const ph=document.getElementById('tmr-phase');if(ph)ph.textContent='COMPLETADO ✓';
   const cl=document.getElementById('tmr-clock');if(cl)cl.textContent='';
   const si=document.getElementById('tmr-series-info');if(si)si.textContent='';
-  _tmrSpeak(LANG==='en'?'Training complete':'Entrenamiento completo');
+  _tmrSpeak('Entrenamiento completo');
   setTimeout(()=>ov.classList.add('tmr-hidden'),3500);
 }
 function _tmrTicker(){if(_tmrPaused)return;_tmrTime--;_tmrDraw();if(_tmrTime<=0)_tmrEnter(_tmrStep+1);}
-function tmrStart(mode,series){
-  _tmrMode=mode;_tmrSCount=series;_tmrPaused=false;
-  _tmrSteps=_tmrMkSteps(mode,series);
+function tmrStart(){
+  _tmrPaused=false;_tmrSteps=_tmrBuildSteps();
   const ov=document.getElementById('tmr-ov');if(!ov)return;
   ov.classList.remove('tmr-hidden');
   document.getElementById('tmr-confirm')?.classList.add('tmr-hidden');
@@ -624,27 +704,104 @@ function tmrStop(){
   clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
   document.getElementById('tmr-ov')?.classList.add('tmr-hidden');_tmrPaused=false;
 }
+
+// Build sequence preview rows for the config card
+function _tmrSeqRows(){
+  if(_tmrDisc==='sport'){
+    if(_tmrPhase==='qual'&&_tmrMode==='precision')
+      return`<tr><td>Cargar</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">240s</td></tr><tr><td>Descargar</td><td class="tmr-tc">10s</td></tr>`;
+    if(_tmrPhase==='qual'&&_tmrMode==='rapid')
+      return`<tr><td>Cargar</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Verde 3s → Rojo 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Descargar</td><td class="tmr-tc">10s</td></tr>`;
+    if(_tmrPhase==='final')
+      return`<tr><td>Listos</td><td class="tmr-tc">20s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>× 5: Verde 3s → Rojo 7s</td><td class="tmr-tc">50s</td></tr><tr><td>Alto</td><td class="tmr-tc">5s</td></tr>`;
+  } else {
+    if(_tmrPhase==='qual'&&_tmrMode==='full')
+      return`<tr><td>2 series × 8s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>2 series × 6s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>2 series × 4s</td><td class="tmr-tc">+7s rojo</td></tr><tr><td>Descanso entre series</td><td class="tmr-tc">60s</td></tr>`;
+    if(_tmrPhase==='qual'&&_tmrMode==='custom')
+      return`<tr><td>Anuncio serie</td><td class="tmr-tc">5s</td></tr><tr><td>Cargar · posicionarse</td><td class="tmr-tc">60s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">${_tmrRFPTime}s</td></tr><tr><td>Descanso</td><td class="tmr-tc">60s</td></tr>`;
+    if(_tmrPhase==='final')
+      return`<tr><td>Listos</td><td class="tmr-tc">20s</td></tr><tr><td>Atención · rojo</td><td class="tmr-tc">7s</td></tr><tr><td>Fuego · verde</td><td class="tmr-tc">4s</td></tr><tr><td>Reciclaje blanco</td><td class="tmr-tc">14s</td></tr>`;
+  }
+  return'';
+}
+
 function timerHTML(){
-  const L=LANG==='en';
+  // Config depends on disc+phase combination
+  let cfgHTML='';
+  if(_tmrDisc==='sport'&&_tmrPhase==='qual'){
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Etapa</div>
+      <div class="tmr-modes">
+        <button class="tmr-card${_tmrMode==='precision'?' tmr-card-on':''}" id="tmr-sel-prec">
+          <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Precisión</div><div class="tmr-card-detail">240s · 5 disp.</div>
+        </button>
+        <button class="tmr-card${_tmrMode==='rapid'?' tmr-card-on':''}" id="tmr-sel-rapid">
+          <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Tiro Rápido</div><div class="tmr-card-detail">3s+7s · 5 disp.</div>
+        </button>
+      </div></div>
+    <div class="tmr-cfg"><div class="tmr-cfg-label">Series (máx 6 por etapa)</div>
+      <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+    </div>`;
+  } else if(_tmrDisc==='sport'&&_tmrPhase==='final'){
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">Tiro Rápido · 3s · Hit / Miss (≥10.2)</div>
+    <div class="tmr-cfg-label" style="margin-top:14px">Series (10 oficiales)</div>
+      <div class="tmr-series-btns">${[1,2,4,6,8,10].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+    </div>`;
+  } else if(_tmrDisc==='rfp'&&_tmrPhase==='qual'){
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-label">Modo</div>
+      <div class="tmr-modes">
+        <button class="tmr-card${_tmrMode==='full'?' tmr-card-on':''}" id="tmr-sel-full">
+          <div class="tmr-card-icon">📋</div><div class="tmr-card-name">Completo</div><div class="tmr-card-detail">2×8s · 2×6s · 2×4s</div>
+        </button>
+        <button class="tmr-card${_tmrMode==='custom'?' tmr-card-on':''}" id="tmr-sel-custom">
+          <div class="tmr-card-icon">⚙️</div><div class="tmr-card-name">Personalizado</div><div class="tmr-card-detail">Elegí tiempo y series</div>
+        </button>
+      </div></div>
+    ${_tmrMode==='custom'?`<div class="tmr-cfg"><div class="tmr-cfg-label">Tiempo de exposición</div>
+      <div class="tmr-series-btns">
+        <button class="tmr-nb tmr-nb-w${_tmrRFPTime===8?' tmr-nb-on':''}" data-tmrt="8">8s</button>
+        <button class="tmr-nb tmr-nb-w${_tmrRFPTime===6?' tmr-nb-on':''}" data-tmrt="6">6s</button>
+        <button class="tmr-nb tmr-nb-w${_tmrRFPTime===4?' tmr-nb-on':''}" data-tmrt="4">4s</button>
+      </div></div>
+    <div class="tmr-cfg"><div class="tmr-cfg-label">Series</div>
+      <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+    </div>`:''}`;
+  } else {
+    cfgHTML=`<div class="tmr-cfg"><div class="tmr-cfg-note">4 segundos · Hit / Miss (≥9.7) · 8 series oficiales</div>
+    <div class="tmr-cfg-label" style="margin-top:14px">Series</div>
+      <div class="tmr-series-btns">${[1,2,4,6,8].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+    </div>`;
+  }
+
   return`<div class="tmr-wrap">
-  <div class="tmr-head"><div class="tmr-title">${'Timer Pistola 25m'}</div><div class="tmr-sub">ISSF Sport Pistol · 25m</div></div>
-  <div class="tmr-modes">
-    <button class="tmr-card${_tmrMode==='precision'?' tmr-card-on':''}" id="tmr-sel-prec">
-      <div class="tmr-card-icon">🎯</div>
-      <div class="tmr-card-name">${L?'Precision':'Precisión'}</div>
-      <div class="tmr-card-detail">240s · ${L?'5 shots/series':'5 disp./serie'}</div>
-    </button>
-    <button class="tmr-card${_tmrMode==='rapid'?' tmr-card-on':''}" id="tmr-sel-rapid">
-      <div class="tmr-card-icon">⚡</div>
-      <div class="tmr-card-name">${L?'Rapid Fire':'Tiro Rápido'}</div>
-      <div class="tmr-card-detail">3s+7s · ${L?'5 shots/series':'5 disp./serie'}</div>
-    </button>
+  <div class="tmr-head"><div class="tmr-title">Timer Pistola 25m</div><div class="tmr-sub">ISSF · Official Timings</div></div>
+
+  <div class="tmr-cfg"><div class="tmr-cfg-label">Disciplina</div>
+    <div class="tmr-modes">
+      <button class="tmr-card${_tmrDisc==='sport'?' tmr-card-on':''}" id="tmr-d-sport">
+        <div class="tmr-card-icon">🎯</div><div class="tmr-card-name">Pistola Deportiva</div><div class="tmr-card-detail">25m · Women</div>
+      </button>
+      <button class="tmr-card${_tmrDisc==='rfp'?' tmr-card-on':''}" id="tmr-d-rfp">
+        <div class="tmr-card-icon">⚡</div><div class="tmr-card-name">Tiro Rápido</div><div class="tmr-card-detail">25m · Men</div>
+      </button>
+    </div>
   </div>
-  <div class="tmr-cfg"><div class="tmr-cfg-label">${L?'Number of series':'Cantidad de series'}</div>
-    <div class="tmr-series-btns">${[1,2,3,4,5,6].map(n=>`<button class="tmr-nb${_tmrSCount===n?' tmr-nb-on':''}" data-tmrs="${n}">${n}</button>`).join('')}</div>
+
+  <div class="tmr-cfg"><div class="tmr-cfg-label">Fase</div>
+    <div class="tmr-tabs">
+      <button class="tmr-tab${_tmrPhase==='qual'?' tmr-tab-on':''}" id="tmr-p-qual">Prueba</button>
+      <button class="tmr-tab${_tmrPhase==='final'?' tmr-tab-on':''}" id="tmr-p-final">Final</button>
+    </div>
   </div>
-  <button class="btn btn-p wf tmr-go" id="tmr-go">${L?'▶  Start training':'▶  Comenzar entrenamiento'}</button>
-  <div class="tmr-hint">${L?'Voice commands and audio cues will guide each series. Keep your device volume up.':'Comandos de voz y señales sonoras guiarán cada serie. Mantené el volumen del dispositivo alto.'}</div>
+
+  ${cfgHTML}
+
+  <div class="tmr-seq-box">
+    <div class="tmr-cfg-label" style="margin-bottom:10px">Secuencia por serie</div>
+    <table class="tmr-seq-tbl"><tbody>${_tmrSeqRows()}</tbody></table>
+  </div>
+
+  <button class="btn btn-p wf tmr-go" id="tmr-go">▶  Comenzar entrenamiento</button>
+  <div class="tmr-hint">Comandos de voz y señales sonoras guiarán cada serie. Mantené el volumen alto.</div>
 </div>`;
 }
 function render(){document.getElementById('app').innerHTML=html();bind();countUp()}
@@ -1281,10 +1438,22 @@ function bind(){
     await updateProfile(form);
   });
   // ── TIMER ──────────────────────────────────────────────────────────
+  // Discipline
+  $('tmr-d-sport')?.addEventListener('click',()=>{_tmrDisc='sport';_tmrPhase='qual';_tmrMode='precision';_tmrSCount=6;renderContent();});
+  $('tmr-d-rfp')?.addEventListener('click',()=>{_tmrDisc='rfp';_tmrPhase='qual';_tmrMode='full';_tmrSCount=6;renderContent();});
+  // Phase
+  $('tmr-p-qual')?.addEventListener('click',()=>{_tmrPhase='qual';_tmrMode=_tmrDisc==='sport'?'precision':'full';_tmrSCount=6;renderContent();});
+  $('tmr-p-final')?.addEventListener('click',()=>{_tmrPhase='final';_tmrSCount=_tmrDisc==='sport'?10:8;renderContent();});
+  // Sub-mode
   $('tmr-sel-prec')?.addEventListener('click',()=>{_tmrMode='precision';renderContent();});
   $('tmr-sel-rapid')?.addEventListener('click',()=>{_tmrMode='rapid';renderContent();});
+  $('tmr-sel-full')?.addEventListener('click',()=>{_tmrMode='full';renderContent();});
+  $('tmr-sel-custom')?.addEventListener('click',()=>{_tmrMode='custom';renderContent();});
+  // RF time + series count
+  document.querySelectorAll('[data-tmrt]').forEach(el=>el.addEventListener('click',()=>{_tmrRFPTime=parseInt(el.dataset.tmrt);renderContent();}));
   document.querySelectorAll('[data-tmrs]').forEach(el=>el.addEventListener('click',()=>{_tmrSCount=parseInt(el.dataset.tmrs);renderContent();}));
-  $('tmr-go')?.addEventListener('click',()=>tmrStart(_tmrMode,_tmrSCount));
+  // Start / pause / stop
+  $('tmr-go')?.addEventListener('click',()=>tmrStart());
   $('tmr-pause-btn')?.addEventListener('click',()=>{_tmrPaused=!_tmrPaused;_tmrDraw();});
   $('tmr-stop-req')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.toggle('tmr-hidden'));
   $('tmr-cancel-stop')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.add('tmr-hidden'));
