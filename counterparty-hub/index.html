@@ -1,849 +1,796 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Centinel · Counterparty Risk Hub</title>
-<meta name="description" content="Early warning de riesgo de contrapartes para empresas de Argentina, Brasil y Chile. Consultá por razón social y CUIT, CNPJ o RUT y recibí una calificación de riesgo con alertas en tiempo real.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Centinel Counterparty Risk Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Calificación de riesgo y alertas tempranas de clientes y proveedores en Argentina. Ingresá un CUIT y conocé su riesgo real en menos de 30 segundos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Layout: institutional light page, white and cool-grey bands broken by two navy bands (credentials, closing CTA); one blue for every action. */
 :root{
-  --bg:#070B14;
-  --bg-2:#0B1120;
-  --surface:#0F172A;
-  --surface-2:#131C33;
-  --line:rgba(148,163,184,.14);
-  --line-2:rgba(148,163,184,.24);
-  --text:#E6EAF2;
-  --muted:#94A3B8;
-  --dim:#64748B;
-  --accent:#5EEAD4;
-  --accent-2:#2DD4BF;
-  --accent-ink:#042F2E;
-  --gold:#F5C46B;
-  --low:#34D399;
-  --mod:#FBBF24;
-  --high:#FB923C;
-  --crit:#F87171;
-  --radius:16px;
-  --maxw:1200px;
-  --serif:"Instrument Serif", Georgia, serif;
-  --sans:"Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --paper:#FFFFFF;
+  --paper-2:#F4F6FA;
+  --ink:#0B1B33;
+  --ink-2:#3B4A61;
+  --muted:#66758C;
+  --line:#E2E7EF;
+  --line-2:#CBD3DF;
+  --navy:#0A1F44;
+  --navy-2:#132B57;
+  --on-navy:#E9EEF7;
+  --on-navy-2:#A9B6CC;
+  --cta:#1D4ED8;
+  --cta-hover:#1A43BC;
+  --cta-soft:#E8EEFC;
+  --seal:#A07A2C;
+  --low:#1E7F55;   --low-bg:#E6F4EC;
+  --mod:#A86A0C;   --mod-bg:#FBF1DE;
+  --high:#B9501A;  --high-bg:#FBEADF;
+  --crit:#B42318;  --crit-bg:#FBE6E4;
+  --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --maxw:1180px;
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 [id]{scroll-margin-top:84px}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:60;background:var(--paper)}
 a{color:inherit;text-decoration:none}
-img,svg{display:block}
-.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-@media (max-width:640px){.wrap{padding:0 16px}}
+svg{display:block}
+.wrap{max-width:var(--maxw);margin:0 auto;padding-left:max(24px, env(safe-area-inset-left, 0px));padding-right:max(24px, env(safe-area-inset-right, 0px))}
+@media (max-width:640px){.wrap{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}}
+h1,h2,h3{text-wrap:balance}
+:focus-visible{outline:3px solid var(--cta);outline-offset:2px;border-radius:4px}
 
-/* ---------- NAV ---------- */
-.nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);background:rgba(7,11,20,.72);border-bottom:1px solid var(--line)}
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;padding:12px 20px;font:600 15px/1.2 var(--sans);border:1px solid transparent;cursor:pointer;transition:background .15s, border-color .15s, box-shadow .15s;white-space:nowrap}
+.btn svg{width:16px;height:16px}
+.btn-cta{background:var(--cta);color:var(--paper);box-shadow:0 1px 2px rgba(11,27,51,.2),0 8px 20px -8px rgba(29,78,216,.55)}
+.btn-cta:hover{background:var(--cta-hover)}
+.btn-line{background:var(--paper);color:var(--ink);border-color:var(--line-2)}
+.btn-line:hover{border-color:var(--ink-2)}
+.btn-lg{padding:16px 26px;font-size:16.5px}
+.btn-sm{padding:9px 15px;font-size:14px}
+.btn-white{background:var(--paper);color:var(--navy)}
+.btn-white:hover{background:var(--cta-soft)}
+.btn-ghost-n{background:transparent;color:var(--on-navy);border-color:rgba(233,238,247,.35)}
+.btn-ghost-n:hover{border-color:var(--on-navy)}
+
+/* ---------- top ---------- */
+.topbar{background:var(--navy);color:var(--on-navy-2);font-size:13px}
+.topbar .wrap{display:flex;justify-content:center;gap:10px;padding-block:9px;text-align:center}
+.topbar b{color:var(--on-navy);font-weight:600}
+.topbar a{color:var(--on-navy);text-decoration:underline;text-underline-offset:3px}
+.nav{position:sticky;top:env(safe-area-inset-top, 0px);z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:24px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em;font-size:18px}
-.brand-mark{width:30px;height:30px}
-.brand small{font-weight:500;color:var(--dim);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-left:4px}
-.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted)}
-.nav-links a:hover{color:var(--text)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--navy)}
+.brand svg{width:32px;height:32px;flex:none}
+.brand-txt{display:flex;flex-direction:column;line-height:1.1}
+.brand-txt b{font-weight:700;font-size:19px;letter-spacing:-.01em}
+.brand-txt small{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.nav-links{display:flex;gap:30px;font-size:14.5px;color:var(--ink-2);font-weight:500}
+.nav-links a:hover{color:var(--cta)}
 .nav-cta{display:flex;gap:10px;align-items:center}
-@media (max-width:900px){.nav-links{display:none}.brand small{display:none}}
+@media (max-width:980px){.nav-links{display:none}}
+@media (max-width:560px){.nav-cta .btn-line{display:none}.brand-txt small{display:none}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:11px 18px;font-weight:600;font-size:14.5px;border:1px solid transparent;cursor:pointer;transition:transform .15s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;font-family:inherit;white-space:nowrap}
-.btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 1px rgba(94,234,212,.4),0 10px 30px -10px rgba(45,212,191,.6)}
-.btn-primary:hover{background:#7FF3E0}
-.btn-ghost{background:transparent;color:var(--text);border-color:var(--line-2)}
-.btn-ghost:hover{border-color:rgba(148,163,184,.5);background:rgba(148,163,184,.06)}
-.btn-lg{padding:15px 24px;font-size:16px;border-radius:12px}
-.btn-sm{padding:8px 14px;font-size:13.5px}
-@media (max-width:520px){.nav-cta .btn-ghost{display:none}}
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(180deg,var(--paper-2),var(--paper) 85%);border-bottom:1px solid var(--line)}
+.hero .wrap{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding-block:72px 80px}
+@media (max-width:1000px){.hero .wrap{grid-template-columns:1fr;gap:44px;padding-block:48px 56px}}
+.hero-copy{min-width:0}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--navy);background:var(--paper);border:1px solid var(--line-2);border-radius:999px;padding:5px 12px}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--low);box-shadow:0 0 0 3px var(--low-bg)}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(38px,5vw,60px);line-height:1.08;letter-spacing:-.02em;color:var(--navy);margin:20px 0 20px}
+h1 span{color:var(--cta)}
+.lede{font-size:clamp(17px,1.5vw,19.5px);color:var(--ink-2);max-width:580px;margin:0 0 30px}
+.lede b{color:var(--ink);font-weight:600}
 
-/* ---------- HERO ---------- */
-.hero{position:relative;padding:88px 0 72px;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:-20% -10% auto -10%;height:900px;background:
-  radial-gradient(600px 380px at 75% 20%, rgba(45,212,191,.16), transparent 70%),
-  radial-gradient(500px 300px at 15% 10%, rgba(99,102,241,.14), transparent 70%);pointer-events:none}
-.grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 70% 60% at 50% 20%,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 20%,#000 30%,transparent 75%);opacity:.5;pointer-events:none}
-.hero .wrap{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
-@media (max-width:1000px){.hero .wrap{grid-template-columns:1fr;gap:48px}.hero{padding:56px 0 48px}}
-.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);border:1px solid var(--line-2);border-radius:999px;padding:6px 14px 6px 8px;background:rgba(15,23,42,.6)}
-.eyebrow .pill{background:rgba(94,234,212,.12);color:var(--accent);font-weight:600;font-size:11.5px;padding:3px 8px;border-radius:999px;letter-spacing:.04em}
-.flags{display:inline-flex;gap:4px;font-size:15px}
-h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.4vw,78px);line-height:1.02;letter-spacing:-.02em;margin:22px 0 22px}
-h1 em{font-style:italic;color:var(--accent)}
-.lede{font-size:clamp(17px,1.6vw,19px);color:var(--muted);max-width:560px;margin:0 0 32px}
-.lede strong{color:var(--text);font-weight:500}
-.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
-.hero-trust{display:flex;gap:22px;flex-wrap:wrap;margin-top:34px;color:var(--dim);font-size:13.5px}
-.hero-trust span{display:flex;align-items:center;gap:8px}
-.hero-trust svg{width:16px;height:16px;color:var(--accent)}
-
-/* ---------- DEMO CARD ---------- */
-.demo{position:relative;background:linear-gradient(180deg,rgba(19,28,51,.92),rgba(15,23,42,.92));border:1px solid var(--line-2);border-radius:20px;padding:22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02) inset}
-.demo::after{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;background:linear-gradient(140deg,rgba(94,234,212,.5),transparent 30%,transparent 70%,rgba(99,102,241,.4));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
-.demo-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.demo-title{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
-.dot-live{width:8px;height:8px;border-radius:50%;background:var(--low);box-shadow:0 0 0 4px rgba(52,211,153,.15);animation:pulse 2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(52,211,153,.04)}}
-.tag-demo{white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--gold);border:1px solid rgba(245,196,107,.3);padding:2px 8px;border-radius:6px}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:4px;gap:4px;margin-bottom:12px}
-.seg button{background:transparent;border:0;color:var(--muted);font:inherit;font-size:13.5px;font-weight:500;padding:8px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
-.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--text);box-shadow:0 0 0 1px var(--line-2)}
-.field{display:block;margin-bottom:10px}
-.field label{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px;letter-spacing:.02em}
-.field input{width:100%;background:var(--bg-2);border:1px solid var(--line-2);color:var(--text);font:inherit;font-size:15px;padding:12px 14px;border-radius:10px;outline:none;transition:border-color .2s, box-shadow .2s}
-.field input.mono{font-family:var(--mono);letter-spacing:.02em}
-.field input:focus{border-color:rgba(94,234,212,.6);box-shadow:0 0 0 4px rgba(94,234,212,.12)}
-.field input.bad{border-color:rgba(248,113,113,.7)}
-.hint{font-size:12px;color:var(--dim)}
+.cuit-form{background:var(--paper);border:1px solid var(--line-2);border-radius:12px;padding:8px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;box-shadow:0 1px 2px rgba(11,27,51,.06),0 18px 40px -22px rgba(11,27,51,.35);max-width:640px}
+@media (max-width:640px){.cuit-form{grid-template-columns:1fr}}
+.cuit-form .f{display:flex;flex-direction:column;padding:6px 12px;border-radius:8px;min-width:0}
+.cuit-form .f:focus-within{background:var(--paper-2)}
+.cuit-form label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.cuit-form input{border:0;outline:none;background:transparent;font:500 16px/1.4 var(--sans);color:var(--ink);padding:2px 0;width:100%}
+.cuit-form input.mono{font-family:var(--mono);letter-spacing:.02em}
+.cuit-form .f + .f{border-left:1px solid var(--line)}
+@media (max-width:640px){.cuit-form .f + .f{border-left:0;border-top:1px solid var(--line)}}
+.cuit-form .btn{height:100%;min-height:52px}
+.form-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:640px;margin-top:10px;font-size:13px}
+.hint{color:var(--muted)}
 .hint.ok{color:var(--low)}.hint.err{color:var(--crit)}
-.link-btn{background:none;border:0;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;padding:0}
-.demo-actions{display:flex;gap:10px;margin-top:6px}
-.demo-actions .btn{flex:1}
+.link{background:none;border:0;padding:0;font:600 13px var(--sans);color:var(--cta);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.assure{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px;font-size:14px;color:var(--ink-2)}
+.assure span{display:flex;align-items:center;gap:8px}
+.assure svg{width:16px;height:16px;color:var(--low)}
 
-.result{margin-top:18px;border-top:1px dashed var(--line-2);padding-top:18px;display:none}
-.result.show{display:block;animation:rise .5s ease both}
-@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.scan{margin-top:18px;display:none;font-family:var(--mono);font-size:12.5px;color:var(--muted)}
-.scan.show{display:block}
-.scan div{display:flex;align-items:center;gap:10px;padding:3px 0;opacity:.35;transition:opacity .25s}
-.scan div.done{opacity:1}
-.scan div .ck{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--dim);flex:none}
-.scan div.done .ck{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 3px var(--surface)}
-.res-top{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
-.gauge{position:relative;width:118px;height:118px}
-.gauge svg{width:118px;height:118px;transform:rotate(-90deg)}
-.gauge .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.gauge .val b{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1}
-.gauge .val span{font-size:10.5px;color:var(--dim);margin-top:4px;letter-spacing:.06em}
-.res-name{font-weight:600;font-size:16px;line-height:1.3}
-.res-id{font-family:var(--mono);font-size:12.5px;color:var(--dim);margin:2px 0 10px}
-.rating{display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:5px 10px;font-weight:600;font-size:13px}
-.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
-.kpi{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.kpi small{display:block;font-size:11px;color:var(--dim);letter-spacing:.02em}
-.kpi b{font-size:14.5px;font-weight:600}
-.signals{margin-top:14px;display:flex;flex-direction:column;gap:6px}
-.sig{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);background:rgba(11,17,32,.6);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
-.sig i{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px}
-.sig b{color:var(--text);font-weight:500}
-.res-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:12px;color:var(--dim);gap:10px;flex-wrap:wrap}
-@media (max-width:480px){.seg button{font-size:12.5px;padding:8px 4px}.demo-title{font-size:12px}.res-grid{grid-template-columns:1fr 1fr}.res-top{grid-template-columns:1fr;justify-items:start}}
+/* report card */
+.report{background:var(--paper);border:1px solid var(--line-2);border-radius:14px;box-shadow:0 2px 4px rgba(11,27,51,.04),0 30px 60px -30px rgba(11,27,51,.35);overflow:hidden;min-width:0}
+.rep-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--paper-2);font-size:12.5px;color:var(--muted);gap:10px}
+.rep-head b{color:var(--navy);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:11.5px}
+.rep-tag{font-family:var(--mono);font-size:11px;color:var(--seal);border:1px solid currentColor;border-radius:4px;padding:1px 7px;white-space:nowrap}
+.rep-body{padding:22px 20px 20px}
+.rep-id{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+.rep-name{font-weight:600;font-size:17px;color:var(--navy);line-height:1.3}
+.rep-cuit{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:3px}
+.grade{text-align:center;border-radius:10px;padding:8px 14px;min-width:88px}
+.grade b{display:block;font-family:var(--serif);font-size:30px;line-height:1.05}
+.grade small{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.scale{margin:20px 0 6px}
+.scale-bar{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--crit) 0 35%,var(--high) 35% 55%,var(--mod) 55% 75%,var(--low) 75% 100%)}
+.scale-pin{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--paper);border:4px solid var(--navy);transform:translate(-50%,-50%);transition:left 1s cubic-bezier(.2,.8,.2,1);box-shadow:0 2px 6px rgba(11,27,51,.3)}
+.scale-lbl{position:relative;height:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+.scale-lbl span{position:absolute;transform:translateX(-50%)}
+.scale-lbl span:first-child{transform:none}
+.scale-lbl span:last-child{transform:translateX(-100%)}
+.score-line{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+.score-line b{font-size:34px;font-weight:700;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.score-line span{color:var(--muted);font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:10px;margin-top:16px}
+.kpis div{padding:11px 13px;min-width:0}
+.kpis div + div{border-left:1px solid var(--line)}
+.kpis small{display:block;font-size:11.5px;color:var(--muted)}
+.kpis b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+@media (max-width:420px){.kpis{grid-template-columns:1fr}.kpis div + div{border-left:0;border-top:1px solid var(--line)}}
+.sigs{margin-top:16px;display:flex;flex-direction:column}
+.sigs h4{margin:0 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sig{display:grid;grid-template-columns:10px 1fr;gap:10px;font-size:14px;color:var(--ink-2);padding:8px 0;border-top:1px solid var(--line)}
+.sig i{width:8px;height:8px;border-radius:2px;margin-top:7px}
+.sig b{color:var(--ink);font-weight:600}
+.rep-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);background:var(--paper-2)}
+.rep-foot a{color:var(--cta);font-weight:600}
+.scan{padding:22px 20px;font-size:14px;color:var(--ink-2)}
+.scan .row{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:7px 0;opacity:.4;transition:opacity .2s}
+.scan .row.done{opacity:1}
+.scan .ck{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-2)}
+.scan .row.done .ck{border-color:var(--low);background:var(--low);box-shadow:inset 0 0 0 3px var(--paper)}
+.scan .n{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scan-bar{height:4px;border-radius:999px;background:var(--line);margin-top:14px;overflow:hidden}
+.scan-bar i{display:block;height:100%;width:0;background:var(--cta);transition:width .3s linear}
 
-/* ---------- SECTIONS ---------- */
-section{position:relative}
-.sec{padding:110px 0}
-@media (max-width:760px){.sec{padding:72px 0}}
-.sec-head{max-width:760px;margin-bottom:56px}
-.kicker{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;display:block}
-h2{font-family:var(--serif);font-weight:400;font-size:clamp(36px,4.6vw,56px);line-height:1.05;letter-spacing:-.015em;margin:0 0 18px}
-h2 em{font-style:italic;color:var(--accent)}
-.sec-head p{color:var(--muted);font-size:18px;margin:0}
-h3{font-size:18px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px}
+/* ---------- credentials band ---------- */
+.creds{background:var(--navy);color:var(--on-navy)}
+.creds .wrap{display:grid;grid-template-columns:repeat(5,1fr);padding-block:40px}
+@media (max-width:900px){.creds .wrap{grid-template-columns:repeat(2,1fr);row-gap:28px}}
+.cred{padding:0 22px;border-left:1px solid rgba(233,238,247,.16)}
+.cred:first-child{border-left:0;padding-left:0}
+@media (max-width:900px){.cred{border-left:0;padding:0}}
+.cred b{display:block;font-family:var(--serif);font-weight:600;font-size:clamp(30px,3.4vw,40px);line-height:1.1;color:var(--paper);font-variant-numeric:tabular-nums}
+.cred span{font-size:14px;color:var(--on-navy-2)}
 
-/* logos strip / sources */
-.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-2)}
-.strip .wrap{display:flex;align-items:center;gap:40px;padding-top:22px;padding-bottom:22px;flex-wrap:wrap;justify-content:space-between}
-.strip p{margin:0;color:var(--dim);font-size:13px;max-width:240px}
-.src-list{display:flex;gap:28px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;font-weight:500}
-.src-list span{display:flex;align-items:center;gap:8px}
-.src-list span::before{content:"";width:6px;height:6px;border-radius:2px;background:var(--line-2)}
+/* ---------- sections ---------- */
+.sec{padding-block:100px}
+@media (max-width:760px){.sec{padding-block:68px}}
+.alt{background:var(--paper-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sec-head{max-width:760px;margin-bottom:52px}
+.label{display:block;font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--cta);margin-bottom:14px}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(30px,3.8vw,44px);line-height:1.15;letter-spacing:-.015em;color:var(--navy);margin:0 0 16px}
+.sec-head p{font-size:18px;color:var(--ink-2);margin:0;max-width:680px}
+h3{font-size:18px;font-weight:600;color:var(--navy);margin:0 0 6px}
 
 /* problem */
-.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (max-width:900px){.problem-grid{grid-template-columns:1fr}}
-.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
-.pcard .num{font-family:var(--serif);font-size:56px;line-height:1;color:var(--text);margin-bottom:14px}
-.pcard .num em{color:var(--crit);font-style:italic}
-.pcard p{color:var(--muted);margin:0;font-size:15px}
+.prob{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+@media (max-width:900px){.prob{grid-template-columns:1fr}}
+.prob div{padding:30px;background:var(--paper)}
+.prob div + div{border-left:1px solid var(--line)}
+@media (max-width:900px){.prob div + div{border-left:0;border-top:1px solid var(--line)}}
+.prob p{margin:0;color:var(--ink-2);font-size:15.5px}
 
-/* how */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:s}
-@media (max-width:900px){.steps{grid-template-columns:1fr}}
-.step{position:relative;background:linear-gradient(180deg,var(--surface),var(--bg-2));border:1px solid var(--line);border-radius:var(--radius);padding:28px;overflow:hidden}
-.step::before{counter-increment:s;content:"0" counter(s);font-family:var(--mono);font-size:12px;color:var(--accent);display:block;margin-bottom:28px}
-.step p{color:var(--muted);margin:0;font-size:15px}
-.step .art{height:120px;margin:-6px 0 22px;border-radius:12px;background:var(--bg);border:1px solid var(--line);position:relative;overflow:hidden;padding:14px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
-.art .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)}
-.art .row:last-child{border:0}
-.art .chip{font-size:10.5px;padding:1px 7px;border-radius:5px}
+/* method */
+.method{display:grid;grid-template-columns:repeat(3,1fr) 1.1fr;gap:16px;align-items:stretch}
+@media (max-width:1000px){.method{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.method{grid-template-columns:1fr}}
+.layer{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px;display:flex;flex-direction:column}
+.layer .tag{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:18px}
+.layer .ic{width:40px;height:40px;border-radius:8px;background:var(--cta-soft);color:var(--cta);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.layer .ic svg{width:20px;height:20px}
+.layer p{margin:0 0 18px;color:var(--ink-2);font-size:15px;flex:1}
+.layer ul{list-style:none;margin:0;padding:14px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+.layer li::before{content:"";display:inline-block;width:5px;height:5px;background:var(--cta);border-radius:1px;margin:0 10px 2px 0}
+.layer.out{background:var(--navy);border-color:var(--navy);color:var(--on-navy)}
+.layer.out h3{color:var(--paper)}
+.layer.out p,.layer.out .tag{color:var(--on-navy-2)}
+.layer.out .ic{background:rgba(255,255,255,.1);color:var(--paper)}
+.out-scale{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.out-scale div{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;font-size:13.5px;color:var(--on-navy)}
+.out-scale span{font-family:var(--mono);font-size:12px;color:var(--on-navy-2)}
+.out-scale i{height:6px;border-radius:999px}
+.method-note{margin-top:22px;font-size:14px;color:var(--muted);max-width:760px}
 
-/* engine / signals */
-.engine{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
-@media (max-width:1000px){.engine{grid-template-columns:1fr}}
-.feat-list{display:flex;flex-direction:column;gap:4px;margin-top:28px}
-.feat{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
-.feat:last-child{border-bottom:1px solid var(--line)}
-.feat .ic{width:36px;height:36px;border-radius:10px;background:rgba(94,234,212,.08);border:1px solid rgba(94,234,212,.2);display:flex;align-items:center;justify-content:center;color:var(--accent)}
-.feat .ic svg{width:18px;height:18px}
-.feat h3{font-size:16px;margin:0 0 2px}
-.feat p{margin:0;color:var(--muted);font-size:14.5px}
-.feed{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;overflow:hidden;box-shadow:0 40px 100px -40px rgba(0,0,0,.9)}
-.feed-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line);font-size:13.5px}
-.feed-head b{font-weight:600}
-.feed-head span{color:var(--dim);font-family:var(--mono);font-size:12px}
-.alert{display:grid;grid-template-columns:auto 1fr auto;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);align-items:start;transition:background .2s}
-.alert:hover{background:rgba(148,163,184,.04)}
-.alert:last-child{border:0}
-.sev{font-family:var(--mono);font-size:10.5px;font-weight:500;padding:3px 7px;border-radius:5px;letter-spacing:.04em;margin-top:2px}
-.alert h4{margin:0;font-size:14.5px;font-weight:600}
-.alert p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
-.alert time{font-family:var(--mono);font-size:11.5px;color:var(--dim);white-space:nowrap}
-.alert .co{font-family:var(--mono);font-size:11.5px;color:var(--dim);display:block;margin-top:4px}
-.alert.new{animation:slidein .6s ease both}
-@keyframes slidein{from{opacity:0;transform:translateY(-10px);background:rgba(94,234,212,.08)}to{opacity:1;transform:none}}
-@media (max-width:520px){.alert{grid-template-columns:1fr}.alert time{order:-1}}
-
-/* coverage */
-.cov{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (max-width:900px){.cov{grid-template-columns:1fr}}
-.country{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;position:relative;overflow:hidden}
-.country .fl{font-size:28px;margin-bottom:10px}
-.country .idt{font-family:var(--mono);font-size:12px;color:var(--accent);border:1px solid rgba(94,234,212,.25);border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:16px}
-.country ul{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
-.country li{display:grid;grid-template-columns:16px 1fr;gap:10px;font-size:14.5px;color:var(--muted)}
-.country li svg{width:16px;height:16px;color:var(--accent);margin-top:4px}
-.country li b{color:var(--text);font-weight:500}
-.country .hl{position:absolute;top:22px;right:22px;font-size:11px;font-weight:600;color:var(--accent-ink);background:var(--accent);padding:3px 9px;border-radius:999px}
+/* monitoring */
+.split{display:grid;grid-template-columns:.95fr 1.05fr;gap:56px;align-items:center}
+@media (max-width:1000px){.split{grid-template-columns:1fr;gap:40px}}
+.split > *{min-width:0}
+.checks{list-style:none;padding:0;margin:26px 0 30px;display:flex;flex-direction:column;gap:14px}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:12px;font-size:15.5px;color:var(--ink-2)}
+.checks li svg{width:20px;height:20px;color:var(--cta);margin-top:2px}
+.checks b{color:var(--ink);font-weight:600}
+.feed{background:var(--paper);border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:0 30px 60px -36px rgba(11,27,51,.35)}
+.feed-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--paper-2);font-size:13.5px;gap:10px}
+.feed-head b{color:var(--navy)}
+.feed-head span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.feed-head span i{width:7px;height:7px;border-radius:50%;background:var(--low)}
+.alert{display:grid;grid-template-columns:4px 1fr auto;gap:14px;padding:15px 20px 15px 0;border-bottom:1px solid var(--line)}
+.alert:last-child{border-bottom:0}
+.alert .bar{border-radius:0 3px 3px 0}
+.alert h4{margin:0;font-size:14.5px;font-weight:600;color:var(--ink)}
+.alert p{margin:2px 0 0;font-size:13.5px;color:var(--ink-2)}
+.alert .meta{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.sev{font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:4px}
+.co{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.alert time{font-size:12px;color:var(--muted);white-space:nowrap}
+.alert.new{animation:fadein .5s ease both}
+@keyframes fadein{from{background:var(--cta-soft)}to{background:var(--paper)}}
 
 /* sectors */
-.sectors{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sectors{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 @media (max-width:900px){.sectors{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:480px){.sectors{grid-template-columns:1fr}}
-.sector{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg-2);transition:border-color .2s, transform .2s}
-.sector:hover{border-color:rgba(94,234,212,.35);transform:translateY(-2px)}
-.sector b{display:block;font-weight:600;margin-bottom:4px}
-.sector span{font-size:13.5px;color:var(--muted)}
+.sector{background:var(--paper);padding:22px}
+.sector b{display:block;color:var(--navy);font-weight:600;margin-bottom:4px}
+.sector span{font-size:14px;color:var(--ink-2)}
 
 /* pricing */
-.pricing-tabs{display:inline-flex;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:5px;gap:4px;margin-bottom:36px;flex-wrap:wrap}
-.pricing-tabs button{background:transparent;border:0;color:var(--muted);font:inherit;font-weight:500;font-size:14.5px;padding:10px 18px;border-radius:9px;cursor:pointer}
-.pricing-tabs button[aria-selected="true"]{background:var(--text);color:var(--bg)}
-.pane{display:none}
-.pane.active{display:block;animation:rise .4s ease both}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tabs{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--paper);border:1px solid var(--line-2);border-radius:10px;margin-bottom:32px}
+.tabs button{border:0;background:transparent;font:600 14.5px var(--sans);color:var(--ink-2);padding:10px 16px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--navy);color:var(--paper)}
+.billing{display:flex;align-items:center;gap:12px;margin:-12px 0 26px;font-size:14.5px;color:var(--ink-2);flex-wrap:wrap}
+.switch{position:relative;width:44px;height:24px;border-radius:999px;border:0;background:var(--line-2);cursor:pointer;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--paper);transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch[aria-checked="true"]{background:var(--cta)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.save{font-size:12.5px;font-weight:700;color:var(--low);background:var(--low-bg);border-radius:999px;padding:2px 9px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
 @media (max-width:1000px){.plans{grid-template-columns:1fr}}
-.plan{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px;display:flex;flex-direction:column;position:relative}
-.plan.featured{background:linear-gradient(180deg,rgba(45,212,191,.08),var(--surface) 40%);border-color:rgba(94,234,212,.45);box-shadow:0 30px 80px -40px rgba(45,212,191,.5)}
-.plan .badge{position:absolute;top:-12px;left:30px;background:var(--accent);color:var(--accent-ink);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.03em}
-.plan h3{font-size:17px}
-.plan .desc{color:var(--muted);font-size:14.5px;margin:0 0 22px;min-height:44px}
-.price{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
-.price b{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
-.price span{color:var(--dim);font-size:14px}
-.price-sub{font-size:13px;color:var(--dim);margin-bottom:24px;min-height:20px}
-.plan ul{list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:11px;font-size:14.5px;flex:1}
-.plan li{display:grid;grid-template-columns:18px 1fr;gap:10px;color:var(--muted)}
-.plan li svg{width:16px;height:16px;color:var(--accent);margin-top:4px}
-.plan li b{color:var(--text);font-weight:500}
+.plan{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:30px;display:flex;flex-direction:column;position:relative}
+.plan.feat{border:2px solid var(--cta);box-shadow:0 30px 60px -36px rgba(29,78,216,.5)}
+.plan .badge{position:absolute;top:-13px;left:28px;background:var(--cta);color:var(--paper);font-size:11.5px;font-weight:700;letter-spacing:.05em;padding:4px 10px;border-radius:999px}
+.plan .desc{color:var(--ink-2);font-size:14.5px;margin:0 0 22px;min-height:46px}
+.price{display:flex;align-items:baseline;gap:6px}
+.price b{font-size:40px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.price span{color:var(--muted);font-size:14px}
+.psub{font-size:13px;color:var(--muted);margin:4px 0 24px;min-height:20px}
+.plan ul{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:10px;font-size:14.5px;flex:1}
+.plan li{display:grid;grid-template-columns:18px 1fr;gap:10px;color:var(--ink-2)}
+.plan li svg{width:16px;height:16px;color:var(--cta);margin-top:4px}
+.plan li b{color:var(--ink);font-weight:600}
 .plan .btn{width:100%}
-.billing{display:flex;align-items:center;gap:12px;margin:-16px 0 30px;font-size:14px;color:var(--muted)}
-.switch{position:relative;width:44px;height:24px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:999px;cursor:pointer;padding:0}
-.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:transform .2s}
-.switch[aria-checked="true"]{background:var(--accent-2)}
-.switch[aria-checked="true"]::after{transform:translateX(20px);background:var(--accent-ink)}
-.save{color:var(--accent);font-weight:600;font-size:12.5px;border:1px solid rgba(94,234,212,.3);border-radius:999px;padding:2px 8px}
-
-.calc{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
-@media (max-width:900px){.calc{grid-template-columns:1fr}}
-.calc-box{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:30px}
-.range-row{margin:22px 0 8px}
-.range-row label{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:12px}
-.range-row label b{font-family:var(--mono);color:var(--text);font-size:15px}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--accent) var(--p,30%),var(--surface-2) var(--p,30%));outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--text);border:4px solid var(--accent);cursor:pointer;box-shadow:0 0 0 6px rgba(94,234,212,.12)}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:4px solid var(--accent);cursor:pointer}
-.tiers{width:100%;border-collapse:collapse;margin-top:22px;font-size:14px}
-.tiers td{padding:11px 0;border-top:1px solid var(--line);color:var(--muted)}
-.tiers td:last-child{text-align:right;font-family:var(--mono);color:var(--text)}
-.tiers tr.on td{color:var(--accent)}
-.tiers tr.on td:last-child{color:var(--accent)}
-.total{display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(160deg,rgba(45,212,191,.12),var(--surface) 55%);border-color:rgba(94,234,212,.35)}
-.total .big{font-size:56px;font-weight:600;letter-spacing:-.03em;line-height:1;margin:10px 0 6px}
-.total small{color:var(--dim);font-size:13px}
-.total ul{list-style:none;padding:0;margin:22px 0;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
-.total li::before{content:"→ ";color:var(--accent)}
-
-.oneoff{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
-@media (max-width:900px){.oneoff{grid-template-columns:1fr}}
-.deliver{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
-@media (max-width:520px){.deliver{grid-template-columns:1fr}}
-.deliver div{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--muted)}
-.deliver b{display:block;color:var(--text);font-weight:600;margin-bottom:2px;font-size:14.5px}
-.price-note{margin-top:22px;font-size:13px;color:var(--dim)}
+.pnote{margin-top:22px;font-size:14px;color:var(--muted)}
+.pnote a{color:var(--cta);font-weight:600}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:30px;min-width:0}
+.two-col{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media (max-width:900px){.two-col{grid-template-columns:1fr}}
+.box.total{border:2px solid var(--cta);display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+.big{font-size:50px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1.05;margin:6px 0;font-variant-numeric:tabular-nums}
+.box small{font-size:13.5px;color:var(--muted)}
+.box ul.tick{list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:8px;font-size:14.5px;color:var(--ink-2)}
+.box ul.tick li{display:grid;grid-template-columns:18px 1fr;gap:8px}
+.box ul.tick svg{width:16px;height:16px;color:var(--cta);margin-top:4px}
+.range{margin:22px 0 6px}
+.range label{display:flex;justify-content:space-between;gap:12px;font-size:14.5px;color:var(--ink-2);margin-bottom:12px}
+.range label b{font-family:var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--cta) var(--p,30%),var(--line) var(--p,30%));outline-offset:6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--paper);border:5px solid var(--cta);cursor:pointer;box-shadow:0 1px 4px rgba(11,27,51,.3)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--paper);border:5px solid var(--cta);cursor:pointer}
+.tiers{width:100%;border-collapse:collapse;margin-top:20px;font-size:14.5px}
+.tiers td{padding:10px 0;border-top:1px solid var(--line);color:var(--ink-2)}
+.tiers td:last-child{text-align:right;font-family:var(--mono);color:var(--ink)}
+.tiers tr.on td{color:var(--cta);font-weight:600}
+.deliv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+@media (max-width:520px){.deliv{grid-template-columns:1fr}}
+.deliv div{border:1px solid var(--line);border-radius:10px;padding:14px;font-size:14px;color:var(--ink-2);background:var(--paper-2)}
+.deliv b{display:block;color:var(--navy);font-weight:600}
 
 /* roi */
-.roi{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:16px}
+.roi{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 @media (max-width:900px){.roi{grid-template-columns:1fr}}
-.roi-in{padding:24px}
-.roi-out{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:32px;display:flex;flex-direction:column;justify-content:center}
-.roi-out .lbl{font-size:13.5px;color:var(--muted)}
-.roi-out .big{font-family:var(--serif);font-size:clamp(52px,6vw,76px);line-height:1;color:var(--accent);margin:10px 0 20px}
-.roi-out .rows{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
-.roi-out .rows div{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--muted)}
-.roi-out .rows b{color:var(--text);font-family:var(--mono);font-weight:500}
-.roi-out .disc{font-size:12px;color:var(--dim);margin-top:16px}
+.roi-in{padding:32px;background:var(--paper)}
+.roi-in .range:first-child{margin-top:0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border:1px solid var(--line-2);border-radius:9px}
+.seg button{border:0;background:transparent;font:600 14px var(--sans);color:var(--ink-2);padding:9px 6px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:var(--paper)}
+.roi-out{padding:36px;background:var(--navy);color:var(--on-navy);display:flex;flex-direction:column;justify-content:center}
+.roi-out .lbl{font-size:14px;color:var(--on-navy-2)}
+.roi-out .big{color:var(--paper);font-family:var(--serif);font-size:clamp(44px,5vw,62px);margin:8px 0 22px}
+.roi-out .rows div{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid rgba(233,238,247,.16);font-size:15px;color:var(--on-navy-2)}
+.roi-out .rows b{color:var(--paper);font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.roi-out .disc{font-size:12.5px;color:var(--on-navy-2);margin:16px 0 0}
+
+/* trust */
+.trust{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+@media (max-width:900px){.trust{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.trust{grid-template-columns:1fr}}
+.trust div{border-top:2px solid var(--navy);padding-top:18px}
+.trust svg{width:24px;height:24px;color:var(--navy);margin-bottom:12px}
+.trust p{margin:0;font-size:14.5px;color:var(--ink-2)}
 
 /* founders */
-.founders{position:relative;border-radius:28px;overflow:hidden;border:1px solid rgba(94,234,212,.3);background:
-  radial-gradient(700px 300px at 85% 0%, rgba(45,212,191,.22), transparent 70%),
-  radial-gradient(600px 300px at 0% 100%, rgba(99,102,241,.18), transparent 70%), var(--surface);padding:64px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
-@media (max-width:900px){.founders{grid-template-columns:1fr;padding:36px 24px}}
-.founders h2{margin-bottom:14px}
-.founders p{color:var(--muted);font-size:17px;margin:0 0 20px}
-.perks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
-.perks li{display:grid;grid-template-columns:28px 1fr;gap:12px;font-size:15px;color:var(--muted)}
-.perks li b{color:var(--text);font-weight:500}
-.perks .n{width:28px;height:28px;border-radius:8px;background:rgba(94,234,212,.12);color:var(--accent);font-family:var(--mono);font-size:12px;display:flex;align-items:center;justify-content:center}
-form.lead{background:rgba(7,11,20,.7);border:1px solid var(--line-2);border-radius:18px;padding:26px}
-form.lead h3{margin-bottom:4px}
-form.lead > p{font-size:14px;color:var(--dim);margin:0 0 18px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:520px){.two{grid-template-columns:1fr}}
-.field select{width:100%;background:var(--bg-2);border:1px solid var(--line-2);color:var(--text);font:inherit;font-size:15px;padding:12px 14px;border-radius:10px;outline:none;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat}
-.field select:focus{border-color:rgba(94,234,212,.6)}
-.form-ok{display:none;text-align:center;padding:30px 10px}
-.form-ok.show{display:block}
-.form-ok .ckbig{width:56px;height:56px;border-radius:50%;background:rgba(94,234,212,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.founders{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+@media (max-width:900px){.founders{grid-template-columns:1fr;gap:36px}}
+.founders > *{min-width:0}
+.spots{display:flex;align-items:center;gap:14px;margin:22px 0 26px;padding:14px 16px;border:1px solid var(--line-2);border-radius:10px;background:var(--paper)}
+.spots .meter{flex:1;height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.spots .meter i{display:block;height:100%;width:0;background:var(--cta)}
+.spots b{font-size:14px;color:var(--navy);white-space:nowrap}
+.perks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.perks li{display:grid;grid-template-columns:22px 1fr;gap:12px;font-size:15.5px;color:var(--ink-2)}
+.perks svg{width:20px;height:20px;color:var(--low);margin-top:2px}
+.perks b{color:var(--ink)}
+form.lead{background:var(--paper);border:1px solid var(--line-2);border-radius:14px;padding:30px;box-shadow:0 30px 60px -40px rgba(11,27,51,.4)}
+form.lead h3{font-size:20px;margin-bottom:4px}
+form.lead > div > p{font-size:14.5px;color:var(--muted);margin:0 0 20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;min-width:0}
+.field label{font-size:13.5px;font-weight:600;color:var(--ink)}
+.field input,.field select{font:15px var(--sans);color:var(--ink);background:var(--paper);border:1px solid var(--line-2);border-radius:8px;padding:11px 12px;outline:none;width:100%}
+.field input:focus,.field select:focus{border-color:var(--cta);box-shadow:0 0 0 3px var(--cta-soft)}
+.field input.bad{border-color:var(--crit)}
+.err-msg{font-size:13px;color:var(--crit);margin:0 0 12px}
+.form-ok{text-align:center;padding:30px 8px}
+.form-ok .ck{width:56px;height:56px;border-radius:50%;background:var(--low-bg);color:var(--low);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.form-ok .ck svg{width:26px;height:26px}
+.fine{font-size:12.5px;color:var(--muted);text-align:center;margin:12px 0 0}
 
 /* faq */
 .faq{max-width:860px}
-details{border-top:1px solid var(--line);padding:22px 0}
+details{border-top:1px solid var(--line);padding:20px 0}
 details:last-child{border-bottom:1px solid var(--line)}
-summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px;font-weight:500;font-size:17.5px}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px;font-weight:600;font-size:17px;color:var(--navy)}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font-family:var(--mono);color:var(--accent);font-size:20px;line-height:1;transition:transform .2s}
+summary::after{content:"+";font-size:22px;line-height:1;color:var(--cta);transition:transform .2s}
 details[open] summary::after{transform:rotate(45deg)}
-details p{color:var(--muted);margin:14px 0 0;max-width:760px}
+details p{margin:12px 0 0;color:var(--ink-2);max-width:760px}
 
-/* final cta */
-.final{text-align:center;padding:120px 0 110px;position:relative;overflow:hidden}
-.final::before{content:"";position:absolute;left:50%;top:0;width:900px;height:500px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(45,212,191,.16),transparent);pointer-events:none}
-.final h2{font-size:clamp(40px,6vw,76px);max-width:900px;margin:0 auto 22px;position:relative}
-.final p{color:var(--muted);font-size:18px;max-width:560px;margin:0 auto 34px;position:relative}
-.final .hero-ctas{justify-content:center;position:relative}
+/* closing */
+.closing{background:var(--navy);color:var(--on-navy)}
+.closing .wrap{padding-block:90px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center}
+@media (max-width:900px){.closing .wrap{grid-template-columns:1fr;padding-block:64px}}
+.closing h2{color:var(--paper);font-size:clamp(32px,4.2vw,50px);margin-bottom:14px}
+.closing p{color:var(--on-navy-2);font-size:18px;margin:0;max-width:600px}
+.closing .ctas{display:flex;flex-direction:column;gap:12px}
+.closing .ctas small{color:var(--on-navy-2);font-size:13px;text-align:center}
 
-footer{border-top:1px solid var(--line);padding:48px 0 40px;color:var(--dim);font-size:13.5px}
-footer .wrap{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px}
+footer{background:var(--paper);border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer .wrap{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:32px;padding-block:52px 36px}
 @media (max-width:800px){footer .wrap{grid-template-columns:1fr 1fr}}
-footer h5{color:var(--text);font-size:13px;font-weight:600;margin:0 0 12px}
+footer h5{margin:0 0 12px;font-size:13px;color:var(--navy);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
 footer a{display:block;padding:3px 0}
-footer a:hover{color:var(--text)}
-.legal{grid-column:1/-1;border-top:1px solid var(--line);padding-top:22px;margin-top:8px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:12.5px}
+footer a:hover{color:var(--cta)}
+.legal{grid-column:1/-1;border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12.5px}
 
-.reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease, transform .7s ease}
-.reveal.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-
-.sticky-cta{position:fixed;left:16px;right:16px;bottom:16px;z-index:60;display:none}
-@media (max-width:640px){.sticky-cta.show{display:block}.sticky-cta .btn{width:100%;box-shadow:0 20px 40px -10px rgba(0,0,0,.8)}}
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:none}
+.sticky .btn{width:100%}
+@media (max-width:640px){.sticky.show{display:block}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 
-<!-- SVG sprite -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/></symbol>
-  <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
-  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 16V11a6 6 0 1112 0v5l2 2H4l2-2zM10 21h4"/></symbol>
-  <symbol id="i-graph" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 3 3 6-7"/></symbol>
-  <symbol id="i-network" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="5" cy="19" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="19" cy="19" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 7.3L6.2 16.8M13 7.3l4.8 9.5M7.5 19h9" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-  <symbol id="i-api" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></symbol>
+  <symbol id="i-checkc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".14"/><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M7.5 12.5l3 3 6-6.5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="11" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2.5-6 4 12 2.5-6H21"/></symbol>
+  <symbol id="i-gavel" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4l6 6M11.5 6.5l6 6M13 5l-6 6 6 6 6-6M9.5 13.5L3 20M4 21h8"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 17a8 8 0 1116 0M12 17l4-5"/><circle cx="12" cy="17" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0A1F44"/><path d="M16 6l8 3v6c0 4.7-3.3 8.6-8 9.6-4.7-1-8-4.9-8-9.6V9l8-3z" fill="none" stroke="#FFFFFF" stroke-width="2"/><path d="M12 15.5l3 3 5-5.5" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
+
+<div class="topbar"><div class="wrap"><span><b>Programa de clientes fundadores:</b> 40% de descuento de por vida para las primeras 50 empresas. <a href="#fundadores">Reservá tu lugar</a></span></div></div>
 
 <header class="nav">
   <div class="wrap">
-    <a href="#" class="brand" aria-label="Centinel inicio">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5EEAD4"/><stop offset="1" stop-color="#6366F1"/></linearGradient></defs>
-        <rect width="32" height="32" rx="9" fill="url(#bg1)"/>
-        <path d="M16 6.5l7.5 2.8v5.6c0 4.4-3.1 8.2-7.5 9.1-4.4-.9-7.5-4.7-7.5-9.1V9.3L16 6.5z" fill="#070B14"/>
-        <circle cx="16" cy="15" r="3.2" fill="none" stroke="#5EEAD4" stroke-width="1.8"/>
-        <circle cx="16" cy="15" r="1.1" fill="#5EEAD4"/>
-      </svg>
-      Centinel <small>Counterparty Risk Hub</small>
+    <a href="#" class="brand" aria-label="Centinel Counterparty Risk Hub, inicio">
+      <svg aria-hidden="true"><use href="#i-logo"/></svg>
+      <span class="brand-txt"><b>Centinel</b><small>Counterparty Risk Hub</small></span>
     </a>
     <nav class="nav-links" aria-label="Principal">
-      <a href="#como-funciona">Cómo funciona</a>
-      <a href="#alertas">Alertas</a>
-      <a href="#cobertura">Cobertura</a>
+      <a href="#metodologia">Metodología</a>
+      <a href="#monitoreo">Monitoreo</a>
       <a href="#precios">Precios</a>
-      <a href="#faq">FAQ</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#faq">Preguntas</a>
     </nav>
     <div class="nav-cta">
-      <a href="#precios" class="btn btn-ghost btn-sm">Ver planes</a>
-      <a href="#fundadores" class="btn btn-primary btn-sm">Probar gratis</a>
+      <a href="#fundadores" class="btn btn-line btn-sm">Hablar con un asesor</a>
+      <a href="#consulta" class="btn btn-cta btn-sm">Consultar un CUIT gratis</a>
     </div>
   </div>
 </header>
 
 <main>
-<!-- ================= HERO ================= -->
+<!-- HERO -->
 <section class="hero">
-  <div class="grid-bg"></div>
   <div class="wrap">
-    <div>
-      <span class="eyebrow"><span class="pill">NUEVO</span> Early warning de contrapartes · <span class="flags" aria-label="Argentina, Brasil, Chile">🇦🇷 🇧🇷 🇨🇱</span></span>
-      <h1>Sabé quién no te va a pagar <em>antes</em> de que deje de pagarte.</h1>
-      <p class="lede">Ingresá la razón social y el <strong>CUIT, CNPJ o RUT</strong> de un cliente o proveedor. En segundos, Centinel cruza fuentes oficiales y señales públicas con modelos de IA y te devuelve una <strong>calificación de riesgo clara</strong> — y te avisa en cuanto algo cambia.</p>
-      <div class="hero-ctas">
-        <a href="#demo" class="btn btn-primary btn-lg" onclick="document.getElementById('in-name').focus()">Analizar una empresa gratis <svg width="18" height="18"><use href="#i-arrow"/></svg></a>
-        <a href="#precios" class="btn btn-ghost btn-lg">Ver precios</a>
+    <div class="hero-copy">
+      <span class="eyebrow"><i></i>Riesgo de clientes y proveedores en Argentina</span>
+      <h1>Antes de venderle a plazo, conocé su <span>riesgo real</span>.</h1>
+      <p class="lede">Ingresá el CUIT de un cliente o proveedor. En menos de 30 segundos recibís una <b>calificación de riesgo</b>, un <b>límite de crédito sugerido</b> y las señales que la explican. Y si algo cambia, te avisamos antes de que deje de pagarte.</p>
+
+      <form class="cuit-form" id="consulta" novalidate>
+        <div class="f"><label for="in-name">Razón social</label><input id="in-name" type="text" placeholder="Distribuidora del Sur S.A." autocomplete="off"></div>
+        <div class="f"><label for="in-cuit">CUIT</label><input id="in-cuit" class="mono" type="text" inputmode="numeric" placeholder="30-12345678-9" autocomplete="off"></div>
+        <button class="btn btn-cta btn-lg" type="submit" id="btn-run">Analizar gratis <svg><use href="#i-arrow"/></svg></button>
+      </form>
+      <div class="form-meta">
+        <span class="hint" id="cuit-hint">Validamos el dígito verificador del CUIT antes de consultar.</span>
+        <button type="button" class="link" id="btn-sample">Probar con un CUIT de ejemplo</button>
       </div>
-      <div class="hero-trust">
-        <span><svg><use href="#i-check"/></svg>3 consultas gratis, sin tarjeta</span>
-        <span><svg><use href="#i-check"/></svg>Resultado en &lt; 30 segundos</span>
-        <span><svg><use href="#i-check"/></svg>Sólo fuentes públicas y licenciadas</span>
+
+      <div class="assure">
+        <span><svg><use href="#i-checkc"/></svg>3 consultas gratis, sin tarjeta</span>
+        <span><svg><use href="#i-checkc"/></svg>La empresa consultada no se entera</span>
+        <span><svg><use href="#i-checkc"/></svg>Factura A</span>
       </div>
     </div>
 
-    <div class="demo" id="demo" aria-live="polite">
-      <div class="demo-head">
-        <div class="demo-title"><span class="dot-live"></span>Consulta de contraparte</div>
-        <span class="tag-demo">DEMO · DATOS SIMULADOS</span>
-      </div>
-      <div class="seg" role="group" aria-label="País">
-        <button type="button" data-c="AR" aria-pressed="true">🇦🇷 Argentina</button>
-        <button type="button" data-c="BR" aria-pressed="false">🇧🇷 Brasil</button>
-        <button type="button" data-c="CL" aria-pressed="false">🇨🇱 Chile</button>
-      </div>
-      <div class="field">
-        <label for="in-name"><span>Razón social</span></label>
-        <input id="in-name" type="text" placeholder="Ej. Distribuidora del Sur S.A." autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="in-id"><span id="id-label">CUIT</span><button type="button" class="link-btn" id="btn-sample">Usar un ejemplo</button></label>
-        <input id="in-id" class="mono" type="text" inputmode="numeric" placeholder="30-12345678-9" autocomplete="off">
-        <div class="hint" id="id-hint">Validamos el dígito verificador antes de consultar.</div>
-      </div>
-      <div class="demo-actions">
-        <button class="btn btn-primary" id="btn-run" type="button">Calcular riesgo <svg width="16" height="16"><use href="#i-arrow"/></svg></button>
-      </div>
-
-      <div class="scan" id="scan"></div>
-
-      <div class="result" id="result">
-        <div class="res-top">
-          <div class="gauge">
-            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(148,163,184,.14)" stroke-width="10"/><circle id="g-arc" cx="60" cy="60" r="50" fill="none" stroke="var(--low)" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)"/></svg>
-            <div class="val"><b id="g-val">0</b><span>SCORE / 1000</span></div>
+    <div class="report" aria-live="polite">
+      <div class="rep-head"><b>Informe de riesgo</b><span class="rep-tag" id="rep-tag">EJEMPLO</span></div>
+      <div class="scan" id="scan" hidden></div>
+      <div id="rep">
+        <div class="rep-body">
+          <div class="rep-id">
+            <div>
+              <div class="rep-name" id="r-name">Metalúrgica Andina S.R.L.</div>
+              <div class="rep-cuit" id="r-cuit">CUIT 30-71234567-8 · actualizado hoy</div>
+            </div>
+            <div class="grade" id="r-grade" style="background:var(--high-bg);color:var(--high)"><b id="r-letter">C+</b><small id="r-band">Elevado</small></div>
           </div>
-          <div>
-            <div class="res-name" id="r-name">—</div>
-            <div class="res-id" id="r-id">—</div>
-            <span class="rating" id="r-rating">—</span>
+          <div class="scale">
+            <div class="scale-bar"><span class="scale-pin" id="r-pin" style="left:45%"></span></div>
+            <div class="scale-lbl"><span style="left:0">0</span><span style="left:35%">350</span><span style="left:55%">550</span><span style="left:75%">750</span><span style="left:100%">1000</span></div>
+          </div>
+          <div class="score-line"><b id="r-score">452</b><span>/ 1000 puntos</span></div>
+          <div class="kpis">
+            <div><small>Prob. de default 12 m</small><b id="r-pd">11,4%</b></div>
+            <div><small>Límite sugerido</small><b id="r-lim">USD 18.000</b></div>
+            <div><small>Plazo máximo</small><b id="r-term">30 días</b></div>
+          </div>
+          <div class="sigs" id="r-sigs">
+            <h4>Señales que explican la calificación</h4>
+            <div class="sig"><i style="background:var(--crit)"></i><span><b>Atrasos bancarios de más de 90 días</b> en una entidad financiera.</span></div>
+            <div class="sig"><i style="background:var(--high)"></i><span><b>2 cheques rechazados</b> en los últimos 60 días, sin cancelar.</span></div>
+            <div class="sig"><i style="background:var(--low)"></i><span><b>14 años de actividad</b> con trayectoria fiscal consistente.</span></div>
           </div>
         </div>
-        <div class="res-grid">
-          <div class="kpi"><small>Prob. default 12m</small><b id="r-pd">—</b></div>
-          <div class="kpi"><small>Límite sugerido</small><b id="r-limit">—</b></div>
-          <div class="kpi"><small>Tendencia 90d</small><b id="r-trend">—</b></div>
-        </div>
-        <div class="signals" id="r-signals"></div>
-        <div class="res-foot">
-          <span>Ejemplo ilustrativo generado en tu navegador.</span>
-          <a href="#fundadores" class="link-btn">Monitorear esta empresa →</a>
-        </div>
+        <div class="rep-foot"><span id="r-foot">Informe de ejemplo con datos ilustrativos.</span><a href="#fundadores">Monitorear esta empresa →</a></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= SOURCES STRIP ================= -->
-<div class="strip">
+<!-- CREDENTIALS -->
+<section class="creds" aria-label="Alcance del análisis">
   <div class="wrap">
-    <p>Cruzamos fuentes oficiales y bases públicas de los tres países:</p>
-    <div class="src-list">
-      <span>BCRA · Central de Deudores</span>
-      <span>Cheques rechazados</span>
-      <span>ARCA (ex AFIP)</span>
-      <span>Receita Federal</span>
-      <span>Protestos</span>
-      <span>SII Chile</span>
-      <span>Boletines Oficiales</span>
-      <span>Registros judiciales</span>
-    </div>
+    <div class="cred"><b>+25</b><span>fuentes de información trianguladas</span></div>
+    <div class="cred"><b>+180</b><span>variables analizadas por CUIT</span></div>
+    <div class="cred"><b>3</b><span>capas de validación cruzada</span></div>
+    <div class="cred"><b>24 meses</b><span>de historia de comportamiento</span></div>
+    <div class="cred"><b>&lt; 30 s</b><span>de la consulta al informe</span></div>
   </div>
-</div>
+</section>
 
-<!-- ================= PROBLEM ================= -->
+<!-- PROBLEM -->
 <section class="sec">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">El problema</span>
-      <h2>Tu cuenta corriente comercial es <em>un préstamo</em>. ¿Lo estás tratando como tal?</h2>
-      <p>Cada vez que vendés a 30, 60 o 90 días estás financiando a otra empresa. Los bancos tienen áreas de riesgo enteras para eso. Las pymes, en general, tienen una planilla y una corazonada.</p>
+    <div class="sec-head">
+      <span class="label">El problema</span>
+      <h2>Cada venta en cuenta corriente es un crédito que le das a otra empresa.</h2>
+      <p>Los bancos tienen áreas enteras para evaluar a quién le prestan. La mayoría de las pymes decide con una planilla, una referencia comercial y la intuición del vendedor.</p>
     </div>
-    <div class="problem-grid">
-      <div class="pcard reveal">
-        <div class="num">1 <em>cliente</em></div>
-        <p>Alcanza con que un solo cliente grande entre en concurso o empiece a rebotar cheques para borrar el margen de todo un trimestre.</p>
-      </div>
-      <div class="pcard reveal">
-        <div class="num">Meses</div>
-        <p>Es el tiempo que suele pasar entre las primeras señales públicas de deterioro (atrasos bancarios, cheques rechazados, embargos) y el día en que deja de pagarte.</p>
-      </div>
-      <div class="pcard reveal">
-        <div class="num">0 <em>alertas</em></div>
-        <p>Recibís hoy cuando uno de tus clientes cae de situación 1 a situación 3 en el sistema financiero. Te enterás cuando la factura ya está vencida.</p>
-      </div>
+    <div class="prob">
+      <div><h3>Un solo cliente alcanza</h3><p>Un cliente grande que entra en concurso o empieza a rebotar cheques puede llevarse el margen de un trimestre entero.</p></div>
+      <div><h3>Las señales llegan antes</h3><p>Los atrasos bancarios, los cheques rechazados y los embargos suelen aparecer meses antes del primer pago que no llega.</p></div>
+      <div><h3>Nadie te avisa</h3><p>Hoy te enterás de que un cliente se deterioró cuando la factura ya está vencida y la mercadería ya se entregó.</p></div>
     </div>
   </div>
 </section>
 
-<!-- ================= HOW ================= -->
-<section class="sec" id="como-funciona" style="padding-top:0">
+<!-- METHOD -->
+<section class="sec alt" id="metodologia">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">Cómo funciona</span>
-      <h2>De un CUIT a una decisión de crédito, <em>en tres pasos</em>.</h2>
+    <div class="sec-head">
+      <span class="label">Metodología</span>
+      <h2>Una calificación construida por triangulación, no por una sola fuente.</h2>
+      <p>Cada dato se contrasta contra al menos otras dos fuentes independientes antes de entrar al modelo. Si una fuente está desactualizada o es inconsistente, el sistema lo detecta y ajusta su peso.</p>
     </div>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="art">
-          <div class="row"><span>razon_social</span><span>cuit</span></div>
-          <div class="row"><span>Agro Pampa SRL</span><span>30-7XXXXXXX-1</span></div>
-          <div class="row"><span>Metalúrgica Oeste SA</span><span>30-6XXXXXXX-4</span></div>
-          <div class="row"><span>+ 1.248 filas…</span><span>.csv / .xlsx</span></div>
-        </div>
-        <h3>Cargá tus contrapartes</h3>
-        <p>Una por una desde la web, en lote con un Excel o CSV, o conectando tu ERP vía API. Clientes, proveedores, garantes, socios.</p>
+    <div class="method">
+      <div class="layer">
+        <span class="tag">Capa 1 · +40 variables</span>
+        <div class="ic"><svg><use href="#i-id"/></svg></div>
+        <h3>Identidad y solidez</h3>
+        <p>Confirmamos que la empresa existe, está activa y es quien dice ser.</p>
+        <ul><li>Estado y antigüedad fiscal</li><li>Actividad y estructura societaria</li><li>Consistencia entre registros</li></ul>
       </div>
-      <div class="step reveal">
-        <div class="art">
-          <div class="row"><span>situación BCRA</span><span class="chip" style="background:rgba(251,191,36,.12);color:var(--mod)">2 → 3</span></div>
-          <div class="row"><span>cheques rechazados 90d</span><span class="chip" style="background:rgba(248,113,113,.12);color:var(--crit)">4</span></div>
-          <div class="row"><span>antigüedad fiscal</span><span class="chip" style="background:rgba(52,211,153,.12);color:var(--low)">14 años</span></div>
-          <div class="row"><span>menciones judiciales</span><span class="chip" style="background:rgba(148,163,184,.12)">1</span></div>
-        </div>
-        <h3>La IA lee todas las señales</h3>
-        <p>Cruzamos deuda bancaria, cheques, estado fiscal, boletines oficiales, procesos judiciales y noticias. El modelo pondera cada señal y explica su peso.</p>
+      <div class="layer">
+        <span class="tag">Capa 2 · +90 variables</span>
+        <div class="ic"><svg><use href="#i-pulse"/></svg></div>
+        <h3>Comportamiento de pago</h3>
+        <p>Medimos cómo paga hoy y cómo evolucionó en los últimos 24 meses.</p>
+        <ul><li>Endeudamiento y su tendencia</li><li>Atrasos y regularizaciones</li><li>Cheques e instrumentos de pago</li></ul>
       </div>
-      <div class="step reveal">
-        <div class="art" style="display:flex;align-items:center;gap:16px">
-          <div style="font-family:var(--sans);font-size:38px;font-weight:700;color:var(--high);letter-spacing:-.03em">412</div>
-          <div style="font-family:var(--sans);font-size:12.5px;line-height:1.5">
-            <div style="color:var(--high);font-weight:600">Riesgo elevado</div>
-            <div>Límite sugerido: <b style="color:var(--text)">USD 18.000</b></div>
-            <div>Plazo máx.: <b style="color:var(--text)">30 días</b></div>
-          </div>
+      <div class="layer">
+        <span class="tag">Capa 3 · +50 variables</span>
+        <div class="ic"><svg><use href="#i-gavel"/></svg></div>
+        <h3>Eventos y contexto</h3>
+        <p>La IA lee textos no estructurados para detectar eventos antes de que impacten en los números.</p>
+        <ul><li>Procesos legales y concursales</li><li>Cambios societarios y de autoridades</li><li>Señales reputacionales y sectoriales</li></ul>
+      </div>
+      <div class="layer out">
+        <span class="tag">Resultado</span>
+        <div class="ic"><svg><use href="#i-gauge"/></svg></div>
+        <h3>Score 0–1000 explicable</h3>
+        <p>Una calificación, un límite y un plazo sugeridos, con el porqué de cada punto.</p>
+        <div class="out-scale">
+          <div><span>750+</span><i style="background:var(--low)"></i>Bajo</div>
+          <div><span>550+</span><i style="background:var(--mod)"></i>Moderado</div>
+          <div><span>350+</span><i style="background:var(--high)"></i>Elevado</div>
+          <div><span>&lt; 350</span><i style="background:var(--crit)"></i>Crítico</div>
         </div>
-        <h3>Decidí y dormí tranquilo</h3>
-        <p>Score 0–1000, categoría de riesgo, límite de crédito sugerido y alertas automáticas por email, WhatsApp, Slack o Teams cuando algo cambia.</p>
       </div>
     </div>
+    <p class="method-note">El modelo se recalibra periódicamente con el comportamiento de pago observado, para que la calificación de hoy anticipe lo que va a pasar en los próximos 12 meses.</p>
   </div>
 </section>
 
-<!-- ================= ALERTS / ENGINE ================= -->
-<section class="sec" id="alertas" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="wrap engine">
-    <div class="reveal">
-      <span class="kicker">Early warning</span>
-      <h2>No es un informe. Es un <em>radar</em> que nunca se apaga.</h2>
-      <p style="color:var(--muted);font-size:18px;margin:0">Un informe comercial te dice cómo estaba una empresa el día que lo pediste. Centinel vigila tu cartera todos los días y te avisa sólo cuando hay algo que merece tu atención.</p>
-      <div class="feat-list">
-        <div class="feat"><div class="ic"><svg><use href="#i-bell"/></svg></div><div><h3>Alertas por severidad</h3><p>Crítica, alta, media. Configurás umbrales y canales por equipo: créditos, cobranzas, compras.</p></div></div>
-        <div class="feat"><div class="ic"><svg><use href="#i-graph"/></svg></div><div><h3>Score explicable</h3><p>Cada punto del score tiene una razón. Ideal para justificar decisiones ante el directorio o auditoría.</p></div></div>
-        <div class="feat"><div class="ic"><svg><use href="#i-network"/></svg></div><div><h3>Riesgo de concentración</h3><p>Visualizá cuánto de tu cuenta corriente está expuesto a contrapartes deterioradas, por sector y país.</p></div></div>
-        <div class="feat"><div class="ic"><svg><use href="#i-api"/></svg></div><div><h3>API y webhooks</h3><p>Bloqueá automáticamente pedidos en tu ERP cuando una contraparte cruza un umbral de riesgo.</p></div></div>
-      </div>
+<!-- MONITORING -->
+<section class="sec" id="monitoreo">
+  <div class="wrap split">
+    <div>
+      <span class="label">Monitoreo continuo</span>
+      <h2>Un informe es una foto. Centinel vigila tu cartera todos los días.</h2>
+      <p style="font-size:18px;color:var(--ink-2);margin:0">Cargá tus clientes una vez. Cada vez que uno cambia de situación, te llega una alerta con su gravedad y la acción recomendada.</p>
+      <ul class="checks">
+        <li><svg><use href="#i-check"/></svg><span><b>Alertas por gravedad</b>, por email o WhatsApp, a la persona que tiene que actuar: créditos, cobranzas o compras.</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>Límites de crédito que se ajustan solos</b> cuando el riesgo de un cliente sube o baja.</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>Tablero de concentración</b>: cuánto de tu cuenta corriente está en manos de clientes deteriorados.</span></li>
+        <li><svg><use href="#i-check"/></svg><span><b>Integración con tu sistema de gestión</b> para frenar pedidos cuando un cliente cruza el umbral.</span></li>
+      </ul>
+      <a href="#fundadores" class="btn btn-cta btn-lg" data-plan="Monitoreo continuo">Monitorear mi cartera 14 días gratis <svg><use href="#i-arrow"/></svg></a>
     </div>
-    <div class="feed reveal" aria-label="Ejemplo de feed de alertas">
-      <div class="feed-head"><b>Alertas de cartera</b><span id="feed-clock">en vivo · ejemplo</span></div>
+    <div class="feed" aria-label="Ejemplo de alertas de cartera">
+      <div class="feed-head"><b>Alertas de tu cartera</b><span><i></i>Ejemplo en vivo</span></div>
       <div id="feed">
-        <div class="alert"><span class="sev" style="background:rgba(248,113,113,.14);color:var(--crit)">CRÍTICA</span><div><h4>Pasó a situación 4 en Central de Deudores</h4><p>Deuda bancaria con atraso &gt; 180 días en 2 entidades.</p><span class="co">Metalúrgica O*** S.A. · 🇦🇷</span></div><time>hace 4 min</time></div>
-        <div class="alert"><span class="sev" style="background:rgba(251,146,60,.14);color:var(--high)">ALTA</span><div><h4>3 cheques rechazados sin fondos</h4><p>Por un total de ARS 41,2 M en los últimos 30 días.</p><span class="co">Agro P*** SRL · 🇦🇷</span></div><time>hace 2 h</time></div>
-        <div class="alert"><span class="sev" style="background:rgba(251,146,60,.14);color:var(--high)">ALTA</span><div><h4>Nuevo protesto registrado</h4><p>Título protestado por BRL 380 mil en cartório de São Paulo.</p><span class="co">Logística B*** Ltda. · 🇧🇷</span></div><time>ayer</time></div>
-        <div class="alert"><span class="sev" style="background:rgba(251,191,36,.14);color:var(--mod)">MEDIA</span><div><h4>Cambio de directorio publicado</h4><p>Renuncia del presidente y del CFO en Diario Oficial.</p><span class="co">Inversiones A*** SpA · 🇨🇱</span></div><time>hace 3 d</time></div>
-        <div class="alert"><span class="sev" style="background:rgba(52,211,153,.14);color:var(--low)">MEJORA</span><div><h4>Regularizó su situación bancaria</h4><p>Volvió a situación 1. Score +96 puntos.</p><span class="co">Química del L*** S.A. · 🇦🇷</span></div><time>hace 5 d</time></div>
+        <div class="alert"><span class="bar" style="background:var(--crit)"></span><div><h4>Atrasos bancarios de más de 180 días</h4><p>Score bajó de 512 a 298. Límite sugerido: sólo contado.</p><div class="meta"><span class="sev" style="background:var(--crit-bg);color:var(--crit)">CRÍTICA</span><span class="co">Metalúrgica O*** S.A.</span></div></div><time>hace 4 min</time></div>
+        <div class="alert"><span class="bar" style="background:var(--high)"></span><div><h4>3 cheques rechazados sin fondos</h4><p>Por ARS 41,2 M en los últimos 30 días.</p><div class="meta"><span class="sev" style="background:var(--high-bg);color:var(--high)">ALTA</span><span class="co">Agro P*** S.R.L.</span></div></div><time>hace 2 h</time></div>
+        <div class="alert"><span class="bar" style="background:var(--mod)"></span><div><h4>Cambio de autoridades publicado</h4><p>Renunciaron el presidente y el director financiero.</p><div class="meta"><span class="sev" style="background:var(--mod-bg);color:var(--mod)">MEDIA</span><span class="co">Logística R*** S.A.</span></div></div><time>ayer</time></div>
+        <div class="alert"><span class="bar" style="background:var(--low)"></span><div><h4>Regularizó su situación financiera</h4><p>Score subió 96 puntos. Podés ampliar su límite.</p><div class="meta"><span class="sev" style="background:var(--low-bg);color:var(--low)">MEJORA</span><span class="co">Química del L*** S.A.</span></div></div><time>hace 3 d</time></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= COVERAGE ================= -->
-<section class="sec" id="cobertura">
+<!-- SECTORS -->
+<section class="sec alt" style="padding-block:80px">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">Cobertura</span>
-      <h2>Tres países. <em>Un solo</em> criterio de riesgo.</h2>
-      <p>Si vendés o comprás en el Cono Sur, comparás contrapartes argentinas, brasileñas y chilenas con la misma escala.</p>
-    </div>
-    <div class="cov">
-      <div class="country reveal">
-        <span class="hl">Integración BCRA</span>
-        <div class="fl">🇦🇷</div>
-        <h3>Argentina</h3>
-        <span class="idt">CUIT · 11 dígitos</span>
-        <ul>
-          <li><svg><use href="#i-check"/></svg><span><b>Central de Deudores del BCRA</b> — situación 1 a 6 por entidad, histórico 24 meses</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Cheques rechazados</b> — monto, causal y fecha de pago</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Padrón ARCA</b> — estado, actividad, antigüedad</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Boletín Oficial</b> — concursos, quiebras, cambios societarios</span></li>
-        </ul>
-      </div>
-      <div class="country reveal">
-        <div class="fl">🇧🇷</div>
-        <h3>Brasil</h3>
-        <span class="idt">CNPJ · 14 dígitos</span>
-        <ul>
-          <li><svg><use href="#i-check"/></svg><span><b>Receita Federal</b> — situação cadastral, QSA, CNAE</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Protestos</b> — títulos protestados en cartórios</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Recuperação judicial</b> y procesos relevantes</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Diários Oficiais</b> y señales de prensa</span></li>
-        </ul>
-      </div>
-      <div class="country reveal">
-        <div class="fl">🇨🇱</div>
-        <h3>Chile</h3>
-        <span class="idt">RUT · con dígito verificador</span>
-        <ul>
-          <li><svg><use href="#i-check"/></svg><span><b>SII</b> — inicio de actividades, giro, situación tributaria</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Diario Oficial</b> — constitución, modificaciones, disoluciones</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Boletín Concursal</b> — reorganización y liquidación</span></li>
-          <li><svg><use href="#i-check"/></svg><span><b>Poder Judicial</b> — causas civiles y laborales</span></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= SECTORS ================= -->
-<section class="sec" style="padding-top:0">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">Para quién</span>
-      <h2>Para cualquier empresa que <em>vende a plazo</em> o depende de otra.</h2>
+    <div class="sec-head" style="margin-bottom:36px">
+      <span class="label">Para quién</span>
+      <h2>Para toda empresa argentina que vende a plazo o depende de otra.</h2>
     </div>
     <div class="sectors">
-      <div class="sector reveal"><b>Distribución y mayoristas</b><span>Cientos de clientes en cuenta corriente, márgenes finos.</span></div>
-      <div class="sector reveal"><b>Industria y manufactura</b><span>Clientes concentrados y proveedores críticos.</span></div>
-      <div class="sector reveal"><b>Agro e insumos</b><span>Venta a cosecha, canje y financiación de campaña.</span></div>
-      <div class="sector reveal"><b>Logística y transporte</b><span>Facturación recurrente a dadores de carga.</span></div>
-      <div class="sector reveal"><b>Factoring, SGR y fintech</b><span>Evaluación masiva de librados y cedentes vía API.</span></div>
-      <div class="sector reveal"><b>Construcción</b><span>Subcontratistas, anticipos y garantías.</span></div>
-      <div class="sector reveal"><b>Servicios B2B y SaaS</b><span>Contratos anuales con cobro mensual.</span></div>
-      <div class="sector reveal"><b>Estudios contables</b><span>Un servicio de valor agregado para toda su cartera.</span></div>
+      <div class="sector"><b>Distribuidoras y mayoristas</b><span>Cientos de clientes en cuenta corriente y márgenes finos.</span></div>
+      <div class="sector"><b>Industria</b><span>Clientes concentrados y proveedores críticos.</span></div>
+      <div class="sector"><b>Agro e insumos</b><span>Venta a cosecha, canje y financiación de campaña.</span></div>
+      <div class="sector"><b>Construcción</b><span>Subcontratistas, anticipos y certificados.</span></div>
+      <div class="sector"><b>Logística y transporte</b><span>Facturación recurrente a dadores de carga.</span></div>
+      <div class="sector"><b>Factoring, SGR y fintech</b><span>Evaluación masiva de librados y cedentes.</span></div>
+      <div class="sector"><b>Servicios B2B</b><span>Contratos anuales con cobro mensual.</span></div>
+      <div class="sector"><b>Estudios contables</b><span>Un servicio de valor agregado para sus clientes.</span></div>
     </div>
   </div>
 </section>
 
-<!-- ================= PRICING ================= -->
-<section class="sec" id="precios" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+<!-- PRICING -->
+<section class="sec" id="precios">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">Precios</span>
-      <h2>Pagá como <em>usás</em>. Desde una consulta hasta toda tu cartera.</h2>
-      <p>Precios en USD + impuestos. Podés pagar en ARS, BRL o CLP al tipo de cambio del día con tarjeta, transferencia o Mercado Pago.</p>
+    <div class="sec-head">
+      <span class="label">Precios</span>
+      <h2>Pagá por lo que necesitás: una consulta, un lote o toda tu cartera.</h2>
+      <p>Precios en USD más IVA. Pagás en pesos al tipo de cambio oficial del día, con tarjeta, transferencia o Mercado Pago. Emitimos factura A.</p>
     </div>
 
-    <div class="pricing-tabs" role="tablist" aria-label="Modelos de precio">
-      <button role="tab" aria-selected="true" data-pane="p-mon">Monitoreo continuo</button>
-      <button role="tab" aria-selected="false" data-pane="p-adhoc">Consulta ad hoc</button>
-      <button role="tab" aria-selected="false" data-pane="p-batch">Por lote</button>
-      <button role="tab" aria-selected="false" data-pane="p-one">Diagnóstico one-time</button>
+    <div class="tabs" role="tablist" aria-label="Formas de contratar">
+      <button role="tab" id="t-mon" aria-selected="true" aria-controls="p-mon">Monitoreo continuo</button>
+      <button role="tab" id="t-adhoc" aria-selected="false" aria-controls="p-adhoc">Consultas sueltas</button>
+      <button role="tab" id="t-batch" aria-selected="false" aria-controls="p-batch">Análisis por lote</button>
+      <button role="tab" id="t-one" aria-selected="false" aria-controls="p-one">Diagnóstico de cartera</button>
     </div>
 
-    <!-- MONITOREO -->
-    <div class="pane active" id="p-mon" role="tabpanel">
-      <div class="billing">
-        <span>Mensual</span>
-        <button class="switch" id="bill-switch" role="switch" aria-checked="false" aria-label="Facturación anual"></button>
-        <span>Anual</span><span class="save">2 meses gratis</span>
-      </div>
+    <div class="pane" id="p-mon" role="tabpanel" aria-labelledby="t-mon">
+      <div class="billing"><span>Mensual</span><button class="switch" id="bill" role="switch" aria-checked="false" aria-label="Facturación anual"></button><span>Anual</span><span class="save">2 meses bonificados</span></div>
       <div class="plans">
-        <div class="plan reveal">
+        <div class="plan">
           <h3>Esencial</h3>
           <p class="desc">Para la pyme que quiere dejar de enterarse tarde.</p>
-          <div class="price"><b data-m="149" data-y="124">USD 149</b><span>/mes</span></div>
-          <div class="price-sub" data-bill-sub>facturado mensualmente</div>
+          <div class="price"><b data-m="149" data-y="124">USD 149</b><span>/ mes</span></div>
+          <div class="psub" data-sub>facturación mensual</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg><span>Hasta <b>100 contrapartes</b> monitoreadas</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Actualización <b>semanal</b> del score</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Hasta <b>100 CUITs</b> monitoreados</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Actualización <b>semanal</b></span></li>
             <li><svg><use href="#i-check"/></svg><span>Alertas por email</span></li>
-            <li><svg><use href="#i-check"/></svg><span>10 consultas ad hoc / mes incluidas</span></li>
-            <li><svg><use href="#i-check"/></svg><span>1 usuario · AR, BR o CL</span></li>
+            <li><svg><use href="#i-check"/></svg><span>10 informes completos por mes</span></li>
+            <li><svg><use href="#i-check"/></svg><span>1 usuario</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-ghost" data-plan="Esencial">Empezar 14 días gratis</a>
+          <a href="#fundadores" class="btn btn-line" data-plan="Monitoreo continuo">Probar 14 días gratis</a>
         </div>
-        <div class="plan featured reveal">
-          <span class="badge">MÁS ELEGIDO</span>
+        <div class="plan feat">
+          <span class="badge">EL MÁS ELEGIDO</span>
           <h3>Profesional</h3>
           <p class="desc">Para equipos de créditos y cobranzas con cartera activa.</p>
-          <div class="price"><b data-m="449" data-y="374">USD 449</b><span>/mes</span></div>
-          <div class="price-sub" data-bill-sub>facturado mensualmente</div>
+          <div class="price"><b data-m="449" data-y="374">USD 449</b><span>/ mes</span></div>
+          <div class="psub" data-sub>facturación mensual</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg><span>Hasta <b>500 contrapartes</b> monitoreadas</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Actualización <b>diaria</b> + alertas inmediatas</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Email, <b>WhatsApp, Slack y Teams</b></span></li>
-            <li><svg><use href="#i-check"/></svg><span><b>Límite de crédito sugerido</b> por contraparte</span></li>
-            <li><svg><use href="#i-check"/></svg><span>50 consultas ad hoc / mes · 5 usuarios</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Los 3 países incluidos</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Hasta <b>500 CUITs</b> monitoreados</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Actualización <b>diaria</b> y alertas inmediatas</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Alertas por <b>email y WhatsApp</b></span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Límite de crédito sugerido</b> por cliente</span></li>
+            <li><svg><use href="#i-check"/></svg><span>50 informes completos por mes</span></li>
+            <li><svg><use href="#i-check"/></svg><span>5 usuarios</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-primary" data-plan="Profesional">Empezar 14 días gratis</a>
+          <a href="#fundadores" class="btn btn-cta" data-plan="Monitoreo continuo">Probar 14 días gratis</a>
         </div>
-        <div class="plan reveal">
+        <div class="plan">
           <h3>Corporativo</h3>
           <p class="desc">Para empresas medianas, factoring, SGR y fintech.</p>
-          <div class="price"><b data-m="1290" data-y="1075">USD 1.290</b><span>/mes</span></div>
-          <div class="price-sub" data-bill-sub>facturado mensualmente</div>
+          <div class="price"><b data-m="1290" data-y="1075">USD 1.290</b><span>/ mes</span></div>
+          <div class="psub" data-sub>facturación mensual</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg><span>Hasta <b>2.500 contrapartes</b> · ampliable</span></li>
-            <li><svg><use href="#i-check"/></svg><span><b>API REST + webhooks</b> e integración ERP</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Políticas de crédito y umbrales a medida</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Dashboard de concentración y reportes al directorio</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Usuarios ilimitados · SSO · SLA 99,9%</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Account manager dedicado</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Hasta <b>2.500 CUITs</b>, ampliable</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>API e integración</b> con tu sistema de gestión</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Política de crédito y umbrales a medida</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Reportes de cartera para el directorio</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Usuarios ilimitados y ejecutivo de cuenta</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-ghost" data-plan="Corporativo">Hablar con ventas</a>
+          <a href="#fundadores" class="btn btn-line" data-plan="API / Integración">Hablar con un asesor</a>
         </div>
       </div>
-      <p class="price-note">¿Más de 2.500 contrapartes, white-label o revenue share para tu plataforma? <a href="#fundadores" style="color:var(--accent)">Plan Enterprise y Partners →</a></p>
+      <p class="pnote">¿Más de 2.500 CUITs, marca blanca o integración para tu plataforma? <a href="#fundadores" data-plan="API / Integración">Consultá el plan Enterprise →</a></p>
     </div>
 
-    <!-- AD HOC -->
-    <div class="pane" id="p-adhoc" role="tabpanel">
+    <div class="pane" id="p-adhoc" role="tabpanel" aria-labelledby="t-adhoc" hidden>
       <div class="plans">
         <div class="plan">
           <h3>Gratis</h3>
           <p class="desc">Para probar con tus propios clientes.</p>
           <div class="price"><b>USD 0</b></div>
-          <div class="price-sub">sin tarjeta</div>
+          <div class="psub">sin tarjeta</div>
           <ul>
             <li><svg><use href="#i-check"/></svg><span><b>3 consultas</b> por mes</span></li>
             <li><svg><use href="#i-check"/></svg><span>Score y categoría de riesgo</span></li>
             <li><svg><use href="#i-check"/></svg><span>Principales señales detectadas</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-ghost" data-plan="Gratis">Crear cuenta gratis</a>
+          <a href="#consulta" class="btn btn-line">Consultar un CUIT</a>
         </div>
-        <div class="plan featured">
-          <span class="badge">MEJOR VALOR</span>
-          <h3>Pack 25 informes</h3>
-          <p class="desc">Para evaluar clientes nuevos antes de abrir cuenta.</p>
+        <div class="plan feat">
+          <span class="badge">MEJOR PRECIO</span>
+          <h3>Pack de 25 informes</h3>
+          <p class="desc">Para evaluar clientes nuevos antes de abrirles cuenta.</p>
           <div class="price"><b>USD 199</b></div>
-          <div class="price-sub">USD 7,96 por informe · válido 12 meses</div>
+          <div class="psub">USD 7,96 por informe · válido 12 meses</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg><span><b>Informe completo</b> en PDF descargable</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Límite de crédito y plazo sugeridos</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Histórico 24 meses de deuda bancaria</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Informe completo</b> en PDF</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Límite y plazo sugeridos</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Evolución de los últimos 24 meses</span></li>
             <li><svg><use href="#i-check"/></svg><span>Explicación del score en lenguaje simple</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-primary" data-plan="Pack 25">Comprar pack</a>
+          <a href="#fundadores" class="btn btn-cta" data-plan="Consultas sueltas">Comprar el pack</a>
         </div>
         <div class="plan">
           <h3>Informe individual</h3>
-          <p class="desc">Una decisión puntual, hoy.</p>
-          <div class="price"><b>USD 12</b><span>/informe</span></div>
-          <div class="price-sub">Pack 100: USD 590 (USD 5,90 c/u)</div>
+          <p class="desc">Para una decisión puntual, hoy.</p>
+          <div class="price"><b>USD 12</b><span>/ informe</span></div>
+          <div class="psub">Pack de 100: USD 590 (USD 5,90 c/u)</div>
           <ul>
             <li><svg><use href="#i-check"/></svg><span>Todo lo del informe completo</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Pago único con tarjeta o Mercado Pago</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Se descuenta si luego te suscribís</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Pago único</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Se descuenta si después te suscribís</span></li>
           </ul>
-          <a href="#fundadores" class="btn btn-ghost" data-plan="Individual">Comprar un informe</a>
+          <a href="#fundadores" class="btn btn-line" data-plan="Consultas sueltas">Comprar un informe</a>
         </div>
       </div>
     </div>
 
-    <!-- BATCH -->
-    <div class="pane" id="p-batch" role="tabpanel">
-      <div class="calc">
-        <div class="calc-box">
+    <div class="pane" id="p-batch" role="tabpanel" aria-labelledby="t-batch" hidden>
+      <div class="two-col">
+        <div class="box">
           <h3>Calculadora de lote</h3>
-          <p style="color:var(--muted);margin:0;font-size:15px">Subí un Excel o CSV con razón social y CUIT/CNPJ/RUT. Recibís el archivo enriquecido con score, categoría, límite sugerido y señales en menos de 24 h.</p>
-          <div class="range-row">
-            <label for="batch-range">Cantidad de contrapartes <b id="batch-n">1.000</b></label>
-            <input type="range" id="batch-range" min="50" max="10000" step="50" value="1000">
+          <p style="margin:0;color:var(--ink-2);font-size:15px">Subí un Excel con razón social y CUIT. En menos de 24 horas recibís el archivo con score, categoría, límite sugerido y señales de cada empresa.</p>
+          <div class="range">
+            <label for="batch">Cantidad de CUITs <b id="batch-n">1.000</b></label>
+            <input type="range" id="batch" min="50" max="10000" step="50" value="1000">
           </div>
-          <table class="tiers" aria-label="Tramos de precio por lote">
-            <tr data-t="0"><td>1 – 500 contrapartes</td><td>USD 1,90 c/u</td></tr>
-            <tr data-t="1"><td>501 – 2.000</td><td>USD 1,20 c/u</td></tr>
-            <tr data-t="2"><td>2.001 – 10.000</td><td>USD 0,70 c/u</td></tr>
+          <table class="tiers" aria-label="Precio por tramo">
+            <tr data-t="0"><td>1 a 500 CUITs</td><td>USD 1,90 c/u</td></tr>
+            <tr data-t="1"><td>501 a 2.000</td><td>USD 1,20 c/u</td></tr>
+            <tr data-t="2"><td>2.001 a 10.000</td><td>USD 0,70 c/u</td></tr>
             <tr data-t="3"><td>Más de 10.000</td><td>a medida</td></tr>
           </table>
         </div>
-        <div class="calc-box total">
+        <div class="box total">
           <div>
-            <small>Total estimado del lote</small>
+            <small>Total estimado</small>
             <div class="big" id="batch-total">USD 1.550</div>
-            <small id="batch-unit">≈ USD 1,55 por contraparte · mínimo USD 150</small>
-            <ul>
-              <li>Archivo enriquecido .xlsx + resumen ejecutivo</li>
-              <li>Ranking de las contrapartes más riesgosas</li>
-              <li>30 días de alertas gratis sobre el lote</li>
+            <small id="batch-unit">≈ USD 1,55 por CUIT · mínimo USD 150</small>
+            <ul class="tick">
+              <li><svg><use href="#i-check"/></svg>Excel enriquecido y resumen ejecutivo</li>
+              <li><svg><use href="#i-check"/></svg>Ranking de los clientes más riesgosos</li>
+              <li><svg><use href="#i-check"/></svg>30 días de alertas sin cargo sobre el lote</li>
             </ul>
           </div>
-          <a href="#fundadores" class="btn btn-primary btn-lg" data-plan="Lote">Cotizar mi lote</a>
+          <a href="#fundadores" class="btn btn-cta btn-lg" data-plan="Análisis por lote">Cotizar mi lote</a>
         </div>
       </div>
     </div>
 
-    <!-- ONE TIME -->
-    <div class="pane" id="p-one" role="tabpanel">
-      <div class="oneoff">
-        <div class="calc-box">
-          <span class="kicker" style="margin-bottom:10px">Pago único</span>
-          <h3 style="font-size:24px">Diagnóstico de cartera</h3>
-          <p style="color:var(--muted);margin:0;font-size:15.5px">Una foto completa del riesgo de tu cuenta corriente, lista para presentar al directorio, al banco o a tu aseguradora de crédito. Ideal antes de un cierre de balance, una ronda o una renegociación con bancos.</p>
-          <div class="deliver">
-            <div><b>Hasta 1.000 contrapartes</b>analizadas en AR, BR y CL</div>
-            <div><b>Mapa de concentración</b>por cliente, sector y país</div>
-            <div><b>Top 20 riesgos</b>con recomendación de acción</div>
-            <div><b>Sesión 1:1 de 60 min</b>con un analista para revisar resultados</div>
+    <div class="pane" id="p-one" role="tabpanel" aria-labelledby="t-one" hidden>
+      <div class="two-col">
+        <div class="box">
+          <span class="label" style="margin-bottom:8px">Pago único</span>
+          <h3 style="font-size:22px">Diagnóstico de cartera</h3>
+          <p style="margin:0;color:var(--ink-2);font-size:15.5px">Una radiografía completa del riesgo de tu cuenta corriente, lista para presentar al directorio, al banco o a tu aseguradora. Útil antes de un cierre de balance o de renegociar líneas de crédito.</p>
+          <div class="deliv">
+            <div><b>Hasta 1.000 CUITs</b>analizados</div>
+            <div><b>Mapa de concentración</b>por cliente y sector</div>
+            <div><b>Los 20 mayores riesgos</b>con la acción recomendada</div>
+            <div><b>Reunión de 60 minutos</b>con un analista de riesgo</div>
           </div>
         </div>
-        <div class="calc-box total">
+        <div class="box total">
           <div>
             <small>Precio único</small>
             <div class="big">USD 990</div>
             <small>Entrega en 5 días hábiles</small>
-            <ul>
-              <li>100% acreditable si contratás monitoreo en los 30 días siguientes</li>
-              <li>Informe ejecutivo en PDF + anexo en Excel</li>
-              <li>Confidencialidad bajo NDA</li>
+            <ul class="tick">
+              <li><svg><use href="#i-check"/></svg>Se acredita al 100% si contratás monitoreo dentro de los 30 días</li>
+              <li><svg><use href="#i-check"/></svg>Informe ejecutivo en PDF y anexo en Excel</li>
+              <li><svg><use href="#i-check"/></svg>Acuerdo de confidencialidad firmado</li>
             </ul>
           </div>
-          <a href="#fundadores" class="btn btn-primary btn-lg" data-plan="Diagnóstico">Pedir mi diagnóstico</a>
+          <a href="#fundadores" class="btn btn-cta btn-lg" data-plan="Diagnóstico de cartera">Pedir mi diagnóstico</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= ROI ================= -->
-<section class="sec">
+<!-- ROI -->
+<section class="sec alt">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="kicker">Retorno</span>
-      <h2>¿Cuánto te cuesta <em>no</em> saberlo?</h2>
+    <div class="sec-head">
+      <span class="label">Retorno</span>
+      <h2>¿Cuánto te cuesta enterarte tarde?</h2>
       <p>Mové los valores con los números de tu empresa.</p>
     </div>
-    <div class="roi reveal">
+    <div class="roi">
       <div class="roi-in">
-        <div class="range-row" style="margin-top:0">
-          <label for="r-cartera">Cuenta corriente promedio (USD) <b id="v-cartera">500.000</b></label>
-          <input type="range" id="r-cartera" min="50000" max="5000000" step="50000" value="500000">
+        <div class="range">
+          <label for="r-cc">Saldo promedio de cuenta corriente (USD) <b id="v-cc">500.000</b></label>
+          <input type="range" id="r-cc" min="50000" max="5000000" step="50000" value="500000">
         </div>
-        <div class="range-row">
-          <label for="r-incob">Incobrabilidad anual actual <b id="v-incob">3,0%</b></label>
-          <input type="range" id="r-incob" min="0.5" max="10" step="0.5" value="3">
+        <div class="range">
+          <label for="r-inc">Incobrabilidad anual sobre ventas a plazo <b id="v-inc">3,0%</b></label>
+          <input type="range" id="r-inc" min="0.5" max="10" step="0.5" value="3">
         </div>
-        <div class="range-row">
+        <div class="range">
           <label for="r-red">Reducción esperada con alertas tempranas <b id="v-red">30%</b></label>
           <input type="range" id="r-red" min="10" max="60" step="5" value="30">
         </div>
-        <div class="range-row">
-          <label for="r-plan">Plan</label>
-          <div class="seg" id="r-plan" role="group" aria-label="Plan" style="margin:0">
+        <div class="range">
+          <label id="l-plan">Plan</label>
+          <div class="seg" id="r-plan" role="group" aria-labelledby="l-plan">
             <button type="button" data-v="149" aria-pressed="false">Esencial</button>
             <button type="button" data-v="449" aria-pressed="true">Profesional</button>
             <button type="button" data-v="1290" aria-pressed="false">Corporativo</button>
@@ -851,87 +798,106 @@ footer a:hover{color:var(--text)}
         </div>
       </div>
       <div class="roi-out">
-        <span class="lbl">Pérdidas evitadas estimadas por año</span>
-        <div class="big" id="o-saved">USD 45.000</div>
+        <span class="lbl">Pérdidas evitadas por año (estimado)</span>
+        <div class="big" id="o-saved">USD 13.500</div>
         <div class="rows">
-          <div><span>Pérdida actual por incobrables</span><b id="o-loss">USD 15.000</b></div>
+          <div><span>Pérdida anual actual por incobrables</span><b id="o-loss">USD 45.000</b></div>
           <div><span>Costo anual de Centinel</span><b id="o-cost">USD 5.388</b></div>
-          <div><span>Retorno sobre la inversión</span><b id="o-roi" style="color:var(--accent)">2,8x</b></div>
+          <div><span>Retorno de la inversión</span><b id="o-roi">2,5x</b></div>
         </div>
-        <p class="disc">Estimación orientativa. La reducción real depende de tu política de crédito y de cómo actúes sobre las alertas.</p>
+        <p class="disc">Supone una rotación de cartera de 6 veces por año y 50% de recupero. Es una estimación orientativa; el resultado real depende de tu política de crédito.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= FOUNDERS / LEAD ================= -->
-<section class="sec" id="fundadores" style="padding-top:0">
+<!-- SECURITY -->
+<section class="sec" id="seguridad" style="padding-block:84px">
   <div class="wrap">
-    <div class="founders reveal">
-      <div>
-        <span class="kicker">Programa de clientes fundadores</span>
-        <h2>Primeras <em>50 empresas</em>, condiciones que no se van a repetir.</h2>
-        <p>Estamos abriendo Centinel a un grupo reducido de empresas de Argentina, Brasil y Chile. A cambio de tu feedback, te damos:</p>
-        <ul class="perks">
-          <li><span class="n">01</span><span><b>40% de descuento de por vida</b> en cualquier plan de monitoreo.</span></li>
-          <li><span class="n">02</span><span><b>Diagnóstico de cartera sin cargo</b> (valor USD 990) al activar tu cuenta.</span></li>
-          <li><span class="n">03</span><span><b>Onboarding 1:1</b> y conexión con tu ERP hecha por nosotros.</span></li>
-          <li><span class="n">04</span><span><b>Voz en el roadmap</b>: las señales que vos necesitás, primero.</span></li>
-        </ul>
-      </div>
-      <form class="lead" id="lead-form" novalidate>
-        <div id="form-body">
-          <h3>Quiero ser cliente fundador</h3>
-          <p>Te contactamos en menos de 24 h hábiles.</p>
-          <div class="two">
-            <div class="field"><label for="f-name">Nombre</label><input id="f-name" required autocomplete="name"></div>
-            <div class="field"><label for="f-company">Empresa</label><input id="f-company" required autocomplete="organization"></div>
-          </div>
-          <div class="field"><label for="f-email">Email corporativo</label><input id="f-email" type="email" required autocomplete="email" placeholder="nombre@empresa.com"></div>
-          <div class="two">
-            <div class="field"><label for="f-country">País</label>
-              <select id="f-country"><option>Argentina</option><option>Brasil</option><option>Chile</option><option>Otro</option></select></div>
-            <div class="field"><label for="f-size">Contrapartes a monitorear</label>
-              <select id="f-size"><option>Menos de 100</option><option selected>100 – 500</option><option>500 – 2.500</option><option>Más de 2.500</option></select></div>
-          </div>
+    <div class="sec-head" style="margin-bottom:40px">
+      <span class="label">Seguridad y confidencialidad</span>
+      <h2>Tu cartera de clientes es información sensible. La tratamos así.</h2>
+    </div>
+    <div class="trust">
+      <div><svg><use href="#i-eye"/></svg><h3>Consulta invisible</h3><p>La empresa consultada nunca recibe aviso de que la estás evaluando.</p></div>
+      <div><svg><use href="#i-lock"/></svg><h3>Datos cifrados</h3><p>Tu información viaja y se guarda cifrada. Nunca compartimos ni vendemos tu cartera.</p></div>
+      <div><svg><use href="#i-shield"/></svg><h3>Ley 25.326</h3><p>Diseñado según la Ley de Protección de Datos Personales, con información de acceso legítimo.</p></div>
+      <div><svg><use href="#i-doc"/></svg><h3>Trazabilidad</h3><p>Cada informe queda registrado con fecha y usuario, listo para auditoría.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDERS -->
+<section class="sec alt" id="fundadores">
+  <div class="wrap founders">
+    <div>
+      <span class="label">Programa de clientes fundadores</span>
+      <h2>Sumate entre las primeras 50 empresas y accedé a condiciones que no se van a repetir.</h2>
+      <div class="spots"><div class="meter"><i style="width:0%"></i></div><b>Quedan 50 lugares</b></div>
+      <ul class="perks">
+        <li><svg><use href="#i-checkc"/></svg><span><b>40% de descuento de por vida</b> en cualquier plan de monitoreo.</span></li>
+        <li><svg><use href="#i-checkc"/></svg><span><b>Diagnóstico de cartera sin cargo</b> (valor USD 990) al activar tu cuenta.</span></li>
+        <li><svg><use href="#i-checkc"/></svg><span><b>Puesta en marcha asistida</b>: cargamos tu cartera y conectamos tu sistema por vos.</span></li>
+        <li><svg><use href="#i-checkc"/></svg><span><b>Garantía de 14 días</b>: si no detectamos ninguna alerta relevante en tu cartera, no pagás.</span></li>
+      </ul>
+    </div>
+    <form class="lead" id="lead" novalidate>
+      <div id="lead-body">
+        <h3>Reservá tu lugar</h3>
+        <p>Un asesor te contacta en menos de 24 horas hábiles.</p>
+        <div class="grid2">
+          <div class="field"><label for="f-name">Nombre y apellido</label><input id="f-name" autocomplete="name"></div>
+          <div class="field"><label for="f-company">Empresa</label><input id="f-company" autocomplete="organization"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="f-email">Email laboral</label><input id="f-email" type="email" autocomplete="email" placeholder="nombre@empresa.com.ar"></div>
+          <div class="field"><label for="f-phone">Teléfono (opcional)</label><input id="f-phone" type="tel" autocomplete="tel" placeholder="+54 11 ..."></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="f-size">Clientes en cuenta corriente</label>
+            <select id="f-size"><option>Menos de 100</option><option selected>100 a 500</option><option>500 a 2.500</option><option>Más de 2.500</option></select></div>
           <div class="field"><label for="f-plan">Me interesa</label>
-            <select id="f-plan"><option>Monitoreo continuo</option><option>Consultas ad hoc</option><option>Análisis por lote</option><option>Diagnóstico one-time</option><option>API / Partners</option></select></div>
-          <button class="btn btn-primary btn-lg" type="submit" style="width:100%;margin-top:6px">Reservar mi lugar <svg width="18" height="18"><use href="#i-arrow"/></svg></button>
-          <p class="hint" style="margin-top:12px;text-align:center"><svg width="12" height="12" style="display:inline;vertical-align:-1px"><use href="#i-lock"/></svg> Tus datos no se comparten con terceros.</p>
+            <select id="f-plan"><option>Monitoreo continuo</option><option>Consultas sueltas</option><option>Análisis por lote</option><option>Diagnóstico de cartera</option><option>API / Integración</option></select></div>
         </div>
-        <div class="form-ok" id="form-ok">
-          <div class="ckbig"><svg width="26" height="26"><use href="#i-check"/></svg></div>
-          <h3>¡Listo! Tu lugar está reservado.</h3>
-          <p style="color:var(--muted);margin:6px 0 0">Te escribimos en menos de 24 h hábiles para activar tu cuenta y tu diagnóstico gratuito.</p>
-        </div>
-      </form>
-    </div>
+        <p class="err-msg" id="lead-err" hidden>Completá nombre, empresa y un email válido para continuar.</p>
+        <button class="btn btn-cta btn-lg" type="submit" style="width:100%">Reservar mi lugar <svg><use href="#i-arrow"/></svg></button>
+        <p class="fine">Sin compromiso. No compartimos tus datos con terceros.</p>
+      </div>
+      <div class="form-ok" id="lead-ok" hidden>
+        <div class="ck"><svg><use href="#i-check"/></svg></div>
+        <h3>Tu lugar está reservado</h3>
+        <p style="color:var(--ink-2);margin:6px 0 0">Te escribimos en menos de 24 horas hábiles para activar tu cuenta y coordinar tu diagnóstico sin cargo.</p>
+      </div>
+    </form>
   </div>
 </section>
 
-<!-- ================= FAQ ================= -->
-<section class="sec" id="faq" style="padding-top:0">
+<!-- FAQ -->
+<section class="sec" id="faq">
   <div class="wrap">
-    <div class="sec-head reveal"><span class="kicker">Preguntas frecuentes</span><h2>Lo que nos <em>suelen</em> preguntar.</h2></div>
+    <div class="sec-head" style="margin-bottom:28px"><span class="label">Preguntas frecuentes</span><h2>Lo que nos preguntan antes de empezar.</h2></div>
     <div class="faq">
-      <details><summary>¿De dónde salen los datos?</summary><p>Exclusivamente de fuentes públicas oficiales (como la Central de Deudores del BCRA, padrones fiscales, boletines oficiales y registros judiciales) y de proveedores de datos con licencia. No usamos información obtenida sin autorización y cumplimos con las leyes de protección de datos de cada país.</p></details>
-      <details><summary>¿En qué se diferencia de un informe comercial tradicional?</summary><p>Un informe es una foto. Centinel es monitoreo continuo: te avisa cuando una contraparte cambia de situación, rebota cheques, entra en concurso o modifica su directorio. Además, el score es explicable: sabés exactamente por qué una empresa tiene la calificación que tiene.</p></details>
-      <details><summary>¿Cómo funciona la inteligencia artificial?</summary><p>Los modelos combinan decenas de variables (deuda bancaria y su evolución, cheques, antigüedad, actividad, señales legales y de prensa) y las ponderan según su poder predictivo. La IA también lee textos no estructurados, como edictos y noticias, para detectar eventos relevantes antes de que impacten en los números.</p></details>
-      <details><summary>¿Puedo integrarlo con mi ERP o sistema de facturación?</summary><p>Sí. En los planes Corporativo y Enterprise tenés API REST y webhooks para consultar scores, cargar contrapartes y recibir alertas directamente en tu sistema, por ejemplo para bloquear pedidos de clientes que superan un umbral de riesgo.</p></details>
-      <details><summary>¿Puedo cancelar cuando quiera?</summary><p>Sí. Los planes mensuales se cancelan en un clic, sin permanencia. Los planes anuales tienen 2 meses bonificados.</p></details>
-      <details><summary>¿Sirve para evaluar proveedores, no sólo clientes?</summary><p>Totalmente. Muchas empresas monitorean a sus proveedores críticos para anticipar problemas de abastecimiento, y a socios o garantes para evaluar la solidez de un acuerdo.</p></details>
+      <details><summary>¿De dónde sale la información?</summary><p>Triangulamos más de 25 fuentes oficiales, públicas y privadas con licencia. Cada dato se contrasta contra fuentes independientes antes de entrar al modelo, para que una sola fuente desactualizada no distorsione la calificación. Toda la información es de acceso legítimo.</p></details>
+      <details><summary>¿En qué se diferencia de un informe comercial tradicional?</summary><p>Un informe comercial muestra cómo estaba una empresa el día que lo pediste. Centinel la sigue todos los días y te avisa cuando cambia. Además, el score es explicable: sabés qué señales lo bajaron o lo subieron.</p></details>
+      <details><summary>¿La empresa consultada se entera?</summary><p>No. Las consultas son confidenciales y la empresa evaluada no recibe ningún aviso.</p></details>
+      <details><summary>¿Qué rol cumple la inteligencia artificial?</summary><p>Los modelos ponderan más de 180 variables según su capacidad para anticipar incumplimientos, y leen textos como edictos, publicaciones y noticias para detectar eventos relevantes antes de que se reflejen en los números.</p></details>
+      <details><summary>¿Se puede integrar con mi sistema de gestión?</summary><p>Sí. En los planes Corporativo y Enterprise tenés API para consultar scores, cargar clientes y recibir alertas en tu sistema, por ejemplo para frenar pedidos de un cliente que superó tu umbral de riesgo.</p></details>
+      <details><summary>¿Cómo pago y puedo cancelar?</summary><p>Pagás en pesos al tipo de cambio oficial del día con tarjeta, transferencia o Mercado Pago, y emitimos factura A. Los planes mensuales se cancelan cuando quieras, sin permanencia.</p></details>
     </div>
   </div>
 </section>
 
-<!-- ================= FINAL CTA ================= -->
-<section class="final">
+<!-- CLOSING -->
+<section class="closing">
   <div class="wrap">
-    <h2>Tu próximo cliente incobrable <em>ya está</em> dando señales.</h2>
-    <p>Empezá con 3 consultas gratis. Si en 14 días no detectamos al menos una alerta relevante en tu cartera, no pagás nada.</p>
-    <div class="hero-ctas">
-      <a href="#demo" class="btn btn-primary btn-lg">Analizar una empresa gratis <svg width="18" height="18"><use href="#i-arrow"/></svg></a>
-      <a href="#fundadores" class="btn btn-ghost btn-lg">Agendar una demo</a>
+    <div>
+      <h2>Tu próximo cliente incobrable ya está dando señales.</h2>
+      <p>Consultá tus primeros 3 CUITs sin cargo y mirá lo que hoy no estás viendo.</p>
+    </div>
+    <div class="ctas">
+      <a href="#consulta" class="btn btn-white btn-lg">Consultar un CUIT gratis <svg><use href="#i-arrow"/></svg></a>
+      <a href="#fundadores" class="btn btn-ghost-n btn-lg">Hablar con un asesor</a>
+      <small>Sin tarjeta · Sin permanencia · Factura A</small>
     </div>
   </div>
 </section>
@@ -940,23 +906,23 @@ footer a:hover{color:var(--text)}
 <footer>
   <div class="wrap">
     <div>
-      <a href="#" class="brand" style="margin-bottom:12px;color:var(--text)">
-        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="url(#bg1)"/><path d="M16 6.5l7.5 2.8v5.6c0 4.4-3.1 8.2-7.5 9.1-4.4-.9-7.5-4.7-7.5-9.1V9.3L16 6.5z" fill="#070B14"/><circle cx="16" cy="15" r="3.2" fill="none" stroke="#5EEAD4" stroke-width="1.8"/><circle cx="16" cy="15" r="1.1" fill="#5EEAD4"/></svg>
-        Centinel
+      <a href="#" class="brand" style="margin-bottom:14px" aria-label="Centinel Counterparty Risk Hub">
+        <svg aria-hidden="true"><use href="#i-logo"/></svg>
+        <span class="brand-txt"><b>Centinel</b><small>Counterparty Risk Hub</small></span>
       </a>
-      <p style="margin:0;max-width:300px">Early warning de riesgo de contrapartes para empresas de Argentina, Brasil y Chile.</p>
+      <p style="margin:0;max-width:320px">Calificación de riesgo y alertas tempranas de clientes y proveedores. Buenos Aires, Argentina.</p>
     </div>
-    <div><h5>Producto</h5><a href="#como-funciona">Cómo funciona</a><a href="#alertas">Alertas</a><a href="#cobertura">Cobertura</a><a href="#precios">Precios</a></div>
-    <div><h5>Soluciones</h5><a href="#precios">Monitoreo continuo</a><a href="#precios">Análisis por lote</a><a href="#precios">Diagnóstico de cartera</a><a href="#fundadores">API y Partners</a></div>
-    <div><h5>Empresa</h5><a href="#fundadores">Contacto</a><a href="#faq">FAQ</a><a href="#">Privacidad</a><a href="#">Términos</a></div>
+    <div><h5>Producto</h5><a href="#metodologia">Metodología</a><a href="#monitoreo">Monitoreo</a><a href="#precios">Precios</a><a href="#seguridad">Seguridad</a></div>
+    <div><h5>Soluciones</h5><a href="#precios">Monitoreo continuo</a><a href="#precios">Análisis por lote</a><a href="#precios">Diagnóstico de cartera</a><a href="#fundadores">API e integraciones</a></div>
+    <div><h5>Empresa</h5><a href="#fundadores">Contacto</a><a href="#faq">Preguntas frecuentes</a><a href="#">Privacidad</a><a href="#">Términos y condiciones</a></div>
     <div class="legal">
-      <span>© 2026 Centinel. Todos los derechos reservados.</span>
+      <span>© 2026 Centinel Counterparty Risk Hub. Todos los derechos reservados.</span>
       <span>La calificación es una herramienta de apoyo a la decisión y no constituye asesoramiento financiero.</span>
     </div>
   </div>
 </footer>
 
-<div class="sticky-cta" id="sticky"><a href="#demo" class="btn btn-primary btn-lg">Analizar una empresa gratis</a></div>
+<div class="sticky" id="sticky"><a href="#consulta" class="btn btn-cta btn-lg">Consultar un CUIT gratis</a></div>
 
 <script>
 (() => {
@@ -964,250 +930,191 @@ footer a:hover{color:var(--text)}
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const fmt = (n, d=0) => n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d});
 
-  /* ---------- Tax ID validation per country ---------- */
-  const ID = {
-    AR: {
-      label:'CUIT', ph:'30-12345678-9', len:11,
-      format(d){ return d.length<=2?d : d.length<=10? d.slice(0,2)+'-'+d.slice(2) : d.slice(0,2)+'-'+d.slice(2,10)+'-'+d.slice(10,11); },
-      check(d){ if(d.length!==11) return false; const w=[5,4,3,2,7,6,5,4,3,2]; let s=0; for(let i=0;i<10;i++) s+=+d[i]*w[i]; let v=11-(s%11); if(v===11) v=0; if(v===10) return false; return v===+d[10]; },
-      sample(){ for(;;){ const b='30'+String(Math.floor(Math.random()*1e8)).padStart(8,'0'); const w=[5,4,3,2,7,6,5,4,3,2]; let s=0; for(let i=0;i<10;i++) s+=+b[i]*w[i]; let v=11-(s%11); if(v===11) v=0; if(v!==10) return b+v; } },
-      names:['Distribuidora del Sur S.A.','Metalúrgica Andina SRL','Agroinsumos Pampeanos S.A.','Logística Río de la Plata S.A.'],
-      cur:'USD', alerts:[
-        ['crit','Situación 3 en Central de Deudores','Atraso de 90–180 días en 1 entidad financiera.'],
-        ['high','2 cheques rechazados sin fondos','Rechazos en los últimos 60 días, aún sin cancelar.'],
-        ['mod','Aumento de deuda bancaria +38% en 6 meses','Endeudamiento creciente con más entidades.'],
-        ['low','Situación 1 en todas las entidades','Sin atrasos registrados en los últimos 24 meses.'],
-        ['low','Contribuyente activo hace más de 10 años','Actividad declarada consistente con su facturación.'],
-      ]
-    },
-    BR: {
-      label:'CNPJ', ph:'12.345.678/0001-90', len:14,
-      format(d){ let o=d.slice(0,2); if(d.length>2)o+='.'+d.slice(2,5); if(d.length>5)o+='.'+d.slice(5,8); if(d.length>8)o+='/'+d.slice(8,12); if(d.length>12)o+='-'+d.slice(12,14); return o; },
-      dv(b){ const calc=(s,w)=>{let t=0;for(let i=0;i<w.length;i++)t+=+s[i]*w[i];const r=t%11;return r<2?0:11-r;}; const d1=calc(b,[5,4,3,2,9,8,7,6,5,4,3,2]); const d2=calc(b+d1,[6,5,4,3,2,9,8,7,6,5,4,3,2]); return ''+d1+d2; },
-      check(d){ if(d.length!==14||/^(\d)\1+$/.test(d)) return false; return this.dv(d.slice(0,12))===d.slice(12); },
-      sample(){ const b=String(Math.floor(Math.random()*1e8)).padStart(8,'0')+'0001'; return b+this.dv(b); },
-      names:['Comercial Paulista Ltda.','Transportes Minas Gerais S.A.','Indústria Têxtil Sul Ltda.','Agro Cerrado Comércio S.A.'],
-      cur:'USD', alerts:[
-        ['crit','Pedido de recuperação judicial','Publicado en Diário Oficial hace 12 días.'],
-        ['high','Nuevo protesto registrado','Título protestado en cartório en los últimos 30 días.'],
-        ['mod','Cambio en el cuadro societario (QSA)','Salida de socio administrador.'],
-        ['low','Situação cadastral: ATIVA','Sin pendencias en Receita Federal.'],
-        ['low','Más de 8 años de actividad','CNAE consistente con su operación.'],
-      ]
-    },
-    CL: {
-      label:'RUT', ph:'76.123.456-7', len:9,
-      clean(v){ return v.toUpperCase().replace(/[^0-9K]/g,''); },
-      format(d){ if(d.length<2) return d; const b=d.slice(0,-1), v=d.slice(-1); return b.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+v; },
-      dv(b){ let s=0,m=2; for(let i=b.length-1;i>=0;i--){ s+=+b[i]*m; m=m===7?2:m+1; } const r=11-(s%11); return r===11?'0':r===10?'K':String(r); },
-      check(d){ if(d.length<8||d.length>9) return false; const b=d.slice(0,-1); if(!/^\d+$/.test(b)) return false; return this.dv(b)===d.slice(-1); },
-      sample(){ const b='7'+String(Math.floor(Math.random()*1e7)).padStart(7,'0'); return b+this.dv(b); },
-      names:['Inversiones del Pacífico SpA','Constructora Los Andes Ltda.','Exportadora Valle Central S.A.','Servicios Mineros Norte SpA'],
-      cur:'USD', alerts:[
-        ['crit','Procedimiento concursal de reorganización','Publicado en Boletín Concursal.'],
-        ['high','Causas laborales activas en aumento','5 nuevas demandas en los últimos 90 días.'],
-        ['mod','Modificación de capital publicada','Disminución de capital en Diario Oficial.'],
-        ['low','Inicio de actividades hace más de 12 años','Situación tributaria al día en SII.'],
-        ['low','Sin procedimientos concursales','No registra causas comerciales relevantes.'],
-      ]
-    }
-  };
-  let country = 'AR';
-  const inName = $('#in-name'), inId = $('#in-id'), hint = $('#id-hint');
-  const digits = v => country==='CL' ? ID.CL.clean(v) : v.replace(/\D/g,'');
+  /* ---------- CUIT ---------- */
+  const W = [5,4,3,2,7,6,5,4,3,2];
+  const dv = b => { let s=0; for (let i=0;i<10;i++) s += +b[i]*W[i]; const v = 11 - (s % 11); return v===11 ? 0 : v; };
+  const validCuit = d => d.length===11 && /^(20|23|24|27|30|33|34)/.test(d) && dv(d)!==10 && dv(d)===+d[10];
+  const fmtCuit = d => d.length<=2 ? d : d.length<=10 ? d.slice(0,2)+'-'+d.slice(2) : d.slice(0,2)+'-'+d.slice(2,10)+'-'+d.slice(10);
+  const sampleCuit = () => { for(;;){ const b='30'+String(Math.floor(Math.random()*1e8)).padStart(8,'0'); const v=dv(b); if(v!==10) return b+v; } };
+  const names = ['Distribuidora del Sur S.A.','Metalúrgica Andina S.R.L.','Agroinsumos Pampeanos S.A.','Logística Río de la Plata S.A.','Frigorífico La Llanura S.A.','Constructora Patagónica S.R.L.'];
 
-  function setCountry(c){
-    country = c;
-    $$('.seg[aria-label="País"] button').forEach(b => b.setAttribute('aria-pressed', b.dataset.c===c));
-    $('#id-label').textContent = ID[c].label;
-    inId.placeholder = ID[c].ph; inId.value = ''; inId.classList.remove('bad');
-    inName.placeholder = 'Ej. ' + ID[c].names[0];
-    hint.className='hint'; hint.textContent='Validamos el dígito verificador antes de consultar.';
-  }
-  $$('.seg[aria-label="País"] button').forEach(b => b.addEventListener('click', () => setCountry(b.dataset.c)));
-
-  inId.addEventListener('input', () => {
-    const d = digits(inId.value).slice(0, ID[country].len);
-    inId.value = ID[country].format(d);
-    if (d.length >= (country==='CL'?8:ID[country].len)) {
-      const ok = ID[country].check(d);
-      inId.classList.toggle('bad', !ok);
-      hint.className = 'hint ' + (ok?'ok':'err');
-      hint.textContent = ok ? `✓ ${ID[country].label} válido` : `Dígito verificador inválido para ${ID[country].label}`;
-    } else { inId.classList.remove('bad'); hint.className='hint'; hint.textContent='Validamos el dígito verificador antes de consultar.'; }
+  const inName = $('#in-name'), inCuit = $('#in-cuit'), hint = $('#cuit-hint');
+  const setHint = (cls, txt) => { hint.className = 'hint ' + cls; hint.textContent = txt; };
+  inCuit.addEventListener('input', () => {
+    const d = inCuit.value.replace(/\D/g,'').slice(0,11);
+    inCuit.value = fmtCuit(d);
+    if (d.length===11) validCuit(d) ? setHint('ok','✓ CUIT válido') : setHint('err','El dígito verificador no coincide. Revisá el CUIT.');
+    else setHint('','Validamos el dígito verificador del CUIT antes de consultar.');
   });
   $('#btn-sample').addEventListener('click', () => {
-    const c = ID[country];
-    inName.value = c.names[Math.floor(Math.random()*c.names.length)];
-    inId.value = c.sample(); inId.dispatchEvent(new Event('input'));
+    inName.value = names[Math.floor(Math.random()*names.length)];
+    inCuit.value = sampleCuit(); inCuit.dispatchEvent(new Event('input'));
+    $('#btn-run').focus();
   });
 
-  /* deterministic pseudo-score from the id (demo only) */
-  function hash(str){ let h=2166136261; for(const ch of str){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
-  function band(s){
-    if (s>=750) return {k:'low', t:'Riesgo bajo', c:'var(--low)', bg:'rgba(52,211,153,.12)', pd:[0.4,1.8], lim:[80,250], term:'90 días'};
-    if (s>=550) return {k:'mod', t:'Riesgo moderado', c:'var(--mod)', bg:'rgba(251,191,36,.12)', pd:[2,6], lim:[30,90], term:'60 días'};
-    if (s>=350) return {k:'high', t:'Riesgo elevado', c:'var(--high)', bg:'rgba(251,146,60,.12)', pd:[7,18], lim:[8,30], term:'30 días'};
-    return {k:'crit', t:'Riesgo crítico', c:'var(--crit)', bg:'rgba(248,113,113,.12)', pd:[20,45], lim:[0,5], term:'contado'};
-  }
-  const sevColor = {crit:'var(--crit)', high:'var(--high)', mod:'var(--mod)', low:'var(--low)'};
+  /* ---------- demo scoring (illustrative only) ---------- */
+  const hash = s => { let h=2166136261; for (const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; };
+  const bands = [
+    {min:750, name:'Bajo',     color:'var(--low)',  bg:'var(--low-bg)',  letters:['A','A+','AA'], pd:[0.4,1.8], lim:[80,250], term:'90 días', span:250},
+    {min:550, name:'Moderado', color:'var(--mod)',  bg:'var(--mod-bg)',  letters:['B','B+','BB'], pd:[2,6],     lim:[30,90],  term:'60 días', span:200},
+    {min:350, name:'Elevado',  color:'var(--high)', bg:'var(--high-bg)', letters:['C','C+','CC'], pd:[7,18],    lim:[8,30],   term:'30 días', span:200},
+    {min:0,   name:'Crítico',  color:'var(--crit)', bg:'var(--crit-bg)', letters:['D','D+','DD'], pd:[20,45],   lim:[0,0],    term:'Contado', span:350},
+  ];
+  const signals = {
+    crit:['Atrasos bancarios de más de 180 días','en dos entidades financieras.'],
+    chq:['3 cheques rechazados','en los últimos 60 días, sin cancelar.'],
+    debt:['Endeudamiento creció 38%','en los últimos 6 meses.'],
+    legal:['Proceso judicial comercial abierto','iniciado en los últimos 90 días.'],
+    ok:['Sin atrasos en los últimos 24 meses','en ninguna entidad.'],
+    age:['Más de 10 años de actividad','con trayectoria fiscal consistente.'],
+    stable:['Endeudamiento estable','y acorde a su nivel de actividad.'],
+  };
+  const sigColor = {crit:'var(--crit)',chq:'var(--high)',debt:'var(--mod)',legal:'var(--high)',ok:'var(--low)',age:'var(--low)',stable:'var(--low)'};
+  const pickSigs = i => [['ok','age','stable'],['debt','ok','age'],['chq','debt','age'],['crit','chq','legal']][i];
 
-  let running = false;
-  $('#btn-run').addEventListener('click', run);
-  [inName, inId].forEach(el => el.addEventListener('keydown', e => { if(e.key==='Enter') run(); }));
-
-  function run(){
-    if (running) return;
-    const d = digits(inId.value);
-    if (!ID[country].check(d)) {
-      inId.classList.add('bad'); hint.className='hint err';
-      hint.textContent = d.length ? `Revisá el ${ID[country].label}: el dígito verificador no coincide.` : `Ingresá un ${ID[country].label} o usá un ejemplo.`;
-      inId.focus(); return;
-    }
-    if (!inName.value.trim()) inName.value = ID[country].names[hash(d)%4];
-    running = true;
-    const res = $('#result'), scan = $('#scan');
-    res.classList.remove('show');
-    const steps = {
-      AR:['Validando CUIT en padrón ARCA','Consultando Central de Deudores BCRA','Buscando cheques rechazados','Leyendo Boletín Oficial y registros judiciales','Calculando score con modelo de IA'],
-      BR:['Validando CNPJ en Receita Federal','Buscando protestos en cartórios','Revisando processos judiciais','Leyendo Diários Oficiais','Calculando score con modelo de IA'],
-      CL:['Validando RUT en SII','Revisando Boletín Concursal','Buscando causas en Poder Judicial','Leyendo Diario Oficial','Calculando score con modelo de IA'],
-    }[country];
-    scan.innerHTML = steps.map(s => `<div><span class="ck"></span>${s}</div>`).join('');
-    scan.classList.add('show');
-    const rows = $$('div', scan);
-    rows.forEach((r,i) => setTimeout(() => r.classList.add('done'), 260*(i+1)));
-    setTimeout(() => { scan.classList.remove('show'); render(d); running=false; }, 260*steps.length + 350);
-  }
+  const steps = [
+    ['Validando identidad fiscal y societaria', '42 datos'],
+    ['Triangulando fuentes de información', '27 fuentes'],
+    ['Analizando comportamiento de pago', '94 datos'],
+    ['Detectando eventos legales y societarios', '51 datos'],
+    ['Calculando el score con el modelo de IA', '184 variables'],
+  ];
+  let busy = false;
+  $('#consulta').addEventListener('submit', e => {
+    e.preventDefault();
+    if (busy) return;
+    const d = inCuit.value.replace(/\D/g,'');
+    if (!validCuit(d)) { setHint('err', d.length ? 'El CUIT no es válido. Revisá el dígito verificador.' : 'Ingresá un CUIT o probá con uno de ejemplo.'); inCuit.focus(); return; }
+    if (!inName.value.trim()) inName.value = names[hash(d) % names.length];
+    busy = true;
+    const scan = $('#scan'), rep = $('#rep');
+    rep.hidden = true; scan.hidden = false;
+    $('#rep-tag').textContent = 'PROCESANDO';
+    scan.innerHTML = steps.map(([t]) => `<div class="row"><span class="ck"></span><span>${t}</span><span class="n"></span></div>`).join('') + '<div class="scan-bar"><i></i></div>';
+    const rows = $$('.row', scan), bar = $('.scan-bar i', scan);
+    const STEP = 380;
+    rows.forEach((r,i) => setTimeout(() => {
+      r.classList.add('done');
+      $('.n', r).textContent = steps[i][1];
+      bar.style.width = ((i+1)/rows.length*100)+'%';
+    }, STEP*(i+1)));
+    setTimeout(() => { scan.hidden = true; rep.hidden = false; render(d); busy = false; }, STEP*rows.length + 400);
+  });
 
   function render(d){
-    const h = hash(country + d);
-    const score = 180 + (h % 760);
-    const b = band(score);
-    const r = n => ((h >> n) & 255) / 255;
-    const pd = b.pd[0] + (b.pd[1]-b.pd[0]) * (1 - (score%100)/100);
-    const lim = Math.round((b.lim[0] + (b.lim[1]-b.lim[0]) * r(3)) ) * 1000;
-    const tr = Math.round((r(9) - 0.5) * 120);
-
+    const h = hash(d);
+    const score = 160 + (h % 800);
+    const bi = bands.findIndex(b => score >= b.min), b = bands[bi];
+    const f = ((h >> 8) & 255) / 255;
+    const pd = b.pd[1] - (b.pd[1]-b.pd[0]) * Math.min(1, (score - b.min) / b.span);
+    const lim = Math.round(b.lim[0] + (b.lim[1]-b.lim[0]) * f) * 1000;
+    $('#rep-tag').textContent = 'SIMULACIÓN';
     $('#r-name').textContent = inName.value.trim();
-    $('#r-id').textContent = ID[country].label + ' ' + ID[country].format(d);
-    const rt = $('#r-rating'); rt.textContent = b.t; rt.style.color = b.c; rt.style.background = b.bg;
-    $('#r-pd').textContent = fmt(pd,1) + '%';
-    $('#r-limit').textContent = lim ? 'USD ' + fmt(lim) : 'Sólo contado';
-    $('#r-trend').innerHTML = `<span style="color:${tr>=0?'var(--low)':'var(--crit)'}">${tr>=0?'▲ +':'▼ '}${tr} pts</span>`;
-
-    const pool = ID[country].alerts;
-    const picks = b.k==='low' ? [pool[3],pool[4],pool[2]] : b.k==='mod' ? [pool[2],pool[3],pool[4]] : b.k==='high' ? [pool[1],pool[2],pool[4]] : [pool[0],pool[1],pool[2]];
-    $('#r-signals').innerHTML = picks.map(([k,t,p]) => `<div class="sig"><i style="background:${sevColor[k]}"></i><div><b>${t}</b> — ${p}</div></div>`).join('');
-
-    const arc = $('#g-arc'); arc.style.stroke = b.c; arc.style.strokeDashoffset = 314;
-    $('#result').classList.add('show');
-    requestAnimationFrame(() => requestAnimationFrame(() => { arc.style.strokeDashoffset = 314 - 314*score/1000; }));
-    const gv = $('#g-val'); const t0 = performance.now();
-    (function tick(t){ const p = Math.min(1,(t-t0)/1100); gv.textContent = Math.round(score*(1-Math.pow(1-p,3))); if(p<1) requestAnimationFrame(tick); })(t0);
+    $('#r-cuit').textContent = 'CUIT ' + fmtCuit(d) + ' · consultado ahora';
+    const g = $('#r-grade'); g.style.background = b.bg; g.style.color = b.color;
+    $('#r-letter').textContent = b.letters[h % 3];
+    $('#r-band').textContent = b.name;
+    $('#r-pd').textContent = fmt(pd, 1) + '%';
+    $('#r-lim').textContent = lim ? 'USD ' + fmt(lim) : 'Sólo contado';
+    $('#r-term').textContent = b.term;
+    $('#r-sigs').innerHTML = '<h4>Señales que explican la calificación</h4>' + pickSigs(bi).map(k => `<div class="sig"><i style="background:${sigColor[k]}"></i><span><b>${signals[k][0]}</b> ${signals[k][1]}</span></div>`).join('');
+    $('#r-foot').textContent = 'Simulación ilustrativa generada en tu navegador.';
+    const pin = $('#r-pin'); pin.style.left = '0%';
+    requestAnimationFrame(() => requestAnimationFrame(() => { pin.style.left = (score/10) + '%'; }));
+    const el = $('#r-score'), t0 = performance.now();
+    (function tick(t){ const p = Math.min(1,(t-t0)/1000); el.textContent = Math.round(score*(1-Math.pow(1-p,3))); if (p<1) requestAnimationFrame(tick); })(t0);
   }
 
-  /* ---------- Live feed ---------- */
+  /* ---------- live feed ---------- */
   const extra = [
-    ['ALTA','high','Embargo publicado en Boletín Oficial','Medida cautelar sobre cuentas bancarias.','Construcciones N*** S.A. · 🇦🇷'],
-    ['MEDIA','mod','Deuda bancaria creció 45% en 90 días','Toma de crédito en 3 nuevas entidades.','Alimentos C*** SRL · 🇦🇷'],
-    ['CRÍTICA','crit','Pedido de recuperação judicial','Publicado en Diário Oficial do Estado.','Têxtil R*** Ltda. · 🇧🇷'],
-    ['MEJORA','low','Canceló cheques rechazados','Todos los rechazos de los últimos 90 días pagados.','Ferretería M*** S.A. · 🇦🇷'],
-    ['ALTA','high','Nuevas causas laborales','4 demandas ingresadas este mes.','Servicios T*** SpA · 🇨🇱'],
+    ['crit','CRÍTICA','Pedido de concurso preventivo','Score bajó a 214. Recomendado: suspender entregas.','Construcciones N*** S.A.'],
+    ['high','ALTA','Embargo sobre cuentas bancarias','Medida cautelar por deuda comercial.','Alimentos C*** S.R.L.'],
+    ['mod','MEDIA','Endeudamiento creció 45% en 90 días','Tomó crédito en 3 nuevas entidades.','Ferretería M*** S.A.'],
+    ['low','MEJORA','Canceló los cheques rechazados','Score subió 64 puntos.','Transportes S*** S.A.'],
   ];
-  const sevBg = {crit:'rgba(248,113,113,.14)',high:'rgba(251,146,60,.14)',mod:'rgba(251,191,36,.14)',low:'rgba(52,211,153,.14)'};
-  let fi = 0; const feed = $('#feed');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduce) setInterval(() => {
+  const sevBg = {crit:'var(--crit-bg)',high:'var(--high-bg)',mod:'var(--mod-bg)',low:'var(--low-bg)'};
+  const sevC = {crit:'var(--crit)',high:'var(--high)',mod:'var(--mod)',low:'var(--low)'};
+  const feed = $('#feed'); let fi = 0;
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => {
     if (document.hidden) return;
-    const [lbl,k,t,p,co] = extra[fi++ % extra.length];
-    const el = document.createElement('div'); el.className='alert new';
-    el.innerHTML = `<span class="sev" style="background:${sevBg[k]};color:${sevColor[k]}">${lbl}</span><div><h4>${t}</h4><p>${p}</p><span class="co">${co}</span></div><time>ahora</time>`;
+    const [k,l,t,p,co] = extra[fi++ % extra.length];
+    const el = document.createElement('div'); el.className = 'alert new';
+    el.innerHTML = `<span class="bar" style="background:${sevC[k]}"></span><div><h4>${t}</h4><p>${p}</p><div class="meta"><span class="sev" style="background:${sevBg[k]};color:${sevC[k]}">${l}</span><span class="co">${co}</span></div></div><time>ahora</time>`;
     feed.prepend(el);
-    const times = ['ahora','hace 1 min','hace 9 min','hace 3 h','ayer'];
-    $$('.alert', feed).forEach((a,i) => { if(i>0 && i<5) a.querySelector('time').textContent = times[i]; });
-    while (feed.children.length > 5) feed.lastElementChild.remove();
-  }, 4200);
+    const ts = ['ahora','hace 6 min','hace 2 h','ayer'];
+    $$('.alert', feed).forEach((a,i) => { const t = $('time', a); if (t && i<4) t.textContent = ts[i]; });
+    while (feed.children.length > 4) feed.lastElementChild.remove();
+  }, 5000);
 
-  /* ---------- Pricing tabs ---------- */
-  $$('.pricing-tabs button').forEach(btn => btn.addEventListener('click', () => {
-    $$('.pricing-tabs button').forEach(b => b.setAttribute('aria-selected', b===btn));
-    $$('.pane').forEach(p => p.classList.toggle('active', p.id===btn.dataset.pane));
-    $$('.pane.active .reveal').forEach(el => el.classList.add('in'));
+  /* ---------- pricing tabs ---------- */
+  const tabs = $$('.tabs [role=tab]');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => { x.setAttribute('aria-selected', x===t); $('#'+x.getAttribute('aria-controls')).hidden = x!==t; });
   }));
-  const sw = $('#bill-switch');
-  sw.addEventListener('click', () => {
-    const y = sw.getAttribute('aria-checked') !== 'true';
-    sw.setAttribute('aria-checked', y);
-    $$('#p-mon .price b').forEach(b => b.textContent = 'USD ' + fmt(+b.dataset[y?'y':'m']));
-    $$('[data-bill-sub]').forEach((s,i) => {
-      const m = +$$('#p-mon .price b')[i].dataset.y;
-      s.textContent = y ? `USD ${fmt(m*12)} facturado anualmente` : 'facturado mensualmente';
+  const bill = $('#bill');
+  bill.addEventListener('click', () => {
+    const y = bill.getAttribute('aria-checked') !== 'true';
+    bill.setAttribute('aria-checked', y);
+    const subs = $$('#p-mon [data-sub]');
+    $$('#p-mon .price b').forEach((b,i) => {
+      b.textContent = 'USD ' + fmt(+b.dataset[y ? 'y' : 'm']);
+      subs[i].textContent = y ? `USD ${fmt(+b.dataset.y*12)} por año` : 'facturación mensual';
     });
   });
 
-  /* ---------- Batch calculator ---------- */
+  /* ---------- batch ---------- */
   const tiers = [[500,1.9],[2000,1.2],[10000,0.7]];
-  function batchPrice(n){ let total=0, prev=0; for(const [cap,p] of tiers){ const q=Math.max(0,Math.min(n,cap)-prev); total+=q*p; prev=cap; } return Math.max(150,total); }
-  const br = $('#batch-range');
-  function updBatch(){
-    const n = +br.value; br.style.setProperty('--p', ((n-50)/(10000-50)*100)+'%');
+  const batchPrice = n => { let t=0, prev=0; for (const [cap,p] of tiers){ t += Math.max(0, Math.min(n,cap)-prev)*p; prev=cap; } return Math.max(150,t); };
+  const fill = el => el.style.setProperty('--p', ((el.value-el.min)/(el.max-el.min)*100)+'%');
+  const br = $('#batch');
+  const updBatch = () => {
+    const n = +br.value; fill(br);
     $('#batch-n').textContent = fmt(n);
     const t = batchPrice(n);
     $('#batch-total').textContent = 'USD ' + fmt(Math.round(t));
-    $('#batch-unit').textContent = `≈ USD ${fmt(t/n,2)} por contraparte · mínimo USD 150`;
-    const idx = n<=500?0:n<=2000?1:2;
-    $$('.tiers tr').forEach(tr => tr.classList.toggle('on', +tr.dataset.t<=idx));
-  }
+    $('#batch-unit').textContent = `≈ USD ${fmt(t/n,2)} por CUIT · mínimo USD 150`;
+    const idx = n<=500 ? 0 : n<=2000 ? 1 : 2;
+    $$('.tiers tr').forEach(tr => tr.classList.toggle('on', +tr.dataset.t === idx));
+  };
   br.addEventListener('input', updBatch); updBatch();
 
   /* ---------- ROI ---------- */
-  let planCost = 449;
-  $$('#r-plan button').forEach(b => b.addEventListener('click', () => {
-    $$('#r-plan button').forEach(x => x.setAttribute('aria-pressed', x===b)); planCost = +b.dataset.v; updRoi();
-  }));
-  const rc = $('#r-cartera'), ri = $('#r-incob'), rr = $('#r-red');
-  function pct(el){ el.style.setProperty('--p', ((el.value-el.min)/(el.max-el.min)*100)+'%'); }
+  let plan = 449;
+  $$('#r-plan button').forEach(b => b.addEventListener('click', () => { $$('#r-plan button').forEach(x => x.setAttribute('aria-pressed', x===b)); plan = +b.dataset.v; updRoi(); }));
+  const rc = $('#r-cc'), ri = $('#r-inc'), rr = $('#r-red');
   function updRoi(){
-    [rc,ri,rr].forEach(pct);
-    const cartera=+rc.value, inc=+ri.value/100, red=+rr.value/100;
-    // la cuenta corriente rota ~ 6 veces al año en una pyme típica a 60 días
-    const loss = cartera*6*inc*0.5; // pérdida esperada sobre ventas a plazo, con 50% de recupero
-    const saved = loss*red;
-    const cost = planCost*12;
-    $('#v-cartera').textContent = fmt(cartera);
-    $('#v-incob').textContent = fmt(+ri.value,1)+'%';
-    $('#v-red').textContent = rr.value+'%';
-    $('#o-loss').textContent = 'USD '+fmt(Math.round(loss));
-    $('#o-saved').textContent = 'USD '+fmt(Math.round(saved));
-    $('#o-cost').textContent = 'USD '+fmt(cost);
-    $('#o-roi').textContent = fmt(saved/cost,1)+'x';
+    [rc,ri,rr].forEach(fill);
+    const loss = +rc.value * 6 * (+ri.value/100) * 0.5;
+    const saved = loss * (+rr.value/100), cost = plan*12;
+    $('#v-cc').textContent = fmt(+rc.value);
+    $('#v-inc').textContent = fmt(+ri.value,1) + '%';
+    $('#v-red').textContent = rr.value + '%';
+    $('#o-loss').textContent = 'USD ' + fmt(Math.round(loss));
+    $('#o-saved').textContent = 'USD ' + fmt(Math.round(saved));
+    $('#o-cost').textContent = 'USD ' + fmt(cost);
+    $('#o-roi').textContent = fmt(saved/cost,1) + 'x';
   }
   [rc,ri,rr].forEach(el => el.addEventListener('input', updRoi)); updRoi();
 
-  /* ---------- Plan buttons preselect form ---------- */
-  const planMap = {Esencial:'Monitoreo continuo',Profesional:'Monitoreo continuo',Corporativo:'Monitoreo continuo',Gratis:'Consultas ad hoc','Pack 25':'Consultas ad hoc',Individual:'Consultas ad hoc',Lote:'Análisis por lote','Diagnóstico':'Diagnóstico one-time'};
-  $$('[data-plan]').forEach(a => a.addEventListener('click', () => { $('#f-plan').value = planMap[a.dataset.plan] || 'Monitoreo continuo'; }));
-
-  /* ---------- Lead form ---------- */
-  $('#lead-form').addEventListener('submit', e => {
+  /* ---------- lead form ---------- */
+  $$('[data-plan]').forEach(a => a.addEventListener('click', () => { $('#f-plan').value = a.dataset.plan; }));
+  $('#lead').addEventListener('submit', e => {
     e.preventDefault();
-    const req = ['#f-name','#f-company','#f-email'].map(s => $(s));
+    const req = [$('#f-name'), $('#f-company'), $('#f-email')];
     let ok = true;
-    req.forEach(el => { const bad = !el.value.trim() || (el.type==='email' && !/^\S+@\S+\.\S+$/.test(el.value)); el.classList.toggle('bad', bad); if(bad) ok=false; });
+    req.forEach(el => { const bad = !el.value.trim() || (el.type==='email' && !/^\S+@\S+\.\S+$/.test(el.value)); el.classList.toggle('bad', bad); if (bad) ok = false; });
+    $('#lead-err').hidden = ok;
     if (!ok) return;
-    // TODO: conectar con tu backend / CRM (Supabase, HubSpot, Formspree, etc.)
-    $('#form-body').style.display='none'; $('#form-ok').classList.add('show');
+    // TODO: enviar a tu backend o CRM (Supabase, HubSpot, etc.)
+    $('#lead-body').hidden = true; $('#lead-ok').hidden = false;
   });
 
-  /* ---------- Reveal on scroll + sticky CTA ---------- */
-  const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }), {threshold:.12});
-  $$('.reveal').forEach(el => io.observe(el));
-  const sticky = $('#sticky'), demo = $('#demo'), fund = $('#fundadores');
+  /* ---------- sticky mobile CTA ---------- */
+  const sticky = $('#sticky'), hero = $('.hero'), fund = $('#fundadores');
   addEventListener('scroll', () => {
-    const past = demo.getBoundingClientRect().bottom < 0;
-    const atForm = fund.getBoundingClientRect().top < innerHeight && fund.getBoundingClientRect().bottom > 0;
-    sticky.classList.toggle('show', past && !atForm);
+    const past = hero.getBoundingClientRect().bottom < 0;
+    const r = fund.getBoundingClientRect();
+    sticky.classList.toggle('show', past && !(r.top < innerHeight && r.bottom > 0));
   }, {passive:true});
 })();
 </script>
