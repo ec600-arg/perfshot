@@ -337,7 +337,7 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
  * }
  * Límite sugerido, plazo y recomendación salen de LEVELS (tu política de crédito).
  */
-(() => {
+(async () => {
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const fmt = (n, d=0) => n.toLocaleString('es-AR', {minimumFractionDigits:d, maximumFractionDigits:d});
@@ -483,7 +483,22 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
     c.lastEvent = c.events[0] || null;
     return c;
   }
-  const DATA = buildDemoData().map(derive);
+  /* Si existe datos.json (salida de `npm run lote -- clientes.csv --salida ../datos.json` en engine/), el panel muestra esos datos. */
+  function fromEngine(rows){
+    return rows.map((r, i) => ({
+      id: 'c' + (i + 1), name: r.name, cuit: r.cuit, sector: r.sector || 'Sin sector', since: r.since || '—',
+      level: r.level, history: r.history, drivers: r.drivers.map(d => ({label:d.label, effect:d.effect, impact:d.impact})),
+      events: r.events.map(e => ({date:e.date, sev:e.sev, title:e.title, detail:e.detail})),
+      exposure: r.exposure || {balance:0, overdue:0, limit:0},
+      monthlySales: (r.exposure && (r.exposure.monthlySales || r.exposure.limit)) || 0,
+      sectorLevel: r.level, links: [], owner: 'Sin asignar',
+    }));
+  }
+  async function loadData(){
+    try { const res = await fetch('datos.json', {cache:'no-store'}); if (res.ok) { const rows = await res.json(); if (Array.isArray(rows) && rows.length) return fromEngine(rows); } } catch {}
+    return buildDemoData();
+  }
+  const DATA = (await loadData()).map(derive);
   const byId = Object.fromEntries(DATA.map(c => [c.id, c]));
   const ALL_EVENTS = DATA.flatMap(c => c.events.map(e => ({...e, c}))).sort((a,b) => b.date.localeCompare(a.date));
   const open30 = ALL_EVENTS.filter(e => daysAgo(e.date) <= 30 && e.sev !== 'low');
