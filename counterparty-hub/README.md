@@ -1,8 +1,9 @@
 # Centinel · Counterparty Risk Hub
 
-Landing page y modelo de negocio de una solución de early warning de riesgo de contrapartes (AR · BR · CL).
+Landing page, maqueta del panel y modelo de negocio de una solución de alertas tempranas de riesgo de clientes y proveedores en Argentina.
 
-- `index.html` — landing autocontenida (HTML + CSS + JS, sin build). Abrila directo en el navegador o subila a cualquier hosting estático (Vercel, Netlify, Cloudflare Pages).
-- `MONETIZACION.md` — modelo de precios (ad hoc, lote, one-time, continuo, API), embudo, números y roadmap.
+- `index.html`: landing autocontenida (HTML + CSS + JS, sin build). Se abre directo en el navegador o se sube a cualquier hosting estático (Vercel, Netlify, Cloudflare Pages).
+- `app.html`: maqueta del panel (tablero de cartera, ficha por empresa y alertas) con datos de ejemplo. El formato de datos que espera está documentado al principio del script.
+- `MONETIZACION.md`: modelo de precios (consultas sueltas, lote, diagnóstico, monitoreo continuo, API), embudo, números y roadmap.
 
-La demo del hero valida el dígito verificador real de CUIT, CNPJ y RUT, pero el score que muestra es **simulado** en el navegador. Para producción, reemplazá `render()` por una llamada a tu backend, y el `TODO` del formulario por tu CRM o Supabase.
+La calificación usa 5 niveles de riesgo: Bajo, Medio, Alto, Muy alto y Crítico. La demo del hero valida el dígito verificador real del CUIT, pero el nivel que muestra es **simulado** en el navegador. Para producción, reemplazá `render()` en la landing y `buildDemoData()` en el panel por llamadas a tu backend, y el `TODO` del formulario por tu CRM o Supabase.

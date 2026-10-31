@@ -49,7 +49,7 @@ Disparadores de conversión:
 | Churn mensual objetivo | < 2,5 % (la vigilancia es "pegajosa": nadie apaga la alarma) |
 | Costo de datos (AR) | Bajo: la API de Central de Deudores del BCRA es pública y gratuita |
 | Costo de datos (BR/CL) | Medio-alto si licenciás bureaus (Serasa, Boa Vista, Equifax/DICOM). Arrancá con fuentes públicas y sumá bureaus como add-on premium con margen |
-| Costo de IA por consulta | Centavos si cacheás resultados y re-scoreás sólo cuando cambia alguna fuente |
+| Costo de IA por consulta | Centavos si cacheás resultados y recalculás el nivel sólo cuando cambia alguna fuente |
 | Margen bruto objetivo | 75–85 % |
 
 **Clave para que sea pasivo:** re-procesar sólo los deltas. Una contraparte no cambia todos los días; consultás BCRA/ARCA con la frecuencia del plan y corrés el modelo únicamente cuando cambia algún input. Así el costo marginal por contraparte monitoreada tiende a cero.
@@ -58,7 +58,7 @@ Disparadores de conversión:
 
 1. **Estudios contables** (AR: miles de estudios con cartera pyme). Programa de referidos: 20 % recurrente de por vida o white-label "Monitor de riesgo by [Estudio]".
 2. **ERPs y facturadores**: Tango, Bejerman, Colppy, Xubio, Contabilium (AR); Omie, Bling, Conta Azul (BR); Defontana, Bsale, Nubox (CL). Integración + marketplace de apps + revenue share.
-3. **Factoring, SGR, ALyCs y fintech de crédito**: necesitan scorear librados y cedentes en volumen → API por llamada.
+3. **Factoring, SGR, ALyCs y fintech de crédito**: necesitan calificar librados y cedentes en volumen → API por llamada.
 4. **Aseguradoras de crédito y cauciones**: preevaluación de tomadores.
 5. **Contenido / SEO**: páginas tipo "¿Cómo consultar la situación BCRA de un CUIT?" y "Qué significa situación 3 en Central de Deudores" (búsquedas de alta intención en AR).
 6. **LinkedIn outbound** a gerentes de créditos y cobranzas, CFOs y responsables de tesorería.
@@ -76,8 +76,8 @@ Disparadores de conversión:
 
 - **Protección de datos:** Ley 25.326 (AR), LGPD (BR), Ley 19.628 y Ley 21.719 (CL). Revisá con un abogado si tu actividad encuadra como "archivo/banco de datos de información crediticia". En AR puede corresponder registro ante la AAIP.
 - **Fuentes:** usá sólo fuentes públicas o licenciadas. Respetá los términos de uso de cada API y no hagas scraping de sitios que lo prohíban.
-- **Disclaimer:** el score es una herramienta de apoyo a la decisión y no constituye asesoramiento financiero (ya está en el footer de la landing).
-- **Explicabilidad:** mostrar por qué un score es el que es reduce reclamos y es un diferencial de venta frente a bureaus "caja negra".
+- **Disclaimer:** la calificación es una herramienta de apoyo a la decisión y no constituye asesoramiento financiero (ya está en el footer de la landing).
+- **Explicabilidad:** mostrar por qué una empresa tiene el nivel de riesgo que tiene reduce reclamos y es un diferencial de venta frente a bureaus "caja negra".
 - **Ética de marketing:** la landing no incluye testimonios ni logos de clientes inventados; usa el "Programa de clientes fundadores" hasta tener casos reales.
 
 ## 8. Próximos pasos concretos

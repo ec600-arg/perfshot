@@ -29,7 +29,8 @@
   --low:#1E7F55;   --low-bg:#E6F4EC;
   --mod:#A86A0C;   --mod-bg:#FBF1DE;
   --high:#B9501A;  --high-bg:#FBEADF;
-  --crit:#B42318;  --crit-bg:#FBE6E4;
+  --vhigh:#B42318; --vhigh-bg:#FBE6E4;
+  --crit:#7A1414;  --crit-bg:#F3DADA;
   --pos:#2457C5;   --neg:#C2561E;
   --serif:"IBM Plex Serif", Georgia, serif;
   --sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -123,10 +124,21 @@ svg{display:block}
 .grid2{display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-bottom:14px}
 @media (max-width:1100px){.grid2{grid-template-columns:1fr}}
 
+.lvlbox{border-radius:10px;padding:12px 18px;min-width:150px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.lvlbox small{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.lvlbox b{font-family:var(--serif);font-size:30px;line-height:1.15;white-space:nowrap}
+.meter5{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;min-width:220px}
+.meter5 div{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;color:var(--muted);text-align:center}
+.meter5 i{height:8px;border-radius:2px;opacity:.18}
+.meter5 div.on{color:var(--ink)}
+.meter5 div.on i{opacity:1;height:12px;margin-top:-2px}
+.trendtxt{font-size:13.5px;color:var(--ink-2);margin-top:10px}
+.imp{display:inline-flex;gap:2px;margin-right:6px;vertical-align:middle}
+.imp i{width:6px;height:12px;border-radius:1px;background:var(--paper-3)}
 /* stacked bar */
 .stack{display:flex;gap:2px;height:28px;border-radius:6px;overflow:hidden;margin:6px 0 14px}
 .stack div{min-width:2px;cursor:default}
-.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.legend{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 @media (max-width:640px){.legend{grid-template-columns:repeat(2,1fr)}}
 .legend div{border-top:3px solid;padding-top:8px;font-size:13px;color:var(--ink-2)}
 .legend b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -201,7 +213,7 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
 .drv{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media (max-width:760px){.drv{grid-template-columns:1fr}}
 .drv h3{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:0 0 6px}
-.drow{display:grid;grid-template-columns:1fr 92px 44px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.drow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
 .drow .bar{height:8px;border-radius:2px;background:var(--paper-3);position:relative;overflow:hidden}
 .drow .bar i{position:absolute;top:0;bottom:0;border-radius:2px}
 .drow b{font-family:var(--mono);font-size:12.5px;text-align:right;color:var(--ink)}
@@ -315,13 +327,15 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
  * Reemplazá buildDemoData() por la respuesta de tu motor. Cada empresa:
  * {
  *   id, name, cuit, sector, since (año de inicio),
- *   score (0-1000), history: [24 scores mensuales, el último = score actual],
- *   drivers: [{label, pts}]   // pts > 0 suma, < 0 resta, respecto del promedio del sector
+ *   level:   0..4                 // 0 Bajo, 1 Medio, 2 Alto, 3 Muy alto, 4 Crítico
+ *   history: [24 niveles mensuales 0..4, el último = nivel actual]
+ *   drivers: [{label, effect:'agrava'|'mitiga', impact:1|2|3}]   // 3 = impacto alto
  *   events:  [{date:'YYYY-MM-DD', sev:'crit'|'high'|'mod'|'low', title, detail}]
- *   exposure: {balance, overdue, limit} // en ARS, viene del ERP o lo carga el usuario
- *   monthlySales (ARS), sectorPct (0-100), links: [ids de empresas vinculadas], owner
+ *   exposure: {balance, overdue, limit}   // en ARS, viene del ERP o lo carga el usuario
+ *   monthlySales (ARS), sectorLevel (0..4, nivel más frecuente del sector),
+ *   links: [{id, why}], owner
  * }
- * PD, calificación, límite sugerido y pérdida esperada se derivan en derive().
+ * Límite sugerido, plazo y recomendación salen de LEVELS (tu política de crédito).
  */
 (() => {
   const $ = (s, r=document) => r.querySelector(s);
@@ -337,22 +351,30 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
   const daysAgo = s => Math.round((TODAY - new Date(s+'T00:00')) / 864e5);
   const ago = s => { const n = daysAgo(s); return n <= 0 ? 'hoy' : n === 1 ? 'ayer' : n < 31 ? `hace ${n} d` : fmtDate(s); };
 
-  /* ---------- risk scale ---------- */
-  const BANDS = [
-    {k:'low',  min:750, name:'Bajo',     c:'var(--low)',  bg:'var(--low-bg)',  term:90, mult:2.0},
-    {k:'mod',  min:550, name:'Moderado', c:'var(--mod)',  bg:'var(--mod-bg)',  term:60, mult:1.2},
-    {k:'high', min:350, name:'Elevado',  c:'var(--high)', bg:'var(--high-bg)', term:30, mult:0.5},
-    {k:'crit', min:0,   name:'Crítico',  c:'var(--crit)', bg:'var(--crit-bg)', term:0,  mult:0},
+  /* ---------- risk levels = política de crédito ---------- */
+  const LEVELS = [
+    {name:'Bajo',     c:'var(--low)',   bg:'var(--low-bg)',   term:90, mult:2.0},
+    {name:'Medio',    c:'var(--mod)',   bg:'var(--mod-bg)',   term:60, mult:1.2},
+    {name:'Alto',     c:'var(--high)',  bg:'var(--high-bg)',  term:30, mult:0.6},
+    {name:'Muy alto', c:'var(--vhigh)', bg:'var(--vhigh-bg)', term:15, mult:0.25},
+    {name:'Crítico',  c:'var(--crit)',  bg:'var(--crit-bg)',  term:0,  mult:0},
   ];
-  const band = s => BANDS.find(b => s >= b.min);
-  const GRADES = [[850,'AAA'],[800,'AA'],[750,'A'],[680,'BBB'],[615,'BB'],[550,'B'],[480,'CCC'],[415,'CC'],[350,'C'],[0,'D']];
-  const grade = s => GRADES.find(g => s >= g[0])[1];
-  const pdOf = s => 0.5 / (1 + Math.exp((s - 380) / 70));
-  const SEV = {crit:['CRÍTICA','var(--crit)','var(--crit-bg)'], high:['ALTA','var(--high)','var(--high-bg)'], mod:['MEDIA','var(--mod)','var(--mod-bg)'], low:['MEJORA','var(--low)','var(--low-bg)']};
-  const pill = b => `<span class="pill" style="color:${b.c};background:${b.bg}"><i></i>${b.name}</span>`;
+  const RECO = [
+    ['Mantener o ampliar', l => [`Podés ampliar el límite hasta ${ars(l)}`,'Plazo de hasta 90 días','Revisión trimestral']],
+    ['Operar con seguimiento', l => [`Límite sugerido ${ars(l)}`,'Plazo máximo 60 días','Revisión mensual del saldo vencido']],
+    ['Reducir exposición', l => [`Bajar el límite a ${ars(l)}`,'Plazo máximo 30 días','Pedir garantía o cheques de terceros']],
+    ['Restringir crédito', l => [`Límite máximo ${ars(l)}`,'Plazo máximo 15 días','Garantía obligatoria','No liberar pedidos con saldo vencido']],
+    ['Suspender crédito', () => ['Operar sólo de contado','Gestionar el cobro del saldo vencido','Evaluar acciones legales con tu abogado']],
+  ];
+  const SEV = {crit:['CRÍTICA','var(--crit)','var(--crit-bg)'], high:['ALTA','var(--vhigh)','var(--vhigh-bg)'], mod:['MEDIA','var(--mod)','var(--mod-bg)'], low:['MEJORA','var(--low)','var(--low-bg)']};
+  const pill = L => `<span class="pill" style="color:${L.c};background:${L.bg}"><i></i>${L.name}</span>`;
   const sevPill = k => `<span class="pill" style="color:${SEV[k][1]};background:${SEV[k][2]}">${SEV[k][0]}</span>`;
-  const elChange = (now, prev) => { const ch = (now/prev - 1) * 100; const r = Math.round(ch*10)/10; return r === 0 ? '<span class="delta flat">=</span>' : `<span class="delta ${r>0?'down':'up'}">${r>0?'▲ +':'▼ '}${fmt(r,1)}%</span>`; };
-  const delta = d => d === 0 ? '<span class="delta flat">=</span>' : `<span class="delta ${d>0?'up':'down'}">${d>0?'▲ +':'▼ '}${d}</span>`;
+  // d = cuántos niveles empeoró (+) o mejoró (−)
+  const trend = (d, from) => d === 0 ? '<span class="delta flat">= Estable</span>'
+    : d > 0 ? `<span class="delta down">▼ Empeoró${from!=null ? ' desde ' + LEVELS[from].name : ''}</span>`
+            : `<span class="delta up">▲ Mejoró${from!=null ? ' desde ' + LEVELS[from].name : ''}</span>`;
+  const meter = i => `<div class="meter5" aria-label="Nivel ${LEVELS[i].name}">${LEVELS.map((L,k) => `<div class="${k===i?'on':''}"><i style="background:${L.c}"></i>${L.name}</div>`).join('')}</div>`;
+  const impact = n => `<span class="imp" aria-label="Impacto ${['','bajo','medio','alto'][n]}">${[1,2,3].map(k => `<i style="${k<=n?'background:currentColor':''}"></i>`).join('')}</span>`;
 
   /* ---------- demo data ---------- */
   function buildDemoData(){
@@ -361,93 +383,90 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
     const W = [5,4,3,2,7,6,5,4,3,2];
     const cuit = () => { for(;;){ const b = '30' + String(Math.floor(rnd()*1e8)).padStart(8,'0'); let s=0; for (let i=0;i<10;i++) s += +b[i]*W[i]; let v = 11 - s%11; if (v===11) v=0; if (v!==10) return b + v; } };
     const fc = c => c.slice(0,2)+'-'+c.slice(2,10)+'-'+c.slice(10);
-    // [nombre, sector, score, trayectoria, ventas mensuales ARS M]
+    // [nombre, sector, nivel actual, trayectoria, ventas mensuales ARS M]
     const base = [
-      ['Supermercados del Litoral S.A.','Comercio minorista',812,'flat',96],
-      ['Metalúrgica Andina S.R.L.','Industria metalúrgica',452,'down',38],
-      ['Agroinsumos Pampeanos S.A.','Agro e insumos',688,'flat',74],
-      ['Constructora Patagónica S.R.L.','Construcción',298,'shock',22],
-      ['Frigorífico La Llanura S.A.','Alimentos',731,'up',58],
-      ['Logística Río de la Plata S.A.','Logística',604,'down',31],
-      ['Ferretería Industrial Mendoza S.A.','Comercio mayorista',846,'flat',19],
-      ['Textil Riachuelo S.R.L.','Industria textil',388,'down',27],
-      ['Química del Litoral S.A.','Industria química',702,'up',44],
-      ['Distribuidora Cuyo Hnos. S.A.','Comercio mayorista',571,'flat',36],
-      ['Panificadora San Telmo S.R.L.','Alimentos',779,'flat',9],
-      ['Transportes Ruta 40 S.A.','Logística',421,'shock',17],
-      ['Plásticos Avellaneda S.A.','Industria plástica',655,'flat',29],
-      ['Cooperativa Agrícola Pergamino Ltda.','Agro e insumos',527,'down',63],
-      ['Laboratorios Belgrano S.A.','Salud',864,'up',41],
-      ['Electromecánica Rosario S.R.L.','Industria metalúrgica',719,'flat',24],
-      ['Muebles del Delta S.R.L.','Industria maderera',341,'down',12],
-      ['Bodegas Valle de Uco S.A.','Alimentos',748,'up',33],
-      ['Servicios Petroleros Neuquén S.A.','Energía',592,'flat',85],
-      ['Indumentaria Once S.R.L.','Comercio minorista',264,'shock',14],
-      ['Envases Córdoba S.A.','Industria plástica',796,'flat',21],
-      ['Molinos del Oeste S.A.','Alimentos',633,'down',47],
-      ['Consultora Norte Digital S.A.S.','Servicios B2B',681,'up',8],
-      ['Autopartes Lanús S.R.L.','Industria metalúrgica',476,'down',26],
+      ['Supermercados del Litoral S.A.','Comercio minorista',0,'flat',96],
+      ['Metalúrgica Andina S.R.L.','Industria metalúrgica',2,'down',38],
+      ['Agroinsumos Pampeanos S.A.','Agro e insumos',1,'flat',74],
+      ['Constructora Patagónica S.R.L.','Construcción',4,'shock',22],
+      ['Frigorífico La Llanura S.A.','Alimentos',0,'up',58],
+      ['Logística Río de la Plata S.A.','Logística',1,'down',31],
+      ['Ferretería Industrial Mendoza S.A.','Comercio mayorista',0,'flat',19],
+      ['Textil Riachuelo S.R.L.','Industria textil',3,'down',27],
+      ['Química del Litoral S.A.','Industria química',1,'up',44],
+      ['Distribuidora Cuyo Hnos. S.A.','Comercio mayorista',1,'flat',36],
+      ['Panificadora San Telmo S.R.L.','Alimentos',0,'flat',9],
+      ['Transportes Ruta 40 S.A.','Logística',3,'shock',17],
+      ['Plásticos Avellaneda S.A.','Industria plástica',1,'flat',29],
+      ['Cooperativa Agrícola Pergamino Ltda.','Agro e insumos',2,'down',63],
+      ['Laboratorios Belgrano S.A.','Salud',0,'up',41],
+      ['Electromecánica Rosario S.R.L.','Industria metalúrgica',1,'flat',24],
+      ['Muebles del Delta S.R.L.','Industria maderera',3,'down',12],
+      ['Bodegas Valle de Uco S.A.','Alimentos',0,'up',33],
+      ['Servicios Petroleros Neuquén S.A.','Energía',1,'flat',85],
+      ['Indumentaria Once S.R.L.','Comercio minorista',4,'shock',14],
+      ['Envases Córdoba S.A.','Industria plástica',0,'flat',21],
+      ['Molinos del Oeste S.A.','Alimentos',1,'down',47],
+      ['Consultora Norte Digital S.A.S.','Servicios B2B',1,'up',8],
+      ['Autopartes Lanús S.R.L.','Industria metalúrgica',2,'down',26],
     ];
     const NEG = ['Atrasos bancarios de más de 90 días','Cheques rechazados sin cancelar','Endeudamiento creciente en 6 meses','Proceso judicial comercial abierto','Cambio reciente de autoridades','Deuda concentrada en una entidad','Embargos registrados','Caída de actividad declarada'];
     const POS = ['Sin atrasos en 24 meses','Más de 10 años de actividad','Endeudamiento estable','Cumplimiento fiscal regular','Financiamiento diversificado','Crecimiento sostenido de actividad','Cheques rechazados cancelados'];
     const owners = ['María López','Juan Pérez','Sofía Gómez','Sin asignar'];
     const dateBack = months => { const d = new Date(TODAY); d.setDate(d.getDate() - Math.round(months*30.4)); return d.toISOString().slice(0,10); };
+    const clamp = v => Math.max(0, Math.min(4, v));
+    const shuffle = a => a.map(v => [rnd(), v]).sort((x,y) => x[0]-y[0]).map(v => v[1]);
 
-    const list = base.map(([name, sector, score, traj, sales], id) => {
-      // history: 24 monthly points ending at score
-      const h = new Array(24);
-      h[23] = score;
-      const shockAt = 17 + Math.floor(rnd()*5);
-      const events = [];
+    const list = base.map(([name, sector, level, traj, sales], id) => {
+      // history of levels, built backwards from the current level
+      const h = new Array(24); h[23] = level;
+      const chg = traj === 'down' ? [22 - Math.floor(rnd()*2), 12 - Math.floor(rnd()*4)]
+                : traj === 'up' ? [22 - Math.floor(rnd()*2), 10 - Math.floor(rnd()*4)]
+                : traj === 'shock' ? [18 + Math.floor(rnd()*4)] : [];
+      let cur = level;
       for (let i = 22; i >= 0; i--) {
-        let step = (rnd() - 0.5) * 22;
-        if (traj === 'down') step += 9;   // going back in time, older scores were higher
-        if (traj === 'up') step -= 9;
-        if (traj === 'shock' && i === shockAt - 1) step += 170 + rnd()*60;
-        h[i] = Math.max(80, Math.min(960, Math.round(h[i+1] + step)));
+        if (chg.includes(i + 1)) cur = traj === 'shock' ? clamp(cur - 2) : traj === 'down' ? clamp(cur - 1) : clamp(cur + 1);
+        h[i] = cur;
       }
-      const b = band(score);
-      // events
+      const events = [];
+      const firstChange = [...h.keys()].reverse().find(i => i > 0 && h[i] !== h[i-1]);
       if (traj === 'shock') {
-        events.push({date:dateBack(23 - shockAt), sev:'crit', title:'Atrasos bancarios de más de 180 días', detail:`El score cayó ${h[shockAt-1]-h[shockAt]} puntos en un mes.`});
-        events.push({date:dateBack(23 - shockAt + 0.6), sev:'high', title:'3 cheques rechazados sin fondos', detail:'Rechazos por falta de fondos en los 30 días previos.'});
+        const m = h.findIndex((v,i) => i > 0 && v !== h[i-1]);
+        events.push({date:dateBack(23 - m), sev:'crit', title:'Atrasos bancarios de más de 180 días', detail:`Pasó de riesgo ${LEVELS[h[m-1]].name} a ${LEVELS[h[m]].name} en un mes.`});
+        events.push({date:dateBack(23 - m + 0.6), sev:'high', title:'3 cheques rechazados sin fondos', detail:'Rechazos por falta de fondos en los 30 días previos.'});
       }
       if (traj === 'down') {
-        events.push({date:dateBack(1 + rnd()*2), sev: b.k==='crit'||b.k==='high' ? 'high' : 'mod', title:'Endeudamiento creció ' + (25 + Math.floor(rnd()*30)) + '% en 6 meses', detail:'Tomó financiamiento en nuevas entidades.'});
-        if (b.k !== 'mod') events.push({date:dateBack(rnd()*0.8), sev:'high', title:'2 cheques rechazados', detail:'Aún sin cancelar.'});
-        events.push({date:dateBack(6 + rnd()*6), sev:'mod', title:'Cambio de autoridades publicado', detail:'Renuncia del presidente del directorio.'});
+        events.push({date:dateBack(23 - firstChange), sev: level >= 2 ? 'high' : 'mod', title:'Endeudamiento creció ' + (25 + Math.floor(rnd()*30)) + '% en 6 meses', detail:`Pasó de riesgo ${LEVELS[h[firstChange-1]].name} a ${LEVELS[h[firstChange]].name}.`});
+        if (level >= 2) events.push({date:dateBack(rnd()*0.8), sev:'high', title:'2 cheques rechazados', detail:'Aún sin cancelar.'});
+        events.push({date:dateBack(9 + rnd()*5), sev:'mod', title:'Cambio de autoridades publicado', detail:'Renuncia del presidente del directorio.'});
       }
       if (traj === 'up') {
-        events.push({date:dateBack(0.3 + rnd()*2), sev:'low', title:'Regularizó su situación financiera', detail:`Score +${40 + Math.floor(rnd()*60)} puntos en 90 días.`});
-        events.push({date:dateBack(9 + rnd()*8), sev:'mod', title:'Atrasos de 31 a 90 días', detail:'Regularizados dentro del trimestre.'});
+        events.push({date:dateBack(23 - firstChange), sev:'low', title:'Regularizó su situación financiera', detail:`Bajó de riesgo ${LEVELS[h[firstChange-1]].name} a ${LEVELS[h[firstChange]].name}.`});
+        events.push({date:dateBack(14 + rnd()*5), sev:'mod', title:'Atrasos de 31 a 90 días', detail:'Regularizados dentro del trimestre.'});
       }
       if (traj === 'flat') {
-        events.push({date:dateBack(4 + rnd()*12), sev: b.k==='low' ? 'low' : 'mod', title: b.k==='low' ? 'Renovó autoridades sin cambios relevantes' : 'Leve aumento de endeudamiento', detail: b.k==='low' ? 'Sin impacto en la calificación.' : 'Dentro del rango habitual del sector.'});
+        events.push({date:dateBack(4 + rnd()*12), sev: level===0 ? 'low' : 'mod', title: level===0 ? 'Renovó autoridades sin cambios relevantes' : 'Leve aumento de endeudamiento', detail: level===0 ? 'Sin impacto en la calificación.' : 'Dentro del rango habitual del sector.'});
       }
-      if (b.k === 'crit') events.push({date:dateBack(rnd()*0.4), sev:'crit', title:'Pedido de concurso preventivo', detail:'Publicado en el boletín de edictos.'});
+      if (level === 4) events.push({date:dateBack(rnd()*0.4), sev:'crit', title:'Pedido de concurso preventivo', detail:'Publicado en el boletín de edictos.'});
       events.sort((a,b) => b.date.localeCompare(a.date));
 
-      // drivers
-      const nNeg = {low:1, mod:3, high:4, crit:5}[b.k], nPos = {low:5, mod:3, high:2, crit:1}[b.k];
-      const shuffle = a => a.map(v => [rnd(), v]).sort((x,y) => x[0]-y[0]).map(v => v[1]);
+      const nNeg = [1,2,3,4,5][level], nPos = [5,3,2,1,1][level];
       const drivers = [
-        ...shuffle(NEG).slice(0, nNeg).map((label,i) => ({label, pts: -Math.round((nNeg - i) * (14 + rnd()*22))})),
-        ...shuffle(POS).slice(0, nPos).map((label,i) => ({label, pts: Math.round((nPos - i) * (10 + rnd()*16))})),
+        ...shuffle(NEG).slice(0, nNeg).map((label,i) => ({label, effect:'agrava', impact: i === 0 && level >= 2 ? 3 : i < 2 && level >= 1 ? 2 : 1 + (rnd() > .6 ? 1 : 0)})),
+        ...shuffle(POS).slice(0, nPos).map((label,i) => ({label, effect:'mitiga', impact: i === 0 && level <= 1 ? 3 : 1 + (rnd() > .5 ? 1 : 0)})),
       ];
 
       const salesM = sales * 1e6;
       const balance = Math.round(salesM * (0.35 + rnd()*0.9) / 1e5) * 1e5;
-      const overdueShare = {low:0.02, mod:0.08, high:0.22, crit:0.48}[b.k] * (0.5 + rnd());
+      const overdueShare = [0.02, 0.06, 0.15, 0.28, 0.48][level] * (0.5 + rnd());
       return {
         id: 'c' + (id + 1), name, cuit: fc(cuit()), sector, since: 1975 + Math.floor(rnd()*46),
-        score, history: h, drivers, events,
+        level, history: h, drivers, events,
         exposure: {balance, overdue: Math.round(balance * overdueShare / 1e5) * 1e5, limit: Math.round(salesM * (0.8 + rnd()*0.8) / 1e6) * 1e6},
-        monthlySales: salesM,
-        sectorPct: Math.max(3, Math.min(97, Math.round((score - 150) / 7.5 + (rnd()-0.5)*12))),
+        monthlySales: salesM, sectorLevel: rnd() > .5 ? 1 : (rnd() > .5 ? 0 : 2),
         links: [], owner: owners[Math.floor(rnd()*owners.length)],
       };
     });
-    // economic groups
     const link = (a,b,why) => { list[a].links.push({id:list[b].id, why}); list[b].links.push({id:list[a].id, why}); };
     link(1, 23, 'Comparten socio mayoritario');
     link(3, 16, 'Mismo domicilio fiscal');
@@ -455,14 +474,12 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
     return list;
   }
 
-  /* ---------- derived metrics ---------- */
+  /* ---------- derived ---------- */
   function derive(c){
-    const b = band(c.score);
-    c.band = b; c.grade = grade(c.score); c.pd = pdOf(c.score);
-    c.d30 = c.score - c.history[22]; c.d90 = c.score - c.history[20];
-    c.el = c.exposure.balance * c.pd * 0.5;
-    c.suggested = Math.round(c.monthlySales * b.mult / 1e6) * 1e6;
-    c.term = b.term;
+    c.L = LEVELS[c.level];
+    c.prev30 = c.history[22]; c.prev90 = c.history[20];
+    c.d30 = c.level - c.prev30; c.d90 = c.level - c.prev90;
+    c.suggested = Math.round(c.monthlySales * c.L.mult / 1e5) * 1e5;
     c.lastEvent = c.events[0] || null;
     return c;
   }
@@ -472,13 +489,10 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
   const open30 = ALL_EVENTS.filter(e => daysAgo(e.date) <= 30 && e.sev !== 'low');
   $('#nav-badge').textContent = open30.length;
 
-  /* ---------- notes (per-viewer convenience) ---------- */
   const store = {
     get(k){ try { return JSON.parse(localStorage.getItem('centinel:' + k)); } catch { return null; } },
     set(k,v){ try { localStorage.setItem('centinel:' + k, JSON.stringify(v)); return true; } catch { return false; } },
   };
-
-  /* ---------- UI helpers ---------- */
   const toastEl = $('#toast'); let toastT;
   const toast = msg => { toastEl.textContent = msg; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => toastEl.hidden = true, 3200); };
   document.addEventListener('click', e => { const t = e.target.closest('[data-toast]'); if (t) toast(t.dataset.toast); });
@@ -491,63 +505,77 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
     };
   }
 
-  /* Line chart: single series, risk zones as faint background bands, optional event markers. */
-  function lineChart(el, values, {min=0, max=1000, zones=false, fmtY=v=>v, label=i=>monthLabel(i), markers={}, tipHtml}){
-    const W = Math.max(280, el.clientWidth), H = 240, P = {l:44, r:26, t:14, b:28};
-    const iw = W - P.l - P.r, ih = H - P.t - P.b;
-    const x = i => P.l + (values.length === 1 ? iw/2 : i * iw / (values.length - 1));
-    const y = v => P.t + ih - (v - min) / (max - min) * ih;
-    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
-    if (zones) {
-      [[750,1000,'var(--low-bg)'],[550,750,'var(--mod-bg)'],[350,550,'var(--high-bg)'],[0,350,'var(--crit-bg)']].forEach(([a,b,c]) => {
-        s += `<rect x="${P.l}" y="${y(b)}" width="${iw}" height="${y(a)-y(b)}" fill="${c}" opacity=".55"/>`;
-      });
-    }
-    const ticks = zones ? [0,350,550,750,1000] : [0,.25,.5,.75,1].map(t => min + t*(max-min));
-    ticks.forEach(t => { s += `<line x1="${P.l}" x2="${W-P.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${P.l-8}" y="${y(t)+4}" text-anchor="end">${fmtY(t)}</text>`; });
-    const step = values.length > 12 ? 4 : 2;
-    values.forEach((_,i) => { if (i % step === (values.length-1) % step) s += `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${label(i)}</text>`; });
-    const path = values.map((v,i) => (i?'L':'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
-    if (!zones) s += `<path d="${path} L${x(values.length-1)} ${P.t+ih} L${x(0)} ${P.t+ih} Z" fill="var(--cta)" opacity=".08"/>`;
-    s += `<path d="${path}" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-    Object.entries(markers).forEach(([i, sev]) => { s += `<circle cx="${x(+i)}" cy="${y(values[i])}" r="5.5" fill="${SEV[sev][1]}" stroke="var(--paper)" stroke-width="2"/>`; });
-    const li = values.length - 1;
-    s += `<circle cx="${x(li)}" cy="${y(values[li])}" r="5" fill="var(--navy)" stroke="var(--paper)" stroke-width="2"/>`;
-    s += `<g class="hov" visibility="hidden"><line y1="${P.t}" y2="${P.t+ih}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="3 3"/><circle r="5" fill="var(--paper)" stroke="var(--navy)" stroke-width="2"/></g>`;
-    s += `<rect x="${P.l}" y="0" width="${iw}" height="${H}" fill="transparent" class="hit"/></svg>`;
-    el.innerHTML = s; el.classList.add('chart');
+  /* Shared hover layer for line-type charts: crosshair + dot + tooltip. */
+  function hoverLayer(el, n, P, iw, x, yAt, tipHtml){
     const tip = tooltip(el), hov = $('.hov', el), ln = $('line', hov), dot = $('circle', hov);
     const move = ev => {
       const r = el.getBoundingClientRect();
-      const i = Math.max(0, Math.min(values.length-1, Math.round((ev.clientX - r.left - P.l) / iw * (values.length-1))));
+      const i = Math.max(0, Math.min(n-1, Math.round((ev.clientX - r.left - P.l) / iw * (n-1))));
       hov.setAttribute('visibility','visible');
       ln.setAttribute('x1', x(i)); ln.setAttribute('x2', x(i));
-      dot.setAttribute('cx', x(i)); dot.setAttribute('cy', y(values[i]));
-      tip.show(tipHtml(i), x(i), y(values[i]));
+      dot.setAttribute('cx', x(i)); dot.setAttribute('cy', yAt(i));
+      tip.show(tipHtml(i), x(i), yAt(i));
     };
     const hit = $('.hit', el);
     hit.addEventListener('pointermove', move);
     hit.addEventListener('pointerdown', move);
     hit.addEventListener('pointerleave', () => { hov.setAttribute('visibility','hidden'); tip.hide(); });
   }
+  const HOV = top => `<g class="hov" visibility="hidden"><line y1="${top.t}" y2="${top.b}" stroke="var(--ink-2)" stroke-width="1" stroke-dasharray="3 3"/><circle r="5" fill="var(--paper)" stroke="var(--navy)" stroke-width="2"/></g>`;
+
+  /* Area line for money over 12 months (single series). */
+  function moneyChart(el, values, label, tipHtml){
+    const W = Math.max(280, el.clientWidth), H = 220, P = {l:44, r:26, t:14, b:28};
+    const iw = W - P.l - P.r, ih = H - P.t - P.b;
+    const max = Math.ceil(Math.max(...values) / 5e7) * 5e7 || 1;
+    const x = i => P.l + i * iw / (values.length - 1), y = v => P.t + ih - v / max * ih;
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
+    [0,.25,.5,.75,1].forEach(t => { const v = t*max; s += `<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${P.l-8}" y="${y(v)+4}" text-anchor="end">${v ? fmt(v/1e6,0)+' M' : '0'}</text>`; });
+    values.forEach((_,i) => { if (i % 2 === 1) s += `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${label(i)}</text>`; });
+    const path = values.map((v,i) => (i?'L':'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+    s += `<path d="${path} L${x(values.length-1)} ${P.t+ih} L${x(0)} ${P.t+ih} Z" fill="var(--vhigh)" opacity=".08"/>`;
+    s += `<path d="${path}" fill="none" stroke="var(--navy)" stroke-width="2" stroke-linejoin="round"/>`;
+    s += `<circle cx="${x(values.length-1)}" cy="${y(values[values.length-1])}" r="5" fill="var(--navy)" stroke="var(--paper)" stroke-width="2"/>`;
+    s += HOV({t:P.t, b:P.t+ih}) + `<rect x="${P.l}" y="0" width="${iw}" height="${H}" fill="transparent" class="hit"/></svg>`;
+    el.innerHTML = s; el.classList.add('chart');
+    hoverLayer(el, values.length, P, iw, x, i => y(values[i]), tipHtml);
+  }
+
+  /* Step chart of the risk level over 24 months: one row per level, Bajo on top. */
+  function levelChart(el, levels, markers, tipHtml){
+    const W = Math.max(280, el.clientWidth), H = 230, P = {l:70, r:26, t:10, b:28};
+    const iw = W - P.l - P.r, ih = H - P.t - P.b, rh = ih / 5;
+    const x = i => P.l + i * iw / (levels.length - 1), y = lv => P.t + rh * lv + rh / 2;
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
+    LEVELS.forEach((L,k) => { s += `<rect x="${P.l}" y="${P.t + rh*k}" width="${iw}" height="${rh}" fill="${L.bg}" opacity=".6"/><text x="${P.l-8}" y="${y(k)+4}" text-anchor="end">${L.name}</text>`; });
+    levels.forEach((_,i) => { if (i % 4 === 3) s += `<text x="${x(i)}" y="${H-8}" text-anchor="middle">${monthLabel(i)}</text>`; });
+    let d = `M${x(0)} ${y(levels[0])}`;
+    for (let i = 1; i < levels.length; i++) { const mx = (x(i-1) + x(i)) / 2; d += ` H${mx} V${y(levels[i])} H${x(i)}`; }
+    s += `<path d="${d}" fill="none" stroke="var(--navy)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    Object.entries(markers).forEach(([i, sev]) => { s += `<circle cx="${x(+i)}" cy="${y(levels[i])}" r="6" fill="${SEV[sev][1]}" stroke="var(--paper)" stroke-width="2"/>`; });
+    const li = levels.length - 1;
+    s += `<circle cx="${x(li)}" cy="${y(levels[li])}" r="5" fill="var(--navy)" stroke="var(--paper)" stroke-width="2"/>`;
+    s += HOV({t:P.t, b:P.t+ih}) + `<rect x="${P.l}" y="0" width="${iw}" height="${H}" fill="transparent" class="hit"/></svg>`;
+    el.innerHTML = s; el.classList.add('chart');
+    hoverLayer(el, levels.length, P, iw, x, i => y(levels[i]), tipHtml);
+  }
 
   /* ---------- views ---------- */
   const view = $('#view');
-  const state = {filter:'all', sort:'el', dir:-1, q:''};
+  const state = {filter:'all', sort:'level', dir:-1, q:''};
+  const atRiskAt = i => DATA.reduce((a,c) => a + (c.history[i] >= 2 ? c.exposure.balance : 0), 0);
 
   function portfolioView(){
     const total = DATA.reduce((a,c) => a + c.exposure.balance, 0);
-    const el = DATA.reduce((a,c) => a + c.el, 0);
     const overdue = DATA.reduce((a,c) => a + c.exposure.overdue, 0);
-    const wScore = Math.round(DATA.reduce((a,c) => a + c.score * c.exposure.balance, 0) / total);
-    const wScorePrev = Math.round(DATA.reduce((a,c) => a + c.history[22] * c.exposure.balance, 0) / total);
-    const byBand = BANDS.map(b => { const cs = DATA.filter(c => c.band === b); return {b, n:cs.length, exp:cs.reduce((a,c) => a + c.exposure.balance, 0)}; });
-    const elSeries = Array.from({length:12}, (_,k) => { const i = 12 + k; return DATA.reduce((a,c) => a + c.exposure.balance * pdOf(c.history[i]) * 0.5, 0); });
-    const elPrev = elSeries[10];
-    const movers = [...DATA].sort((a,b) => a.d30 - b.d30).slice(0,5);
+    const risk = atRiskAt(23), riskPrev = atRiskAt(22);
+    const worse90 = DATA.filter(c => c.d90 > 0), better90 = DATA.filter(c => c.d90 < 0);
+    const byLevel = LEVELS.map((L,k) => { const cs = DATA.filter(c => c.level === k); return {L, n:cs.length, exp:cs.reduce((a,c) => a + c.exposure.balance, 0)}; });
+    const riskSeries = Array.from({length:12}, (_,k) => atRiskAt(12 + k));
+    const movers = [...worse90].sort((a,b) => b.d90 - a.d90 || b.exposure.balance - a.exposure.balance).slice(0,5);
     const top = [...DATA].sort((a,b) => b.exposure.balance - a.exposure.balance).slice(0,5);
     const topShare = top.reduce((a,c) => a + c.exposure.balance, 0) / total;
-    const atRisk = byBand[2].exp + byBand[3].exp;
+    const ch = riskPrev ? (risk / riskPrev - 1) * 100 : 0;
 
     view.innerHTML = `
       <div class="page-head">
@@ -556,56 +584,55 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
       </div>
       <div class="kpis">
         <div class="card kpi"><small>Exposición total</small><b>${ars(total)}</b><span>${ars(overdue)} vencido (${pct(overdue/total)})</span></div>
-        <div class="card kpi"><small>Pérdida esperada a 12 meses</small><b>${ars(el)}</b><span>${elChange(el, elPrev)} vs. mes anterior</span></div>
-        <div class="card kpi"><small>Score promedio ponderado</small><b>${wScore}</b><span>${delta(wScore - wScorePrev)} en 30 días</span></div>
+        <div class="card kpi"><small>Exposición en riesgo alto o superior</small><b>${ars(risk)}</b><span>${pct(risk/total,0)} del total · ${Math.round(ch*10) === 0 ? '<span class="delta flat">=</span>' : `<span class="delta ${ch>0?'down':'up'}">${ch>0?'▲ +':'▼ '}${fmt(ch,1)}%</span>`} vs. mes anterior</span></div>
+        <div class="card kpi"><small>Cambios de nivel en 90 días</small><b>${worse90.length} <span style="font-size:15px;font-weight:600;color:var(--vhigh)">empeoraron</span></b><span>${better90.length} mejoraron · ${DATA.length - worse90.length - better90.length} sin cambios</span></div>
         <div class="card kpi"><small>Alertas en los últimos 30 días</small><b>${open30.length}</b><span>${open30.filter(e=>e.sev==='crit').length} críticas · <a href="#alertas" style="color:var(--cta);font-weight:600">ver todas</a></span></div>
       </div>
 
       <div class="grid2">
         <div class="card">
-          <div class="card-h"><h2>Exposición por nivel de riesgo</h2><small>${pct(atRisk/total,0)} de tu cuenta corriente está en riesgo elevado o crítico</small></div>
+          <div class="card-h"><h2>Exposición por nivel de riesgo</h2><small>${pct(risk/total,0)} de tu cuenta corriente está en riesgo alto, muy alto o crítico</small></div>
           <div class="card-b">
-            <div class="stack chart" id="stack">${byBand.map(x => `<div style="width:${x.exp/total*100}%;background:${x.b.c}" data-tip="<b>${x.b.name}</b><br>${ars(x.exp)} · ${pct(x.exp/total,0)}<br>${x.n} empresas"></div>`).join('')}</div>
-            <div class="legend">${byBand.map(x => `<div style="border-color:${x.b.c}">${x.b.name}<b>${ars(x.exp)}</b>${x.n} empresas · ${pct(x.exp/total,0)}</div>`).join('')}</div>
-            <div class="card-h" style="padding:26px 0 0"><h2>Pérdida esperada, últimos 12 meses</h2><small>Exposición actual × probabilidad de default × 50% sin recupero</small></div>
-            <div id="el-chart" style="margin-top:10px"></div>
+            <div class="stack chart" id="stack">${byLevel.filter(x => x.exp).map(x => `<div style="width:${x.exp/total*100}%;background:${x.L.c}" data-tip="<b>${x.L.name}</b><br>${ars(x.exp)} · ${pct(x.exp/total,0)}<br>${x.n} empresas"></div>`).join('')}</div>
+            <div class="legend">${byLevel.map(x => `<div style="border-color:${x.L.c}">${x.L.name}<b>${ars(x.exp)}</b>${x.n} emp. · ${pct(x.exp/total,0)}</div>`).join('')}</div>
+            <div class="card-h" style="padding:26px 0 0"><h2>Exposición en riesgo alto o superior, 12 meses</h2><small>Saldo actual de las empresas que estaban en Alto, Muy alto o Crítico cada mes</small></div>
+            <div id="risk-chart" style="margin-top:10px"></div>
           </div>
         </div>
         <div class="col">
           <div class="card">
-            <div class="card-h"><h2>Mayores caídas en 30 días</h2><small>Score</small></div>
-            <div class="card-b list">${movers.map(c => `<a class="li" href="#empresa-${c.id}"><div style="min-width:0"><div class="nm">${esc(c.name)}</div><div class="sub">${c.history[22]} → ${c.score} · ${c.band.name}</div></div>${delta(c.d30)}</a>`).join('')}</div>
+            <div class="card-h"><h2>Empeoraron en 90 días</h2><small>${worse90.length} empresas</small></div>
+            <div class="card-b list">${movers.length ? movers.map(c => `<a class="li" href="#empresa-${c.id}"><div style="min-width:0"><div class="nm">${esc(c.name)}</div><div class="sub">${LEVELS[c.prev90].name} → ${c.L.name} · ${ars(c.exposure.balance)}</div></div>${pill(c.L)}</a>`).join('') : '<p class="sub" style="margin:0">Ninguna empresa empeoró en los últimos 90 días.</p>'}</div>
           </div>
           <div class="card">
             <div class="card-h"><h2>Concentración</h2><small>Top 5 = ${pct(topShare,0)} de la exposición</small></div>
-            <div class="card-b list">${top.map(c => `<a class="li" href="#empresa-${c.id}"><div style="min-width:0"><div class="nm">${esc(c.name)}</div><div class="cbar"><i style="width:${c.exposure.balance/top[0].exposure.balance*100}%;background:${c.band.c}"></i></div></div><div style="text-align:right"><b class="num" style="font-size:14px">${ars(c.exposure.balance)}</b><div class="sub">${pct(c.exposure.balance/total)} · ${c.band.name}</div></div></a>`).join('')}</div>
+            <div class="card-b list">${top.map(c => `<a class="li" href="#empresa-${c.id}"><div style="min-width:0"><div class="nm">${esc(c.name)}</div><div class="cbar"><i style="width:${c.exposure.balance/top[0].exposure.balance*100}%;background:${c.L.c}"></i></div></div><div style="text-align:right"><b class="num" style="font-size:14px">${ars(c.exposure.balance)}</b><div class="sub">${pct(c.exposure.balance/total)} · ${c.L.name}</div></div></a>`).join('')}</div>
           </div>
         </div>
       </div>
 
       <div class="card" id="tabla">
         <div class="card-h"><h2>Empresas monitoreadas</h2><small>Hacé clic en una fila para ver la ficha completa</small></div>
-        <div class="filters" role="group" aria-label="Filtrar por riesgo">
+        <div class="filters" role="group" aria-label="Filtrar por nivel de riesgo">
           <button class="chip" data-f="all" aria-pressed="${state.filter==='all'}">Todas</button>
-          ${BANDS.map(b => `<button class="chip" data-f="${b.k}" aria-pressed="${state.filter===b.k}"><i style="background:${b.c}"></i>${b.name}</button>`).join('')}
+          ${LEVELS.map((L,k) => `<button class="chip" data-f="${k}" aria-pressed="${state.filter===String(k)}"><i style="background:${L.c}"></i>${L.name}</button>`).join('')}
           <span class="count" id="count"></span>
         </div>
         <div class="tbl-wrap"><table class="t">
           <thead><tr>
-            ${[['name','Empresa'],['sector','Sector'],['score','Calificación'],['d30','Δ 30 d','r'],['balance','Exposición','r'],['overdue','Vencido','r'],['pd','Prob. default','r'],['el','Pérdida esperada','r'],['ev','Última alerta']].map(([k,l,cl]) => `<th class="${cl||''}"><button data-s="${k}" ${state.sort===k?`aria-sort="${state.dir<0?'descending':'ascending'}"`:''}>${l}${state.sort===k?(state.dir<0?' ↓':' ↑'):''}</button></th>`).join('')}
+            ${[['name','Empresa'],['sector','Sector'],['level','Nivel de riesgo'],['d90','Tendencia 90 d'],['balance','Exposición','r'],['overdue','Vencido','r'],['limit','Límite actual','r'],['suggested','Límite sugerido','r'],['ev','Última alerta']].map(([k,l,cl]) => `<th class="${cl||''}"><button data-s="${k}" ${state.sort===k?`aria-sort="${state.dir<0?'descending':'ascending'}"`:''}>${l}${state.sort===k?(state.dir<0?' ↓':' ↑'):''}</button></th>`).join('')}
           </tr></thead>
           <tbody id="rows"></tbody>
         </table></div>
       </div>
-      <p class="demo-note">Datos de ejemplo. Exposición y vencido provienen de tu sistema de gestión o de la carga en Excel.</p>`;
+      <p class="demo-note">Datos de ejemplo. Exposición, vencido y límite actual provienen de tu sistema de gestión o de la carga en Excel.</p>`;
 
-    // stacked bar tooltip
     const st = $('#stack'), tip = tooltip(st);
     $$('div[data-tip]', st).forEach(d => {
       d.addEventListener('pointermove', ev => { const r = st.getBoundingClientRect(); tip.show(d.dataset.tip, ev.clientX - r.left, 0); });
       d.addEventListener('pointerleave', () => tip.hide());
     });
-    lineChart($('#el-chart'), elSeries, {min:0, max:Math.ceil(Math.max(...elSeries)/1e7)*1e7, fmtY:v => v ? fmt(v/1e6,0)+' M' : '0', label:i => monthLabel(12+i), tipHtml:i => `<b>${monthLabel(12+i)}</b><br>Pérdida esperada: ${ars(elSeries[i])}`});
+    moneyChart($('#risk-chart'), riskSeries, i => monthLabel(12+i), i => `<b>${monthLabel(12+i)}</b><br>En riesgo alto o superior: ${ars(riskSeries[i])}`);
 
     $$('.chip').forEach(b => b.addEventListener('click', () => { state.filter = b.dataset.f; $$('.chip').forEach(x => x.setAttribute('aria-pressed', x===b)); renderRows(); }));
     $$('th button').forEach(b => b.addEventListener('click', () => { const k = b.dataset.s; state.dir = state.sort===k ? -state.dir : (k==='name'||k==='sector'?1:-1); state.sort = k; portfolioView(); $('#tabla').scrollIntoView({block:'start'}); }));
@@ -614,9 +641,9 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
 
   function rowsFor(){
     const q = state.q.toLowerCase().replace(/-/g,'');
-    const val = (c,k) => ({name:c.name, sector:c.sector, score:c.score, d30:c.d30, balance:c.exposure.balance, overdue:c.exposure.overdue, pd:c.pd, el:c.el, ev:c.lastEvent ? c.lastEvent.date : ''})[k];
+    const val = (c,k) => ({name:c.name, sector:c.sector, level:c.level*1e12 + c.exposure.balance, d90:c.d90, balance:c.exposure.balance, overdue:c.exposure.overdue, limit:c.exposure.limit, suggested:c.suggested, ev:c.lastEvent ? c.lastEvent.date : ''})[k];
     return DATA
-      .filter(c => state.filter==='all' || c.band.k===state.filter)
+      .filter(c => state.filter==='all' || c.level===+state.filter)
       .filter(c => !q || c.name.toLowerCase().includes(q) || c.cuit.replace(/-/g,'').includes(q))
       .sort((a,b) => { const x = val(a,state.sort), y = val(b,state.sort); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * state.dir; });
   }
@@ -626,73 +653,70 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
     tb.innerHTML = rows.length ? rows.map(c => `<tr data-id="${c.id}" tabindex="0">
       <td><div class="nm">${esc(c.name)}</div><div class="sub mono">${c.cuit}</div></td>
       <td>${esc(c.sector)}</td>
-      <td><span style="display:flex;gap:8px;align-items:center"><b class="num" style="min-width:30px">${c.score}</b>${pill(c.band)}<span class="sub">${c.grade}</span></span></td>
-      <td class="r">${delta(c.d30)}</td>
+      <td>${pill(c.L)}</td>
+      <td>${trend(c.d90, c.d90 ? c.prev90 : null)}</td>
       <td class="r num">${ars(c.exposure.balance)}</td>
-      <td class="r num" style="color:${c.exposure.overdue/c.exposure.balance>0.15?'var(--crit)':'inherit'}">${ars(c.exposure.overdue)}</td>
-      <td class="r num">${pct(c.pd)}</td>
-      <td class="r num"><b>${ars(c.el)}</b></td>
+      <td class="r num" style="color:${c.exposure.overdue/c.exposure.balance>0.15?'var(--vhigh)':'inherit'}">${ars(c.exposure.overdue)}</td>
+      <td class="r num">${ars(c.exposure.limit)}</td>
+      <td class="r num"><b style="color:${c.suggested < c.exposure.limit ? 'var(--vhigh)' : 'var(--ink)'}">${c.suggested ? ars(c.suggested) : 'Contado'}</b></td>
       <td>${c.lastEvent ? `<span style="display:flex;gap:8px;align-items:center">${sevPill(c.lastEvent.sev)}<span class="sub">${ago(c.lastEvent.date)}</span></span>` : '<span class="sub">—</span>'}</td>
     </tr>`).join('') : `<tr><td colspan="9" class="empty">Ninguna empresa coincide con “${esc(state.q)}”. Probá con otra razón social o CUIT.</td></tr>`;
     $$('tr[data-id]', tb).forEach(tr => { const go = () => location.hash = 'empresa-' + tr.dataset.id; tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key==='Enter') go(); }); });
   }
 
   function companyView(c){
-    const b = c.band;
-    const markers = {};
-    c.events.forEach(e => { const m = 23 - Math.round(daysAgo(e.date)/30.4); if (m >= 0 && m <= 23 && !markers[m]) markers[m] = e.sev; });
-    const evByMonth = {};
-    c.events.forEach(e => { const m = 23 - Math.round(daysAgo(e.date)/30.4); (evByMonth[m] = evByMonth[m] || []).push(e); });
-    const neg = c.drivers.filter(d => d.pts < 0).sort((a,b) => a.pts - b.pts);
-    const pos = c.drivers.filter(d => d.pts > 0).sort((a,b) => b.pts - a.pts);
-    const maxPts = Math.max(...c.drivers.map(d => Math.abs(d.pts)));
+    const L = c.L;
+    const mIdx = e => 23 - Math.round(daysAgo(e.date)/30.4);
+    const markers = {}, evByMonth = {};
+    c.events.forEach(e => { const m = mIdx(e); if (m < 0) return; if (!markers[m]) markers[m] = e.sev; (evByMonth[m] = evByMonth[m] || []).push(e); });
+    const neg = c.drivers.filter(d => d.effect === 'agrava').sort((a,b) => b.impact - a.impact);
+    const pos = c.drivers.filter(d => d.effect === 'mitiga').sort((a,b) => b.impact - a.impact);
     const used = c.exposure.balance / c.exposure.limit;
-    const sugPos = Math.min(1, c.suggested / Math.max(c.exposure.limit, c.exposure.balance, c.suggested));
     const scaleMax = Math.max(c.exposure.limit, c.exposure.balance, c.suggested);
-    const action = b.k==='low' ? ['Mantener o ampliar','var(--low)','var(--low-bg)',[`Podés ampliar el límite hasta ${ars(c.suggested)}`,`Plazo de hasta ${c.term} días`,'Revisión trimestral']]
-      : b.k==='mod' ? ['Operar con seguimiento','var(--mod)','var(--mod-bg)',[`Límite sugerido ${ars(c.suggested)}`,`Plazo máximo ${c.term} días`,'Revisión mensual del saldo vencido']]
-      : b.k==='high' ? ['Reducir exposición','var(--high)','var(--high-bg)',[`Bajar el límite a ${ars(c.suggested)}`,`Plazo máximo ${c.term} días`,'Pedir garantía o cheques de terceros','No liberar pedidos con saldo vencido']]
-      : ['Suspender crédito','var(--crit)','var(--crit-bg)',['Operar sólo de contado','Gestionar el cobro del saldo vencido','Evaluar acciones legales con tu abogado']];
+    const [rTitle, rItems] = RECO[c.level];
     const note = store.get('note:' + c.id) || {owner:c.owner, text:''};
     const links = c.links.map(l => ({...l, c:byId[l.id]}));
+    const sd = c.level - c.sectorLevel;
 
     view.innerHTML = `
       <div class="crumb"><a href="#cartera">Cartera</a><span>/</span><span>${esc(c.name)}</span></div>
       <div class="card co-head">
         <div style="min-width:0">
           <h1>${esc(c.name)}</h1>
-          <div class="co-meta"><span class="mono">CUIT ${c.cuit}</span><span>${esc(c.sector)}</span><span>Activa desde ${c.since}</span><span>Responsable: ${esc(note.owner)}</span></div>
+          <div class="co-meta"><span class="mono">CUIT ${c.cuit}</span><span>${esc(c.sector)}</span><span>Activa desde ${c.since}</span><span id="owner-meta">Responsable: ${esc(note.owner)}</span></div>
           <div class="co-actions">
             <button class="btn btn-line" type="button" data-toast="En la versión final se descarga el informe en PDF con tu marca."><svg><use href="#i-doc"/></svg>Exportar informe</button>
             <button class="btn btn-line" type="button" data-toast="Te avisaremos al instante por email y WhatsApp ante cualquier cambio de esta empresa."><svg><use href="#i-bell"/></svg>Alertas: email y WhatsApp</button>
           </div>
         </div>
-        <div class="co-score">
-          <div class="grade" style="background:${b.bg};color:${b.c}"><b>${c.grade}</b><small>Riesgo ${b.name.toLowerCase()}</small></div>
-          <div class="sc"><b>${c.score}</b><small>de 1000 puntos</small><div class="ds"><span class="sub">30 d ${delta(c.d30)}</span><span class="sub">90 d ${delta(c.d90)}</span></div></div>
+        <div>
+          <div class="co-score">
+            <div class="lvlbox" style="background:${L.bg};color:${L.c}"><small>Nivel de riesgo</small><b>${L.name}</b></div>
+          </div>
+          <div class="trendtxt">30 d: ${trend(c.d30, c.d30 ? c.prev30 : null)}<br>90 d: ${trend(c.d90, c.d90 ? c.prev90 : null)}</div>
         </div>
       </div>
 
       <div class="co-grid">
         <div class="col">
           <div class="card">
-            <div class="card-h"><h2>Evolución del score, 24 meses</h2><small>Los puntos de color marcan eventos detectados</small></div>
-            <div class="card-b"><div id="sc-chart"></div></div>
+            <div class="card-h"><h2>Evolución del nivel de riesgo, 24 meses</h2><small>Los puntos de color marcan eventos detectados</small></div>
+            <div class="card-b"><div id="lv-chart"></div></div>
             <div class="facts">
-              <div><small>Prob. de default 12 m</small><b>${pct(c.pd)}</b></div>
-              <div><small>Pérdida esperada</small><b>${ars(c.el)}</b></div>
+              <div><small>Nivel hace 90 días</small><b>${LEVELS[c.prev90].name}</b></div>
+              <div><small>Nivel hace 12 meses</small><b>${LEVELS[c.history[11]].name}</b></div>
               <div><small>Límite sugerido</small><b>${c.suggested ? ars(c.suggested) : 'Contado'}</b></div>
-              <div><small>Plazo máximo</small><b>${c.term ? c.term + ' días' : 'Contado'}</b></div>
+              <div><small>Plazo máximo</small><b>${L.term ? L.term + ' días' : 'Contado'}</b></div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-h"><h2>Por qué tiene este score</h2><small>Puntos respecto del promedio de su sector</small></div>
+            <div class="card-h"><h2>Por qué tiene este nivel</h2><small>Señales ordenadas por impacto</small></div>
             <div class="card-b drv">
-              <div><h3 style="color:var(--neg)">Lo que resta</h3>${neg.length ? neg.map(d => `<div class="drow"><span>${d.label}</span><span class="bar"><i style="right:0;width:${Math.abs(d.pts)/maxPts*100}%;background:var(--neg)"></i></span><b>${d.pts}</b></div>`).join('') : '<p class="sub">Sin señales negativas relevantes.</p>'}</div>
-              <div><h3 style="color:var(--pos)">Lo que suma</h3>${pos.length ? pos.map(d => `<div class="drow"><span>${d.label}</span><span class="bar"><i style="left:0;width:${d.pts/maxPts*100}%;background:var(--pos)"></i></span><b>+${d.pts}</b></div>`).join('') : '<p class="sub">Sin señales positivas relevantes.</p>'}</div>
+              <div><h3 style="color:var(--neg)">Lo que agrava</h3>${neg.length ? neg.map(d => `<div class="drow"><span>${d.label}</span><span style="color:var(--neg);font-size:12px;font-weight:600;white-space:nowrap">${impact(d.impact)}${['','Bajo','Medio','Alto'][d.impact]}</span></div>`).join('') : '<p class="sub">Sin señales negativas relevantes.</p>'}</div>
+              <div><h3 style="color:var(--pos)">Lo que mitiga</h3>${pos.length ? pos.map(d => `<div class="drow"><span>${d.label}</span><span style="color:var(--pos);font-size:12px;font-weight:600;white-space:nowrap">${impact(d.impact)}${['','Bajo','Medio','Alto'][d.impact]}</span></div>`).join('') : '<p class="sub">Sin señales positivas relevantes.</p>'}</div>
             </div>
-            <p class="drv-note" style="padding:0 20px 18px;margin:0">Resultado de triangular +25 fuentes y +180 variables. Se muestran las señales con mayor peso en la calificación.</p>
+            <p class="drv-note" style="padding:0 20px 18px;margin:0">Resultado de triangular +25 fuentes y +180 variables. Se muestran las señales con mayor impacto en la calificación.</p>
           </div>
 
           <div class="card">
@@ -702,10 +726,10 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
         </div>
 
         <div class="col">
-          <div class="reco" style="background:${action[2]};border-color:${action[1]}">
-            <small style="color:${action[1]}">Recomendación</small>
-            <h3>${action[0]}</h3>
-            <ul>${action[3].map(t => `<li><svg style="color:${action[1]}"><use href="#i-check"/></svg><span>${t}</span></li>`).join('')}</ul>
+          <div class="reco" style="background:${L.bg};border-color:${L.c}">
+            <small style="color:${L.c}">Recomendación</small>
+            <h3>${rTitle}</h3>
+            <ul>${rItems(c.suggested).map(t => `<li><svg style="color:${L.c}"><use href="#i-check"/></svg><span>${t}</span></li>`).join('')}</ul>
             ${c.suggested !== c.exposure.limit ? `<button class="btn btn-cta" type="button" id="apply">Aplicar límite sugerido (${c.suggested ? ars(c.suggested) : 'contado'})</button>` : ''}
           </div>
 
@@ -713,12 +737,12 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
             <div class="card-h"><h2>Tu exposición</h2><small>Según tu sistema de gestión</small></div>
             <div class="card-b">
               <div class="use">
-                <div class="track"><span class="fill" style="width:${Math.min(100, c.exposure.balance/scaleMax*100)}%;background:${used>1?'var(--crit)':'var(--cta)'}"></span><span class="mark" title="Límite sugerido" style="left:calc(${sugPos*100}% - 1px)"></span></div>
+                <div class="track"><span class="fill" style="width:${Math.min(100, c.exposure.balance/scaleMax*100)}%;background:${c.exposure.balance > c.suggested ? 'var(--vhigh)' : 'var(--cta)'}"></span><span class="mark" title="Límite sugerido" style="left:calc(${c.suggested/scaleMax*100}% - 1px)"></span></div>
                 <div class="lbls"><span>Saldo ${ars(c.exposure.balance)}</span><span>▮ sugerido ${c.suggested ? ars(c.suggested) : '$ 0'}</span></div>
               </div>
               <div class="expo-row"><span>Saldo en cuenta corriente</span><b>${ars(c.exposure.balance)}</b></div>
-              <div class="expo-row"><span>Vencido</span><b style="color:${c.exposure.overdue/c.exposure.balance>0.15?'var(--crit)':'var(--ink)'}">${ars(c.exposure.overdue)} (${pct(c.exposure.overdue/c.exposure.balance,0)})</b></div>
-              <div class="expo-row"><span>Límite actual</span><b id="cur-limit">${ars(c.exposure.limit)}</b></div>
+              <div class="expo-row"><span>Vencido</span><b style="color:${c.exposure.overdue/c.exposure.balance>0.15?'var(--vhigh)':'var(--ink)'}">${ars(c.exposure.overdue)} (${pct(c.exposure.overdue/c.exposure.balance,0)})</b></div>
+              <div class="expo-row"><span>Límite actual</span><b>${ars(c.exposure.limit)}</b></div>
               <div class="expo-row"><span>Uso del límite</span><b>${pct(used,0)}</b></div>
               <div class="expo-row"><span>Compras promedio por mes</span><b>${ars(c.monthlySales)}</b></div>
             </div>
@@ -726,13 +750,14 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
 
           <div class="card">
             <div class="card-h"><h2>Comparación con su sector</h2><small>${esc(c.sector)}</small></div>
-            <div class="card-b bench">Está mejor calificada que el <b>${c.sectorPct}%</b> de las empresas de su sector.
-              <div class="scale"><i style="left:${c.sectorPct}%"></i></div><div class="lbls"><span>Peor del sector</span><span>Mejor del sector</span></div></div>
+            <div class="card-b bench">El nivel más frecuente en su sector es <b>${LEVELS[c.sectorLevel].name}</b>.
+              ${sd === 0 ? 'Esta empresa está en línea con su sector.' : `Esta empresa está <b style="color:${sd>0?'var(--vhigh)':'var(--low)'}">${Math.abs(sd)} nivel${Math.abs(sd)>1?'es':''} ${sd>0?'por encima (peor)':'por debajo (mejor)'}</b>.`}
+              <div style="margin-top:14px">${meter(c.level)}</div></div>
           </div>
 
           <div class="card links">
             <div class="card-h"><h2>Grupo económico</h2><small>${links.length ? links.length + ' vinculada' + (links.length>1?'s':'') : 'Sin vínculos'}</small></div>
-            <div class="card-b list">${links.length ? links.map(l => `<a class="li" href="#empresa-${l.c.id}"><div style="min-width:0"><div class="nm">${esc(l.c.name)}</div><div class="sub">${esc(l.why)}</div></div>${pill(l.c.band)}</a>`).join('') : '<p class="sub" style="margin:0">No detectamos empresas vinculadas en tu cartera.</p>'}</div>
+            <div class="card-b list">${links.length ? links.map(l => `<a class="li" href="#empresa-${l.c.id}"><div style="min-width:0"><div class="nm">${esc(l.c.name)}</div><div class="sub">${esc(l.why)}</div></div>${pill(l.c.L)}</a>`).join('') : '<p class="sub" style="margin:0">No detectamos empresas vinculadas en tu cartera.</p>'}</div>
           </div>
 
           <div class="card">
@@ -747,17 +772,14 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
       </div>
       <p class="demo-note">Datos de ejemplo generados para la demo.</p>`;
 
-    lineChart($('#sc-chart'), c.history, {zones:true, markers, tipHtml:i => {
-      const v = c.history[i], bb = band(v), evs = evByMonth[i] || [];
-      return `<b>${monthLabel(i)}</b> · ${v} pts · ${grade(v)} (${bb.name})` + evs.map(e => `<br>● ${esc(e.title)}`).join('');
-    }});
+    levelChart($('#lv-chart'), c.history, markers, i => `<b>${monthLabel(i)}</b> · Riesgo ${LEVELS[c.history[i]].name}` + (evByMonth[i] || []).map(e => `<br>● ${esc(e.title)}`).join(''));
     const ap = $('#apply');
     if (ap) ap.addEventListener('click', () => { c.exposure.limit = c.suggested; toast(`Límite actualizado a ${c.suggested ? ars(c.suggested) : 'contado'}. Se sincroniza con tu sistema de gestión.`); companyView(c); });
     $('#n-save').addEventListener('click', () => {
       const v = {owner:$('#n-owner').value, text:$('#n-text').value};
       const ok = store.set('note:' + c.id, v); c.owner = v.owner;
       $('#n-saved').textContent = ok ? 'Guardado' : 'Guardado sólo en esta sesión';
-      $('.co-meta span:last-child').textContent = 'Responsable: ' + v.owner;
+      $('#owner-meta').textContent = 'Responsable: ' + v.owner;
     });
   }
 
@@ -772,7 +794,7 @@ table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
           ${Object.entries(SEV).map(([k,v]) => `<button class="chip" data-a="${k}" aria-pressed="${filt===k}"><i style="background:${v[1]}"></i>${v[0][0]+v[0].slice(1).toLowerCase()}</button>`).join('')}
           <span class="count">${list.length} alertas</span>
         </div>
-        <div style="margin-top:12px">${list.map(e => `<a class="al" href="#empresa-${e.c.id}"><span class="bar" style="background:${SEV[e.sev][1]}"></span><div style="min-width:0"><h4>${esc(e.title)}</h4><p>${esc(e.detail)}</p><div class="meta">${sevPill(e.sev)}<span class="nm" style="font-size:13px">${esc(e.c.name)}</span><span class="sub">Score ${e.c.score} · ${e.c.band.name}</span></div></div><time>${ago(e.date)}</time></a>`).join('')}</div>
+        <div style="margin-top:12px">${list.map(e => `<a class="al" href="#empresa-${e.c.id}"><span class="bar" style="background:${SEV[e.sev][1]}"></span><div style="min-width:0"><h4>${esc(e.title)}</h4><p>${esc(e.detail)}</p><div class="meta">${sevPill(e.sev)}<span class="nm" style="font-size:13px">${esc(e.c.name)}</span><span class="sub">Riesgo actual: ${e.c.L.name}</span></div></div><time>${ago(e.date)}</time></a>`).join('')}</div>
       </div>`;
     $$('.chip').forEach(b => b.addEventListener('click', () => { state.alertSev = b.dataset.a; alertsView(); }));
   }

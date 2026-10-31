@@ -30,7 +30,8 @@
   --low:#1E7F55;   --low-bg:#E6F4EC;
   --mod:#A86A0C;   --mod-bg:#FBF1DE;
   --high:#B9501A;  --high-bg:#FBEADF;
-  --crit:#B42318;  --crit-bg:#FBE6E4;
+  --vhigh:#B42318; --vhigh-bg:#FBE6E4;
+  --crit:#7A1414;  --crit-bg:#F3DADA;
   --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif;
   --sans:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -120,19 +121,16 @@ h1 span{color:var(--cta)}
 .rep-id{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
 .rep-name{font-weight:600;font-size:17px;color:var(--navy);line-height:1.3}
 .rep-cuit{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:3px}
-.grade{text-align:center;border-radius:10px;padding:8px 14px;min-width:88px}
-.grade b{display:block;font-family:var(--serif);font-size:30px;line-height:1.05}
+.grade{text-align:center;border-radius:10px;padding:8px 14px;min-width:120px}
+.grade b{display:block;font-family:var(--serif);font-size:24px;line-height:1.15;white-space:nowrap}
 .grade small{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
-.scale{margin:20px 0 6px}
-.scale-bar{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--crit) 0 35%,var(--high) 35% 55%,var(--mod) 55% 75%,var(--low) 75% 100%)}
-.scale-pin{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--paper);border:4px solid var(--navy);transform:translate(-50%,-50%);transition:left 1s cubic-bezier(.2,.8,.2,1);box-shadow:0 2px 6px rgba(11,27,51,.3)}
-.scale-lbl{position:relative;height:16px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
-.scale-lbl span{position:absolute;transform:translateX(-50%)}
-.scale-lbl span:first-child{transform:none}
-.scale-lbl span:last-child{transform:translateX(-100%)}
-.score-line{display:flex;align-items:baseline;gap:8px;margin-top:14px}
-.score-line b{font-size:34px;font-weight:700;color:var(--navy);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.score-line span{color:var(--muted);font-size:14px}
+.lvl-meter{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:20px 0 4px}
+.lvl-meter div{display:flex;flex-direction:column;gap:6px;font-size:11.5px;font-weight:600;color:var(--muted);text-align:center;transition:color .3s}
+.lvl-meter i{height:10px;border-radius:3px;opacity:.18;transition:opacity .3s, transform .3s}
+.lvl-meter div.on{color:var(--ink)}
+.lvl-meter div.on i{opacity:1;transform:scaleY(1.5)}
+.trend{margin-top:12px;font-size:14px;color:var(--ink-2)}
+.trend b{font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:10px;margin-top:16px}
 .kpis div{padding:11px 13px;min-width:0}
 .kpis div + div{border-left:1px solid var(--line)}
@@ -199,7 +197,7 @@ h3{font-size:18px;font-weight:600;color:var(--navy);margin:0 0 6px}
 .layer.out p,.layer.out .tag{color:var(--on-navy-2)}
 .layer.out .ic{background:rgba(255,255,255,.1);color:var(--paper)}
 .out-scale{display:flex;flex-direction:column;gap:6px;margin-top:auto}
-.out-scale div{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;font-size:13.5px;color:var(--on-navy)}
+.out-scale div{display:grid;grid-template-columns:18px 1fr 64px;gap:10px;align-items:center;font-size:13.5px;color:var(--on-navy)}
 .out-scale span{font-family:var(--mono);font-size:12px;color:var(--on-navy-2)}
 .out-scale i{height:6px;border-radius:999px}
 .method-note{margin-top:22px;font-size:14px;color:var(--muted);max-width:760px}
@@ -447,21 +445,24 @@ footer a:hover{color:var(--cta)}
               <div class="rep-name" id="r-name">Metalúrgica Andina S.R.L.</div>
               <div class="rep-cuit" id="r-cuit">CUIT 30-71234567-8 · actualizado hoy</div>
             </div>
-            <div class="grade" id="r-grade" style="background:var(--high-bg);color:var(--high)"><b id="r-letter">C+</b><small id="r-band">Elevado</small></div>
+            <div class="grade" id="r-grade" style="background:var(--high-bg);color:var(--high)"><small>Nivel de riesgo</small><b id="r-level">Alto</b></div>
           </div>
-          <div class="scale">
-            <div class="scale-bar"><span class="scale-pin" id="r-pin" style="left:45%"></span></div>
-            <div class="scale-lbl"><span style="left:0">0</span><span style="left:35%">350</span><span style="left:55%">550</span><span style="left:75%">750</span><span style="left:100%">1000</span></div>
+          <div class="lvl-meter" id="r-meter" aria-hidden="true">
+            <div><i style="background:var(--low)"></i>Bajo</div>
+            <div><i style="background:var(--mod)"></i>Medio</div>
+            <div class="on"><i style="background:var(--high)"></i>Alto</div>
+            <div><i style="background:var(--vhigh)"></i>Muy alto</div>
+            <div><i style="background:var(--crit)"></i>Crítico</div>
           </div>
-          <div class="score-line"><b id="r-score">452</b><span>/ 1000 puntos</span></div>
+          <div class="trend" id="r-trend">Tendencia: <b style="color:var(--vhigh)">empeorando</b>. Hace 90 días estaba en nivel Medio.</div>
           <div class="kpis">
-            <div><small>Prob. de default 12 m</small><b id="r-pd">11,4%</b></div>
             <div><small>Límite sugerido</small><b id="r-lim">USD 18.000</b></div>
             <div><small>Plazo máximo</small><b id="r-term">30 días</b></div>
+            <div><small>Garantía</small><b id="r-guar">Recomendada</b></div>
           </div>
           <div class="sigs" id="r-sigs">
             <h4>Señales que explican la calificación</h4>
-            <div class="sig"><i style="background:var(--crit)"></i><span><b>Atrasos bancarios de más de 90 días</b> en una entidad financiera.</span></div>
+            <div class="sig"><i style="background:var(--vhigh)"></i><span><b>Atrasos bancarios de más de 90 días</b> en una entidad financiera.</span></div>
             <div class="sig"><i style="background:var(--high)"></i><span><b>2 cheques rechazados</b> en los últimos 60 días, sin cancelar.</span></div>
             <div class="sig"><i style="background:var(--low)"></i><span><b>14 años de actividad</b> con trayectoria fiscal consistente.</span></div>
           </div>
@@ -532,13 +533,14 @@ footer a:hover{color:var(--cta)}
       <div class="layer out">
         <span class="tag">Resultado</span>
         <div class="ic"><svg><use href="#i-gauge"/></svg></div>
-        <h3>Score 0–1000 explicable</h3>
-        <p>Una calificación, un límite y un plazo sugeridos, con el porqué de cada punto.</p>
+        <h3>5 niveles de riesgo</h3>
+        <p>Una calificación clara, un límite y un plazo sugeridos, con las señales que la explican.</p>
         <div class="out-scale">
-          <div><span>750+</span><i style="background:var(--low)"></i>Bajo</div>
-          <div><span>550+</span><i style="background:var(--mod)"></i>Moderado</div>
-          <div><span>350+</span><i style="background:var(--high)"></i>Elevado</div>
-          <div><span>&lt; 350</span><i style="background:var(--crit)"></i>Crítico</div>
+          <div><span>1</span><i style="background:var(--low)"></i>Bajo</div>
+          <div><span>2</span><i style="background:var(--mod)"></i>Medio</div>
+          <div><span>3</span><i style="background:var(--high)"></i>Alto</div>
+          <div><span>4</span><i style="background:var(--vhigh)"></i>Muy alto</div>
+          <div><span>5</span><i style="background:var(--crit)"></i>Crítico</div>
         </div>
       </div>
     </div>
@@ -564,10 +566,10 @@ footer a:hover{color:var(--cta)}
     <div class="feed" aria-label="Ejemplo de alertas de cartera">
       <div class="feed-head"><b>Alertas de tu cartera</b><span><i></i>Ejemplo en vivo</span></div>
       <div id="feed">
-        <div class="alert"><span class="bar" style="background:var(--crit)"></span><div><h4>Atrasos bancarios de más de 180 días</h4><p>Score bajó de 512 a 298. Límite sugerido: sólo contado.</p><div class="meta"><span class="sev" style="background:var(--crit-bg);color:var(--crit)">CRÍTICA</span><span class="co">Metalúrgica O*** S.A.</span></div></div><time>hace 4 min</time></div>
+        <div class="alert"><span class="bar" style="background:var(--crit)"></span><div><h4>Atrasos bancarios de más de 180 días</h4><p>Pasó de riesgo Medio a Muy alto. Límite sugerido: sólo contado.</p><div class="meta"><span class="sev" style="background:var(--crit-bg);color:var(--crit)">CRÍTICA</span><span class="co">Metalúrgica O*** S.A.</span></div></div><time>hace 4 min</time></div>
         <div class="alert"><span class="bar" style="background:var(--high)"></span><div><h4>3 cheques rechazados sin fondos</h4><p>Por ARS 41,2 M en los últimos 30 días.</p><div class="meta"><span class="sev" style="background:var(--high-bg);color:var(--high)">ALTA</span><span class="co">Agro P*** S.R.L.</span></div></div><time>hace 2 h</time></div>
         <div class="alert"><span class="bar" style="background:var(--mod)"></span><div><h4>Cambio de autoridades publicado</h4><p>Renunciaron el presidente y el director financiero.</p><div class="meta"><span class="sev" style="background:var(--mod-bg);color:var(--mod)">MEDIA</span><span class="co">Logística R*** S.A.</span></div></div><time>ayer</time></div>
-        <div class="alert"><span class="bar" style="background:var(--low)"></span><div><h4>Regularizó su situación financiera</h4><p>Score subió 96 puntos. Podés ampliar su límite.</p><div class="meta"><span class="sev" style="background:var(--low-bg);color:var(--low)">MEJORA</span><span class="co">Química del L*** S.A.</span></div></div><time>hace 3 d</time></div>
+        <div class="alert"><span class="bar" style="background:var(--low)"></span><div><h4>Regularizó su situación financiera</h4><p>Bajó de riesgo Alto a Medio. Podés ampliar su límite.</p><div class="meta"><span class="sev" style="background:var(--low-bg);color:var(--low)">MEJORA</span><span class="co">Química del L*** S.A.</span></div></div><time>hace 3 d</time></div>
       </div>
     </div>
   </div>
@@ -669,7 +671,7 @@ footer a:hover{color:var(--cta)}
           <div class="psub">sin tarjeta</div>
           <ul>
             <li><svg><use href="#i-check"/></svg><span><b>3 consultas</b> por mes</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Score y categoría de riesgo</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Nivel de riesgo y tendencia</span></li>
             <li><svg><use href="#i-check"/></svg><span>Principales señales detectadas</span></li>
           </ul>
           <a href="#consulta" class="btn btn-line">Consultar un CUIT</a>
@@ -684,7 +686,7 @@ footer a:hover{color:var(--cta)}
             <li><svg><use href="#i-check"/></svg><span><b>Informe completo</b> en PDF</span></li>
             <li><svg><use href="#i-check"/></svg><span>Límite y plazo sugeridos</span></li>
             <li><svg><use href="#i-check"/></svg><span>Evolución de los últimos 24 meses</span></li>
-            <li><svg><use href="#i-check"/></svg><span>Explicación del score en lenguaje simple</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Explicación de la calificación en lenguaje simple</span></li>
           </ul>
           <a href="#fundadores" class="btn btn-cta" data-plan="Consultas sueltas">Comprar el pack</a>
         </div>
@@ -707,7 +709,7 @@ footer a:hover{color:var(--cta)}
       <div class="two-col">
         <div class="box">
           <h3>Calculadora de lote</h3>
-          <p style="margin:0;color:var(--ink-2);font-size:15px">Subí un Excel con razón social y CUIT. En menos de 24 horas recibís el archivo con score, categoría, límite sugerido y señales de cada empresa.</p>
+          <p style="margin:0;color:var(--ink-2);font-size:15px">Subí un Excel con razón social y CUIT. En menos de 24 horas recibís el archivo con nivel de riesgo, límite sugerido y señales de cada empresa.</p>
           <div class="range">
             <label for="batch">Cantidad de CUITs <b id="batch-n">1.000</b></label>
             <input type="range" id="batch" min="50" max="10000" step="50" value="1000">
@@ -878,10 +880,10 @@ footer a:hover{color:var(--cta)}
     <div class="sec-head" style="margin-bottom:28px"><span class="label">Preguntas frecuentes</span><h2>Lo que nos preguntan antes de empezar.</h2></div>
     <div class="faq">
       <details><summary>¿De dónde sale la información?</summary><p>Triangulamos más de 25 fuentes oficiales, públicas y privadas con licencia. Cada dato se contrasta contra fuentes independientes antes de entrar al modelo, para que una sola fuente desactualizada no distorsione la calificación. Toda la información es de acceso legítimo.</p></details>
-      <details><summary>¿En qué se diferencia de un informe comercial tradicional?</summary><p>Un informe comercial muestra cómo estaba una empresa el día que lo pediste. Centinel la sigue todos los días y te avisa cuando cambia. Además, el score es explicable: sabés qué señales lo bajaron o lo subieron.</p></details>
+      <details><summary>¿En qué se diferencia de un informe comercial tradicional?</summary><p>Un informe comercial muestra cómo estaba una empresa el día que lo pediste. Centinel la sigue todos los días y te avisa cuando cambia. Además, la calificación es explicable: sabés qué señales la empeoraron o la mejoraron.</p></details>
       <details><summary>¿La empresa consultada se entera?</summary><p>No. Las consultas son confidenciales y la empresa evaluada no recibe ningún aviso.</p></details>
       <details><summary>¿Qué rol cumple la inteligencia artificial?</summary><p>Los modelos ponderan más de 180 variables según su capacidad para anticipar incumplimientos, y leen textos como edictos, publicaciones y noticias para detectar eventos relevantes antes de que se reflejen en los números.</p></details>
-      <details><summary>¿Se puede integrar con mi sistema de gestión?</summary><p>Sí. En los planes Corporativo y Enterprise tenés API para consultar scores, cargar clientes y recibir alertas en tu sistema, por ejemplo para frenar pedidos de un cliente que superó tu umbral de riesgo.</p></details>
+      <details><summary>¿Se puede integrar con mi sistema de gestión?</summary><p>Sí. En los planes Corporativo y Enterprise tenés API para consultar calificaciones, cargar clientes y recibir alertas en tu sistema, por ejemplo para frenar pedidos de un cliente que superó tu umbral de riesgo.</p></details>
       <details><summary>¿Cómo pago y puedo cancelar?</summary><p>Pagás en pesos al tipo de cambio oficial del día con tarjeta, transferencia o Mercado Pago, y emitimos factura A. Los planes mensuales se cancelan cuando quieras, sin permanencia.</p></details>
     </div>
   </div>
@@ -954,11 +956,12 @@ footer a:hover{color:var(--cta)}
 
   /* ---------- demo scoring (illustrative only) ---------- */
   const hash = s => { let h=2166136261; for (const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; };
-  const bands = [
-    {min:750, name:'Bajo',     color:'var(--low)',  bg:'var(--low-bg)',  letters:['A','A+','AA'], pd:[0.4,1.8], lim:[80,250], term:'90 días', span:250},
-    {min:550, name:'Moderado', color:'var(--mod)',  bg:'var(--mod-bg)',  letters:['B','B+','BB'], pd:[2,6],     lim:[30,90],  term:'60 días', span:200},
-    {min:350, name:'Elevado',  color:'var(--high)', bg:'var(--high-bg)', letters:['C','C+','CC'], pd:[7,18],    lim:[8,30],   term:'30 días', span:200},
-    {min:0,   name:'Crítico',  color:'var(--crit)', bg:'var(--crit-bg)', letters:['D','D+','DD'], pd:[20,45],   lim:[0,0],    term:'Contado', span:350},
+  const LEVELS = [
+    {name:'Bajo',     color:'var(--low)',   bg:'var(--low-bg)',   lim:[80,250], term:'90 días', guar:'No necesaria'},
+    {name:'Medio',    color:'var(--mod)',   bg:'var(--mod-bg)',   lim:[30,90],  term:'60 días', guar:'Opcional'},
+    {name:'Alto',     color:'var(--high)',  bg:'var(--high-bg)',  lim:[8,30],   term:'30 días', guar:'Recomendada'},
+    {name:'Muy alto', color:'var(--vhigh)', bg:'var(--vhigh-bg)', lim:[2,8],    term:'15 días', guar:'Obligatoria'},
+    {name:'Crítico',  color:'var(--crit)',  bg:'var(--crit-bg)',  lim:[0,0],    term:'Contado', guar:'—'},
   ];
   const signals = {
     crit:['Atrasos bancarios de más de 180 días','en dos entidades financieras.'],
@@ -969,15 +972,15 @@ footer a:hover{color:var(--cta)}
     age:['Más de 10 años de actividad','con trayectoria fiscal consistente.'],
     stable:['Endeudamiento estable','y acorde a su nivel de actividad.'],
   };
-  const sigColor = {crit:'var(--crit)',chq:'var(--high)',debt:'var(--mod)',legal:'var(--high)',ok:'var(--low)',age:'var(--low)',stable:'var(--low)'};
-  const pickSigs = i => [['ok','age','stable'],['debt','ok','age'],['chq','debt','age'],['crit','chq','legal']][i];
+  const sigColor = {crit:'var(--vhigh)',chq:'var(--high)',debt:'var(--mod)',legal:'var(--high)',ok:'var(--low)',age:'var(--low)',stable:'var(--low)'};
+  const pickSigs = i => [['ok','age','stable'],['debt','ok','age'],['chq','debt','age'],['crit','chq','debt'],['crit','chq','legal']][i];
 
   const steps = [
     ['Validando identidad fiscal y societaria', '42 datos'],
     ['Triangulando fuentes de información', '27 fuentes'],
     ['Analizando comportamiento de pago', '94 datos'],
     ['Detectando eventos legales y societarios', '51 datos'],
-    ['Calculando el score con el modelo de IA', '184 variables'],
+    ['Calculando el nivel de riesgo con IA', '184 variables'],
   ];
   let busy = false;
   $('#consulta').addEventListener('submit', e => {
@@ -1003,34 +1006,31 @@ footer a:hover{color:var(--cta)}
 
   function render(d){
     const h = hash(d);
-    const score = 160 + (h % 800);
-    const bi = bands.findIndex(b => score >= b.min), b = bands[bi];
-    const f = ((h >> 8) & 255) / 255;
-    const pd = b.pd[1] - (b.pd[1]-b.pd[0]) * Math.min(1, (score - b.min) / b.span);
-    const lim = Math.round(b.lim[0] + (b.lim[1]-b.lim[0]) * f) * 1000;
+    const li = [0,0,1,1,1,2,2,3,4,4][h % 10] , L = LEVELS[li];
+    const prev = Math.max(0, Math.min(4, li + [-1,0,0,1][(h >>> 4) % 4]));
+    const f = ((h >>> 8) & 255) / 255;
+    const lim = Math.round(L.lim[0] + (L.lim[1]-L.lim[0]) * f) * 1000;
     $('#rep-tag').textContent = 'SIMULACIÓN';
     $('#r-name').textContent = inName.value.trim();
     $('#r-cuit').textContent = 'CUIT ' + fmtCuit(d) + ' · consultado ahora';
-    const g = $('#r-grade'); g.style.background = b.bg; g.style.color = b.color;
-    $('#r-letter').textContent = b.letters[h % 3];
-    $('#r-band').textContent = b.name;
-    $('#r-pd').textContent = fmt(pd, 1) + '%';
+    const g = $('#r-grade'); g.style.background = L.bg; g.style.color = L.color;
+    $('#r-level').textContent = L.name;
+    $$('#r-meter div').forEach((el,i) => el.classList.toggle('on', i===li));
+    const tr = li > prev ? ['empeorando','var(--vhigh)'] : li < prev ? ['mejorando','var(--low)'] : ['estable','var(--ink)'];
+    $('#r-trend').innerHTML = `Tendencia: <b style="color:${tr[1]}">${tr[0]}</b>. Hace 90 días estaba en nivel ${LEVELS[prev].name}.`;
     $('#r-lim').textContent = lim ? 'USD ' + fmt(lim) : 'Sólo contado';
-    $('#r-term').textContent = b.term;
-    $('#r-sigs').innerHTML = '<h4>Señales que explican la calificación</h4>' + pickSigs(bi).map(k => `<div class="sig"><i style="background:${sigColor[k]}"></i><span><b>${signals[k][0]}</b> ${signals[k][1]}</span></div>`).join('');
+    $('#r-term').textContent = L.term;
+    $('#r-guar').textContent = L.guar;
+    $('#r-sigs').innerHTML = '<h4>Señales que explican la calificación</h4>' + pickSigs(li).map(k => `<div class="sig"><i style="background:${sigColor[k]}"></i><span><b>${signals[k][0]}</b> ${signals[k][1]}</span></div>`).join('');
     $('#r-foot').textContent = 'Simulación ilustrativa generada en tu navegador.';
-    const pin = $('#r-pin'); pin.style.left = '0%';
-    requestAnimationFrame(() => requestAnimationFrame(() => { pin.style.left = (score/10) + '%'; }));
-    const el = $('#r-score'), t0 = performance.now();
-    (function tick(t){ const p = Math.min(1,(t-t0)/1000); el.textContent = Math.round(score*(1-Math.pow(1-p,3))); if (p<1) requestAnimationFrame(tick); })(t0);
   }
 
   /* ---------- live feed ---------- */
   const extra = [
-    ['crit','CRÍTICA','Pedido de concurso preventivo','Score bajó a 214. Recomendado: suspender entregas.','Construcciones N*** S.A.'],
+    ['crit','CRÍTICA','Pedido de concurso preventivo','Pasó a riesgo Crítico. Recomendado: suspender entregas.','Construcciones N*** S.A.'],
     ['high','ALTA','Embargo sobre cuentas bancarias','Medida cautelar por deuda comercial.','Alimentos C*** S.R.L.'],
     ['mod','MEDIA','Endeudamiento creció 45% en 90 días','Tomó crédito en 3 nuevas entidades.','Ferretería M*** S.A.'],
-    ['low','MEJORA','Canceló los cheques rechazados','Score subió 64 puntos.','Transportes S*** S.A.'],
+    ['low','MEJORA','Canceló los cheques rechazados','Bajó de riesgo Muy alto a Alto.','Transportes S*** S.A.'],
   ];
   const sevBg = {crit:'var(--crit-bg)',high:'var(--high-bg)',mod:'var(--mod-bg)',low:'var(--low-bg)'};
   const sevC = {crit:'var(--crit)',high:'var(--high)',mod:'var(--mod)',low:'var(--low)'};
