@@ -397,6 +397,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .tmr-cfg-note{font-family:var(--mono);font-size:11px;color:var(--t3);padding:6px 10px;background:var(--glass);border-radius:var(--rs);border:1px solid var(--border)}
 /* Wide series buttons (8s/6s/4s) */
 .tmr-nb-w{width:54px!important}
+/* Smart Lamp panel */
+.tmr-lamp-wrap{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-top:10px}
+.tmr-lamp-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--glass);border:none;color:var(--t);cursor:pointer;text-align:left}
+.tmr-lamp-toggle:hover{background:var(--glass2)}
+.tmr-lamp-toggle-label{flex:1;font-family:var(--disp);font-size:13px;font-weight:600}
+.tmr-lamp-badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.06em}
+.tmr-lamp-on{background:var(--greend);color:var(--green)}
+.tmr-lamp-off{background:var(--glass2);color:var(--t3)}
+.tmr-lamp-chev{font-size:10px;color:var(--t3);transition:transform .2s}
+.tmr-lamp-chev.open{transform:rotate(180deg)}
+.tmr-lamp-body{padding:14px;border-top:1px solid var(--border);background:var(--glass)}
+.tmr-lamp-desc{font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.6;text-align:center}
 </style>
 </head>
 <body>
@@ -573,6 +585,20 @@ const I={
   chev:_svg('chev',12),timer:_svg('timer',14),
 };
 // ── TIMER MODULE ──────────────────────────────────────────────────────
+// Smart lamp (Tuya) integration
+const _LAMP_KEY='ps_lamp_cfg';
+let _lampCfg={enabled:false,region:'openapi.tuyaus.com',accessId:'',accessSecret:'',deviceId:''};
+function _lampLoad(){try{const s=localStorage.getItem(_LAMP_KEY);if(s)_lampCfg={..._lampCfg,...JSON.parse(s)};}catch(e){}}
+function _lampSave(cfg){_lampCfg={..._lampCfg,...cfg};try{localStorage.setItem(_LAMP_KEY,JSON.stringify(_lampCfg));}catch(e){}}
+function _lampColor(color){
+  if(!_lampCfg.enabled||!_lampCfg.accessId||!_lampCfg.deviceId)return;
+  sb.functions.invoke('tuya-lamp',{body:{
+    region:_lampCfg.region,accessId:_lampCfg.accessId,
+    accessSecret:_lampCfg.accessSecret,deviceId:_lampCfg.deviceId,color
+  }}).catch(()=>{});
+}
+_lampLoad();
+
 let _tmrCtx=null,_tmrWL=null,_tmrTick=null;
 // disc: 'sport'|'rfp'  phase: 'qual'|'final'  mode: 'precision'|'rapid'|'full'|'custom'
 let _tmrDisc='sport',_tmrPhase='qual',_tmrMode='precision',_tmrSCount=6,_tmrRFPTime=8,_tmrPaused=false;
@@ -707,10 +733,15 @@ function _tmrEnter(idx){
   _tmrStep=idx;_tmrTime=s.dur;
   if(s.voice)_tmrSpeak(s.voice);
   if(s.beepF)_tmrBeep(s.beepF,0.22,0.5);
+  // Lamp color: green=FIRE, red=ATTENTION, white=neutral, off otherwise
+  if(s.bg==='#1A8F3C')_lampColor('green');
+  else if(s.bg==='#BF1A1A')_lampColor('red');
+  else _lampColor('white');
   _tmrDraw();
 }
 function _tmrDone(){
   clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
+  _lampColor('off');
   _tmrBeep(880,0.25,0.6);setTimeout(()=>_tmrBeep(1047,0.25,0.6),320);setTimeout(()=>_tmrBeep(1319,0.4,0.7),640);
   const ov=document.getElementById('tmr-ov');if(!ov)return;
   ov.style.background='#0B1C2D';
@@ -734,6 +765,7 @@ function tmrStart(){
 }
 function tmrStop(){
   clearInterval(_tmrTick);_tmrTick=null;_tmrUnlock();speechSynthesis?.cancel();
+  _lampColor('off');
   document.getElementById('tmr-ov')?.classList.add('tmr-hidden');_tmrPaused=false;
 }
 
@@ -834,6 +866,35 @@ function timerHTML(){
 
   <button class="btn btn-p wf tmr-go" id="tmr-go">▶  Start Training</button>
   <div class="tmr-hint">Voice commands and audio cues will guide each series. Keep your volume up.</div>
+
+  <div class="tmr-lamp-wrap" id="tmr-lamp-section">
+    <button class="tmr-lamp-toggle" id="tmr-lamp-toggle">
+      <span style="font-size:16px">💡</span>
+      <span class="tmr-lamp-toggle-label">Smart Lamp</span>
+      <span class="tmr-lamp-badge ${_lampCfg.enabled?'tmr-lamp-on':'tmr-lamp-off'}">${_lampCfg.enabled?'ON':'OFF'}</span>
+      <span class="tmr-lamp-chev" id="tmr-lamp-chev">▼</span>
+    </button>
+    <div class="tmr-lamp-body ${_lampCfg.enabled?'':'tmr-hidden'}" id="tmr-lamp-body">
+      <div class="tmr-lamp-desc">Lamp changes color with each phase: 🟢 FIRE · 🔴 ATTENTION · ⚪ neutral</div>
+      <div class="fg mb7">
+        <label class="fl">Region</label>
+        <select class="fs" id="lamp-region">
+          <option value="openapi.tuyaus.com" ${_lampCfg.region==='openapi.tuyaus.com'?'selected':''}>Americas (US)</option>
+          <option value="openapi.tuyaeu.com" ${_lampCfg.region==='openapi.tuyaeu.com'?'selected':''}>Europe (EU)</option>
+          <option value="openapi.tuyacn.com" ${_lampCfg.region==='openapi.tuyacn.com'?'selected':''}>China (CN)</option>
+        </select>
+      </div>
+      <div class="fg mb7"><label class="fl">Access ID</label><input class="fi" id="lamp-id" placeholder="Your Tuya Access ID" value="${_lampCfg.accessId}" autocomplete="off"/></div>
+      <div class="fg mb7"><label class="fl">Access Secret</label><input class="fi" id="lamp-secret" placeholder="Your Tuya Access Secret" type="password" value="${_lampCfg.accessSecret}" autocomplete="off"/></div>
+      <div class="fg mb10"><label class="fl">Device ID</label><input class="fi" id="lamp-device" placeholder="Your lamp Device ID" value="${_lampCfg.deviceId}" autocomplete="off"/></div>
+      <div class="flex gap8 mb7">
+        <button class="btn btn-p btn-sm" id="lamp-save" style="flex:1">Save &amp; Enable</button>
+        <button class="btn btn-s btn-sm" id="lamp-test">Test 💡</button>
+        ${_lampCfg.enabled?'<button class="btn btn-s btn-sm" id="lamp-disable" style="color:var(--red)">Disable</button>':''}
+      </div>
+      <div id="lamp-status" style="font-size:11px;color:var(--t3);min-height:16px;text-align:center"></div>
+    </div>
+  </div>
 </div>`;
 }
 function render(){document.getElementById('app').innerHTML=html();bind();countUp()}
@@ -1491,6 +1552,41 @@ function bind(){
   $('tmr-stop-req')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.toggle('tmr-hidden'));
   $('tmr-cancel-stop')?.addEventListener('click',()=>document.getElementById('tmr-confirm')?.classList.add('tmr-hidden'));
   $('tmr-ok-stop')?.addEventListener('click',()=>tmrStop());
+  // Smart lamp settings
+  $('tmr-lamp-toggle')?.addEventListener('click',()=>{
+    const body=document.getElementById('tmr-lamp-body');
+    const chev=document.getElementById('tmr-lamp-chev');
+    body?.classList.toggle('tmr-hidden');
+    chev?.classList.toggle('open');
+  });
+  $('lamp-save')?.addEventListener('click',async()=>{
+    const id=$('lamp-id')?.value.trim();
+    const secret=$('lamp-secret')?.value.trim();
+    const device=$('lamp-device')?.value.trim();
+    const region=document.getElementById('lamp-region')?.value;
+    const st=document.getElementById('lamp-status');
+    if(!id||!secret||!device){if(st)st.textContent='Fill in all fields.';return;}
+    if(st)st.textContent='Testing connection...';
+    _lampSave({enabled:true,region,accessId:id,accessSecret:secret,deviceId:device});
+    try{
+      const r=await sb.functions.invoke('tuya-lamp',{body:{region,accessId:id,accessSecret:secret,deviceId:device,color:'white'}});
+      if(r.error||!r.data?.success){
+        if(st)st.textContent='⚠ Connected but command failed — check Device ID.';
+      } else {
+        if(st)st.textContent='✓ Lamp connected successfully!';
+        renderContent();
+      }
+    }catch(e){if(st)st.textContent='⚠ Error: '+e.message;}
+  });
+  $('lamp-test')?.addEventListener('click',()=>{
+    _lampColor('green');
+    setTimeout(()=>_lampColor('red'),1500);
+    setTimeout(()=>_lampColor('white'),3000);
+    setTimeout(()=>_lampColor('off'),4500);
+  });
+  $('lamp-disable')?.addEventListener('click',()=>{
+    _lampSave({enabled:false});renderContent();
+  });
 }
 init();
 </script>
